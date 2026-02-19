@@ -22,7 +22,8 @@ export default function AdminLoginPage() {
       router.push("/admin/review");
       router.refresh();
     } else {
-      setError("Unauthorized access.");
+      const data = await res.json();
+      setError(data.error || "Unauthorized access.");
     }
   };
 
