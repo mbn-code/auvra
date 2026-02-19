@@ -87,34 +87,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 3. DAILY UTILITIES (Problem Solvers) */}
-      <section className="max-w-7xl mx-auto px-6 py-32">
-        <header className="mb-20">
-          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4 text-center">Auvra Utilities</p>
-          <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-center">Problem Solvers.</h2>
-        </header>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          {staticProducts.map((product) => (
-            <Link key={product.id} href={`/product/${product.id}`} className="group">
-              <div className="aspect-square bg-zinc-50 rounded-[3rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 group-hover:shadow-3xl group-hover:shadow-zinc-200">
-                <img 
-                  src={product.images[0]} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-                />
-              </div>
-              <div className="text-center">
-                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">{product.category}</p>
-                <h3 className="text-2xl font-black text-zinc-900 tracking-tighter mb-4 group-hover:underline decoration-2 underline-offset-8">
-                  {product.name}
-                </h3>
-                <p className="text-lg font-bold text-zinc-900">€{(product.price / 100).toFixed(0)}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
