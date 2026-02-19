@@ -16,14 +16,14 @@ const BRANDS = [
 const LOCALES = ["dk", "de", "pl", "se", "fi"];
 
 async function runPulseCycle() {
-  console.log(`[${new Date().toISOString()}] 🚀 Starting Regional Pulse Cycle (EU Cluster)...`);
+  console.log(`[${new Date().toISOString()}] 🚀 Starting Regional EUR Pulse Cycle...`);
 
   for (const brand of BRANDS) {
     const locale = LOCALES[Math.floor(Math.random() * LOCALES.length)];
     
     try {
       const items = await scrapeBrand(brand, locale);
-      console.log(`📦 ${brand}: Found ${items.length} items on .${locale}`);
+      console.log(`📦 ${brand}: Scanned ${items.length} items on .${locale}`);
       
       if (items.length > 0) {
         await saveToSupabase(items);
@@ -32,11 +32,10 @@ async function runPulseCycle() {
       console.error(`💥 Failed cycle for ${brand}:`, err);
     }
     
-    // Throttle to avoid Vinted / Cloudinary rate limits
     await new Promise(r => setTimeout(r, 5000));
   }
 
-  console.log(`[${new Date().toISOString()}] ✅ Regional Pulse Cycle Complete.`);
+  console.log(`[${new Date().toISOString()}] ✅ EUR Pulse Cycle Complete.`);
 }
 
 runPulseCycle();

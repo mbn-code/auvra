@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Check, X, ExternalLink, ShieldCheck, AlertTriangle, TrendingUp, Star } from "lucide-react";
+import { Check, X, ExternalLink, ShieldCheck, AlertTriangle, TrendingUp, Star, Edit3 } from "lucide-react";
 
 export default function AdminReviewPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
 
   useEffect(() => {
     fetchPendingItems();
@@ -18,7 +20,7 @@ export default function AdminReviewPage() {
       .from('pulse_inventory')
       .select('*')
       .eq('status', 'pending_review')
-      .order('created_at', { ascending: false }); // Temporary fallback sorting
+      .order('created_at', { ascending: false });
 
     if (!error) setItems(data || []);
     setLoading(false);
@@ -32,6 +34,29 @@ export default function AdminReviewPage() {
 
     if (!error) {
       setItems(items.filter(item => item.id !== id));
+    }
+  }
+
+  async function savePrice(id: string) {
+    const newPrice = parseFloat(editValue);
+    if (isNaN(newPrice)) return;
+
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+
+    const newProfit = newPrice - item.source_price - 20;
+
+    const { error } = await supabase
+      .from('pulse_inventory')
+      .update({ 
+        listing_price: newPrice,
+        potential_profit: newProfit
+      })
+      .eq('id', id);
+
+    if (!error) {
+      setItems(items.map(i => i.id === id ? { ...i, listing_price: newPrice, potential_profit: newProfit } : i));
+      setEditingId(null);
     }
   }
 
@@ -81,17 +106,40 @@ export default function AdminReviewPage() {
                        item.potential_profit > 60 ? 'bg-yellow-400 text-black' : 'bg-green-500 text-white'
                      }`}>
                         <TrendingUp size={12} />
-                        Profit: +${Math.round(item.potential_profit)}
+                        Profit: +€{Math.round(item.potential_profit)}
                      </div>
                   </div>
                 </div>
                 
                 <div className="p-8 flex-1 flex flex-col">
                   <div className="mb-8 flex-1">
-                    <h3 className="text-2xl font-black mb-2 tracking-tighter leading-tight">{item.title}</h3>
-                    <div className="flex gap-6 items-center">
-                      <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Source: <span className="text-zinc-900">${item.source_price}</span></p>
-                      <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Listing: <span className="text-zinc-900">${item.listing_price}</span></p>
+                    <h3 className="text-2xl font-black mb-4 tracking-tighter leading-tight">{item.title}</h3>
+                    <div className="flex flex-col gap-2">
+                      <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Source: <span className="text-zinc-900">€{item.source_price.toFixed(2)}</span></p>
+                      
+                      {editingId === item.id ? (
+                        <div className="flex gap-2 items-center">
+                          <input 
+                            type="number" 
+                            value={editValue} 
+                            onChange={(e) => setEditValue(e.target.value)}
+                            className="w-24 bg-zinc-50 border border-zinc-200 px-3 py-1 rounded text-sm font-bold"
+                            autoFocus
+                          />
+                          <button onClick={() => savePrice(item.id)} className="text-[10px] font-black uppercase text-green-600">Save</button>
+                          <button onClick={() => setEditingId(null)} className="text-[10px] font-black uppercase text-zinc-400">Cancel</button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Listing: <span className="text-zinc-900">€{item.listing_price}</span></p>
+                          <button 
+                            onClick={() => { setEditingId(item.id); setEditValue(item.listing_price.toString()); }}
+                            className="text-zinc-300 hover:text-black transition-colors"
+                          >
+                            <Edit3 size={12} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
