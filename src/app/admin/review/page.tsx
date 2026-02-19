@@ -69,6 +69,22 @@ export default function AdminReviewPage() {
     }
   }
 
+  async function approveAll() {
+    if (items.length === 0) return;
+    if (!confirm(`Are you sure you want to approve ALL ${items.length} pending items?`)) return;
+    
+    setLoading(true);
+    const { error } = await supabase
+      .from('pulse_inventory')
+      .update({ status: 'available' })
+      .eq('status', 'pending_review');
+
+    if (!error) {
+      setItems([]);
+    }
+    setLoading(false);
+  }
+
   if (loading) return <div className="p-24 text-center">Opening Auvra Terminal...</div>;
 
   return (
@@ -86,8 +102,16 @@ export default function AdminReviewPage() {
             </nav>
           </div>
           <div className="flex items-center gap-8">
-            <div className="text-right">
-              <p className="text-2xl font-black tracking-tighter text-zinc-900">{items.length}</p>
+            <div className="text-right flex flex-col items-end gap-2">
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={approveAll}
+                  className="bg-zinc-900 text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-lg"
+                >
+                  Approve All
+                </button>
+                <p className="text-2xl font-black tracking-tighter text-zinc-900">{items.length}</p>
+              </div>
               <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Awaiting Command</p>
             </div>
             <button 
