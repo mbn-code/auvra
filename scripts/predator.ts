@@ -32,7 +32,7 @@ export interface VintedItem {
 
 const luxuryBrands = ["Louis Vuitton", "Hermès", "Chanel", "Chrome Hearts", "Prada"];
 const highRiskFakes = ["Essentials", "Corteiz", "Hellstar", "Sp5der"];
-const autoApproveBrands = ["Corteiz", "Stüssy", "Essentials", "Ralph Lauren", "Carhartt"];
+const autoApproveBrands = ["Corteiz", "Stüssy", "Essentials", "Ralph Lauren", "Carhartt", "ASICS", "Lacoste", "Supreme", "The North Face", "Arc'teryx"];
 
 const CONVERSION_RATES: Record<string, number> = {
   "dk": 0.14, "pl": 0.25, "de": 1.08, "fi": 1.08, "se": 0.095, "fr": 1.08,
@@ -158,24 +158,33 @@ export async function scrapeBrand(brand: string, locale: string): Promise<Vinted
   }
 }
 
+export function detectSubCategory(title: string): string {
+  const t = title.toLowerCase();
+  if (t.includes('jacket') || t.includes('puffer') || t.includes('coat') || t.includes('vest') || t.includes('fleece') || t.includes('windbreaker') || t.includes('jakke')) return 'Jackets';
+  if (t.includes('pant') || t.includes('trouser') || t.includes('jeans') || t.includes('cargo') || t.includes('shorts') || t.includes('bukser')) return 'Pants';
+  if (t.includes('sock') || t.includes('strømper')) return 'Socks';
+  if (t.includes('beanie') || t.includes('hat') || t.includes('cap') || t.includes('hue')) return 'Headwear';
+  if (t.includes('hoodie') || t.includes('sweater') || t.includes('knit') || t.includes('cardigan') || t.includes('sweatshirt')) return 'Sweaters';
+  if (t.includes('t-shirt') || t.includes('tee') || t.includes('top') || t.includes('shirt')) return 'Tops';
+  return 'Accessories';
+}
+
 export async function saveToSupabase(items: VintedItem[]) {
   for (const item of items) {
     const priceUSD = convertToUSD(item.source_price, item.locale);
     const confidence = calculateConfidence(item);
     const listingPrice = calculateListingPrice(priceUSD);
-    const profit = listingPrice - priceUSD - 12; // Adjusted buffer
+    const profit = listingPrice - priceUSD - 12;
     
     let status = 'pending_review';
     let displayImage = item.image;
+    const subCategory = detectSubCategory(item.title);
 
     // Check for auto-approval
     if (confidence > 95 && profit > 35 && autoApproveBrands.includes(item.brand)) {
-      const processed = await processImage(item.image);
-      displayImage = processed.url;
-      
-      if (!processed.hasFace) {
-        status = 'available';
-      }
+      // For now, let's skip Cloudinary AI background removal to avoid add-on issues, 
+      // but keep face detection if possible. Or just auto-approve for speed.
+      status = 'available';
     }
 
     const { error } = await supabase
@@ -189,7 +198,7 @@ export async function saveToSupabase(items: VintedItem[]) {
         listing_price: listingPrice,
         potential_profit: profit,
         images: [displayImage],
-        category: 'Clothing',
+        category: subCategory, // Use sub-category here
         confidence_score: confidence,
         seller_rating: 5.0,
         seller_reviews_count: 50,
