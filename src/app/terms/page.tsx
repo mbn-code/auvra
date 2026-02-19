@@ -30,6 +30,16 @@ export default function TermsOfService() {
         </section>
 
         <section>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Non-Affiliation</h2>
+          <p>Auvra is an independent curation platform specializing in pre-owned luxury and streetwear. We are not an authorized dealer, nor are we affiliated, associated, or officially connected with any of the brands featured in our archive. All trademarks, logos, and brand names are the property of their respective owners.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Authenticity & Condition</h2>
+          <p>Every piece in the Auvra archive is subjected to a rigorous internal verification process. However, because we specialize in pre-owned items, pieces are sold "as-is" based on the condition report provided on the product page. We guarantee the authenticity of every item sold; should an item be proven inauthentic by a certified third party, a full refund will be issued.</p>
+        </section>
+
+        <section>
           <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Governing Law</h2>
           <p>These terms are governed by the laws of Denmark. Any disputes shall be handled within the jurisdiction of the Danish courts.</p>
         </section>

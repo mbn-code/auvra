@@ -37,7 +37,7 @@ export default function LiveActivity({ productName }: { productName: string }) {
       <div className="bg-white/80 backdrop-blur-xl p-3 px-6 rounded-full shadow-2xl border border-zinc-100/50 flex items-center gap-4">
         <div className="w-1.5 h-1.5 bg-zinc-900 rounded-full animate-pulse" />
         <p className="text-[10px] font-bold text-zinc-500 whitespace-nowrap tracking-tight">
-          <span className="text-zinc-900">{data.name}</span> in {data.city} recently secured their {productName}
+          <span className="text-zinc-900">{data.name}</span> in {data.city} just performed an integrity check on {productName}
         </p>
       </div>
     </div>

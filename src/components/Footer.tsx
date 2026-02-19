@@ -36,6 +36,7 @@ export default function Footer() {
             <li><Link href="/refunds" className="hover:text-black transition-colors">Returns & Exchanges</Link></li>
             <li><Link href="/privacy" className="hover:text-black transition-colors">Privacy & GDPR</Link></li>
             <li><Link href="/terms" className="hover:text-black transition-colors">Terms of Service</Link></li>
+            <li><Link href="/legal" className="hover:text-black transition-colors">Legal Notice</Link></li>
           </ul>
         </div>
 
@@ -56,9 +57,14 @@ export default function Footer() {
       </div>
       
       <div className="max-w-7xl mx-auto mt-24 pt-12 border-t border-zinc-100 flex flex-col md:flex-row justify-between items-center gap-6">
-        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
-          © {new Date().getFullYear()} AUVRA. Designed for the Modern Individual.
-        </p>
+        <div className="flex flex-col gap-2">
+          <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest text-center md:text-left">
+            © {new Date().getFullYear()} AUVRA. Designed for the Modern Individual.
+          </p>
+          <p className="text-[9px] text-zinc-300 font-medium max-w-lg leading-relaxed text-center md:text-left italic">
+            Auvra is an independent curator of pre-owned items and is not affiliated, associated, or authorized by the brands it curates. All brand names and logos are property of their respective owners.
+          </p>
+        </div>
         <div className="flex gap-4 items-center opacity-40 grayscale">
             <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" className="h-4" />
             <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-3" />

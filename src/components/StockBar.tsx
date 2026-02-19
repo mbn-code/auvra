@@ -17,13 +17,13 @@ export default function StockBar() {
   return (
     <div className="space-y-2 py-4">
       <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-widest">
-        <span className="text-red-600 animate-pulse">Low Stock: Only {stock} units left</span>
-        <span className="text-zinc-400">Inventory: 24%</span>
+        <span className="text-zinc-900 animate-pulse">Archive Status: Single Unit Available</span>
+        <span className="text-zinc-400">Demand: High</span>
       </div>
-      <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+      <div className="h-1.5 w-full bg-zinc-50 rounded-full overflow-hidden">
         <div 
-          className="h-full bg-red-600 transition-all duration-1000 ease-out" 
-          style={{ width: `${percentage}%` }}
+          className="h-full bg-zinc-900 transition-all duration-1000 ease-out" 
+          style={{ width: `100%` }}
         />
       </div>
     </div>
