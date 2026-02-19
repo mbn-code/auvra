@@ -151,13 +151,14 @@ export function calculateConfidence(item: VintedItem, description: string = "") 
 
 function detectSubCategory(title: string): string {
   const t = title.toLowerCase();
-  if (t.includes('jacket') || t.includes('puffer') || t.includes('coat') || t.includes('vest') || t.includes('fleece') || t.includes('jakke')) return 'Jackets';
-  if (t.includes('pant') || t.includes('jeans') || t.includes('cargo') || t.includes('shorts') || t.includes('bukser')) return 'Pants';
-  if (t.includes('sock') || t.includes('strømper')) return 'Socks';
-  if (t.includes('beanie') || t.includes('hat') || t.includes('cap') || t.includes('hue')) return 'Headwear';
-  if (t.includes('hoodie') || t.includes('sweater') || t.includes('knit') || t.includes('sweatshirt')) return 'Sweaters';
-  if (t.includes('t-shirt') || t.includes('tee') || t.includes('top') || t.includes('shirt')) return 'Tops';
-  return 'Accessories';
+  if (t.includes('jacket') || t.includes('puffer') || t.includes('coat') || t.includes('vest') || t.includes('fleece') || t.includes('jakke') || t.includes('parka') || t.includes('bomber') || t.includes('windbreaker') || t.includes('kurtka')) return 'Jackets';
+  if (t.includes('pant') || t.includes('jeans') || t.includes('cargo') || t.includes('shorts') || t.includes('bukser') || t.includes('sweatpants') || t.includes('trouser') || t.includes('spodnie')) return 'Pants';
+  if (t.includes('sock') || t.includes('strømper') || t.includes('socks')) return 'Socks';
+  if (t.includes('beanie') || t.includes('hat') || t.includes('cap') || t.includes('hue') || t.includes('bucket') || t.includes('headwear') || t.includes('czapka')) return 'Headwear';
+  if (t.includes('hoodie') || t.includes('sweater') || t.includes('knit') || t.includes('sweatshirt') || t.includes('cardigan') || t.includes('pullover') || t.includes('bluza') || t.includes('trøje')) return 'Sweaters';
+  if (t.includes('t-shirt') || t.includes('tee') || t.includes('top') || t.includes('shirt') || t.includes('polo') || t.includes('skjorte') || t.includes('koszula')) return 'Tops';
+  if (t.includes('bag') || t.includes('backpack') || t.includes('wallet') || t.includes('belt') || t.includes('glasses') || t.includes('scarf') || t.includes('gloves') || t.includes('torebka')) return 'Accessories';
+  return 'Archive';
 }
 
 export async function scrapeBrand(brand: string, locale: string): Promise<VintedItem[]> {

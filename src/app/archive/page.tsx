@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { Zap, ChevronRight } from "lucide-react";
+import { Zap, ChevronRight, Search } from "lucide-react";
 
 export default function ArchivePage() {
   const [brands, setBrands] = useState<{ name: string; preview: string; count: number }[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,6 +41,10 @@ export default function ArchivePage() {
     setLoading(false);
   }
 
+  const filteredBrands = brands.filter(b => 
+    b.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-white">
       <section className="relative pt-40 pb-20 px-6 border-b border-zinc-50 overflow-hidden">
@@ -55,9 +60,19 @@ export default function ArchivePage() {
             <h1 className="text-6xl md:text-8xl font-black text-zinc-900 mb-8 tracking-tighter leading-[0.95]">
               Curated <br /> Archives.
             </h1>
-            <p className="text-lg md:text-xl text-zinc-500 font-medium leading-relaxed">
+            <p className="text-lg md:text-xl text-zinc-500 font-medium leading-relaxed mb-12">
               Browse by heritage and house. Each brand represents a unique pillar of our curated pulse archive.
             </p>
+            <div className="relative max-w-md">
+              <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-400" />
+              <input 
+                type="text" 
+                placeholder="Search High Houses..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-zinc-50 border border-zinc-100 pl-14 pr-6 py-5 rounded-full font-bold text-[12px] uppercase tracking-widest outline-none focus:border-black transition-all shadow-sm"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -67,13 +82,13 @@ export default function ArchivePage() {
           <div className="py-32 text-center text-zinc-400 font-bold uppercase tracking-[0.3em] text-[10px]">
             Syncing Archive Pulse...
           </div>
-        ) : brands.length === 0 ? (
+        ) : filteredBrands.length === 0 ? (
           <div className="py-32 text-center">
-             <p className="text-zinc-300 font-black text-2xl tracking-tighter mb-4 italic">"The archives are currently empty."</p>
+             <p className="text-zinc-300 font-black text-2xl tracking-tighter mb-4 italic">"No brands found matching your search."</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-8">
-            {brands.map((brand) => (
+            {filteredBrands.map((brand) => (
               <Link key={brand.name} href={`/archive/brand/${encodeURIComponent(brand.name)}`} className="group block">
                 <div className="aspect-[16/9] bg-zinc-50 rounded-[3rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 group-hover:shadow-2xl group-hover:shadow-zinc-100 relative">
                   <img src={brand.preview} className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-1000" alt={brand.name} />

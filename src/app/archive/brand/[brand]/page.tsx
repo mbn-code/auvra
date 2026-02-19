@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { use } from "react";
 import { supabase } from "@/lib/supabase";
-import { Zap, ArrowLeft, Filter } from "lucide-react";
+import { Zap, ArrowLeft, Filter, ChevronDown, SortAsc, SortDesc, Clock } from "lucide-react";
 
 export default function BrandArchivePage({ params }: { params: Promise<{ brand: string }> }) {
   const { brand: brandName } = use(params);
@@ -13,8 +13,12 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
   const [items, setItems] = useState<any[]>([]);
   const [filteredItems, setFilteredItems] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [conditions, setConditions] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [activeCondition, setActiveCondition] = useState<string>("All");
+  const [sortBy, setSortBy] = useState<string>("newest");
   const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchBrandItems();
@@ -26,28 +30,42 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
       .from('pulse_inventory')
       .select('*')
       .eq('brand', decodedBrand)
-      .eq('status', 'available')
-      .order('created_at', { ascending: false });
+      .eq('status', 'available');
 
     if (!error && data) {
       setItems(data);
-      setFilteredItems(data);
       
-      if (data.length > 15) {
-        const uniqueCategories = Array.from(new Set(data.map(item => item.category)));
-        setCategories(["All", ...uniqueCategories]);
-      }
+      const uniqueCategories = Array.from(new Set(data.map(item => item.category)));
+      setCategories(["All", ...uniqueCategories]);
+
+      const uniqueConditions = Array.from(new Set(data.map(item => item.condition).filter(Boolean)));
+      setConditions(["All", ...uniqueConditions]);
     }
     setLoading(false);
   }
 
   useEffect(() => {
-    if (activeCategory === "All") {
-      setFilteredItems(items);
-    } else {
-      setFilteredItems(items.filter(item => item.category === activeCategory));
+    let result = [...items];
+
+    if (activeCategory !== "All") {
+      result = result.filter(item => item.category === activeCategory);
     }
-  }, [activeCategory, items]);
+
+    if (activeCondition !== "All") {
+      result = result.filter(item => item.condition === activeCondition);
+    }
+
+    // Sorting
+    if (sortBy === "price-asc") {
+      result.sort((a, b) => a.listing_price - b.listing_price);
+    } else if (sortBy === "price-desc") {
+      result.sort((a, b) => b.listing_price - a.listing_price);
+    } else {
+      result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+
+    setFilteredItems(result);
+  }, [activeCategory, activeCondition, sortBy, items]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -70,33 +88,115 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
             </h1>
           </div>
           <div className="text-right">
-             <p className="text-2xl font-black tracking-tighter text-zinc-900">{items.length}</p>
+             <p className="text-2xl font-black tracking-tighter text-zinc-900">{filteredItems.length}</p>
              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Available Pieces</p>
           </div>
         </div>
       </section>
 
-      {/* Category Tabs if > 15 items */}
-      {categories.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 pt-12">
-          <div className="flex flex-wrap gap-4 items-center">
-            <Filter size={16} className="text-zinc-400 mr-2" />
-            {categories.map(cat => (
+      {/* Modern Filter & Sort Bar */}
+      <section className="sticky top-20 z-40 bg-white/80 backdrop-blur-md border-b border-zinc-50 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-6">
+          <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide flex-1">
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
+                showFilters ? "bg-black text-white border-black" : "bg-white text-zinc-900 border-zinc-200"
+              }`}
+            >
+              <Filter size={12} />
+              {showFilters ? "Close Filters" : "Filters"}
+            </button>
+
+            <div className="h-4 w-[1px] bg-zinc-200 mx-2" />
+
+            {/* Quick Category Access if not many */}
+            {categories.length <= 6 && categories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                  activeCategory === cat 
-                    ? "bg-black text-white shadow-xl shadow-zinc-200" 
-                    : "bg-zinc-50 text-zinc-400 hover:bg-zinc-100"
+                className={`whitespace-nowrap px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
+                  activeCategory === cat ? "text-zinc-900 border-b-2 border-black" : "text-zinc-400 hover:text-zinc-600"
                 }`}
               >
                 {cat}
               </button>
             ))}
           </div>
-        </section>
-      )}
+
+          <div className="flex items-center gap-4">
+            <div className="relative group">
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="appearance-none bg-zinc-50 border border-zinc-100 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest pr-10 cursor-pointer outline-none hover:border-zinc-300 transition-all"
+              >
+                <option value="newest">Newest Arrivals</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+              </select>
+              <ChevronDown size={12} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Expandable Filter Panel */}
+        <div className={`overflow-hidden transition-all duration-500 ease-in-out ${showFilters ? "max-h-[400px] py-8 opacity-100" : "max-h-0 py-0 opacity-0"}`}>
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
+            {/* Categories if more than 6 */}
+            {categories.length > 6 && (
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Category</h4>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all ${
+                        activeCategory === cat ? "bg-zinc-900 text-white" : "bg-zinc-50 text-zinc-500 hover:bg-zinc-100"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Condition</h4>
+              <div className="flex flex-wrap gap-2">
+                {conditions.map(cond => (
+                  <button
+                    key={cond}
+                    onClick={() => setActiveCondition(cond)}
+                    className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all ${
+                      activeCondition === cond ? "bg-zinc-900 text-white" : "bg-zinc-50 text-zinc-500 hover:bg-zinc-100"
+                    }`}
+                  >
+                    {cond}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Price Points</h4>
+              <div className="space-y-2">
+                <button onClick={() => setSortBy("price-asc")} className={`flex items-center gap-2 text-[11px] font-bold uppercase ${sortBy === "price-asc" ? "text-zinc-900" : "text-zinc-400"}`}>
+                  <SortAsc size={14} /> Value First
+                </button>
+                <button onClick={() => setSortBy("price-desc")} className={`flex items-center gap-2 text-[11px] font-bold uppercase ${sortBy === "price-desc" ? "text-zinc-900" : "text-zinc-400"}`}>
+                  <SortDesc size={14} /> Premium First
+                </button>
+                <button onClick={() => setSortBy("newest")} className={`flex items-center gap-2 text-[11px] font-bold uppercase ${sortBy === "newest" ? "text-zinc-900" : "text-zinc-400"}`}>
+                  <Clock size={14} /> Recent Drops
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="max-w-7xl mx-auto px-6 py-24">
         {loading ? (
