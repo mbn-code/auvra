@@ -33,22 +33,40 @@ export interface VintedItem {
 const luxuryBrands = ["Louis Vuitton", "Hermès", "Chanel", "Chrome Hearts", "Prada"];
 const highRiskFakes = ["Essentials", "Corteiz", "Hellstar", "Sp5der"];
 const autoApproveBrands = ["Corteiz", "Stüssy", "Essentials", "Ralph Lauren", "Carhartt", "ASICS", "Lacoste", "Supreme", "The North Face", "Arc'teryx"];
-const highMarginSources = ["Louis Vuitton", "Chanel", "Hermès", "Chrome Hearts", "Moncler", "Stone Island", "Arc'teryx"];
 
-export async function scrapeGrailed(brand: string): Promise<VintedItem[]> {
-  // Placeholder for Grailed integration - usually requires more specific selectors
-  console.log(`[Pulse] Grailed search initiated for ${brand}...`);
-  return [];
-}
+// Translation Mapping for common terms
+const TRANSLATIONS: Record<string, string> = {
+  // Common terms (merged)
+  "jakke": "Jacket", "jacka": "Jacket", "jacke": "Jacket", "kurtka": "Jacket",
+  "bukser": "Pants", "byxor": "Pants", "hose": "Pants", "spodnie": "Pants",
+  "skjorte": "Shirt", "skjorta": "Shirt", "hemd": "Shirt", "koszula": "Shirt", "koszulowa": "Shirt",
+  "hue": "Beanie", "mössa": "Beanie", "mütze": "Beanie", "czapka": "Beanie",
+  "strik": "Knit", "stickad": "Knit", "strick": "Knit", "dzianina": "Knit",
+  "trøje": "Sweater", "tröja": "Sweater", "pullover": "Sweater", "sweter": "Sweater",
+  "frakke": "Coat", "kappa": "Coat", "mantel": "Coat", "płaszcz": "Coat",
+  "vest": "Vest", "väst": "Vest", "kamizelka": "Vest",
+  "hættetrøje": "Hoodie", "huvtröja": "Hoodie", "kapuzenpullover": "Hoodie", "bluza": "Hoodie",
+  "taske": "Bag", "väska": "Bag", "tasche": "Bag", "torebka": "Bag",
+  "sko": "Shoes", "skor": "Shoes", "schuhe": "Shoes", "buty": "Shoes",
+  "støvler": "Boots", "stiefel": "Boots",
+  "bomuld": "Cotton", "baumwolle": "Cotton", "bawełna": "Cotton", "bomull": "Cotton",
+  "sort": "Black", "schwarz": "Black", "czarny": "Black", "svart": "Black",
+  "hvid": "White", "weiss": "White", "weiß": "White", "biały": "White", "vit": "White",
+  "blå": "Blue", "blau": "Blue", "niebieski": "Blue",
+  "rød": "Red", "rot": "Red", "czerwony": "Red", "röd": "Red",
+  "grøn": "Green", "grün": "Green", "zielony": "Green", "grön": "Green",
+  "gul": "Yellow", "gelb": "Yellow", "żółty": "Yellow",
+  
+  // Conditions
+  "meget god": "Very Good", "sehr gut": "Very Good", "bardzo dobry": "Very Good", "mycket bra": "Very Good",
+  "ny uden prislapp": "New without tags", "neu ohne etikett": "New without tags", "nowy bez metki": "New without tags",
+  "god": "Good", "gut": "Good", "dobry": "Good", "bra": "Good",
+  "ny med prislapp": "New with tags", "neu mit etikett": "New with tags", "nowy z metką": "New with tags",
+  "tilfredsstillende": "Satisfactory", "zufriedenstellend": "Satisfactory", "satysfakcjonujący": "Satisfactory", "okej": "Satisfactory"
+};
 
-// Conversion rates to EUR (Base currency for the store)
 const CONVERSION_RATES: Record<string, number> = {
-  "dk": 0.13, // DKK to EUR
-  "pl": 0.23, // PLN to EUR
-  "de": 1.0,  // EUR to EUR
-  "fi": 1.0,  // EUR to EUR
-  "se": 0.088, // SEK to EUR
-  "fr": 1.0,  // EUR to EUR
+  "dk": 0.13, "pl": 0.23, "de": 1.0, "fi": 1.0, "se": 0.088, "fr": 1.0,
 };
 
 function parseVintedPrice(priceText: string): number {
@@ -70,18 +88,33 @@ function parseVintedPrice(priceText: string): number {
   return parseFloat(clean) || 0;
 }
 
+function translateTerm(text: string): string {
+  if (!text) return text;
+  const lower = text.toLowerCase().trim();
+  if (TRANSLATIONS[lower]) return TRANSLATIONS[lower];
+  
+  const words = lower.split(' ');
+  const translatedWords = words.map(w => TRANSLATIONS[w] || w);
+  const fullTranslated = translatedWords.join(' ');
+  
+  return fullTranslated.charAt(0).toUpperCase() + fullTranslated.slice(1).toLowerCase();
+}
+
 function sanitizeTitle(rawTitle: string): string {
   let clean = rawTitle.split(',')[0].split(' – ')[0].split(' - ')[0].split(' | ')[0];
-  return clean
+  
+  clean = clean
     .replace(/vinted/gi, '')
     .replace(/sold/gi, '')
     .replace(/buying/gi, '')
     .replace(/\[.*?\]/g, '') 
     .replace(/\(.*?\)/g, '') 
     .replace(/\s+/g, ' ')
-    .trim()
+    .trim();
+
+  return clean
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map(word => translateTerm(word))
     .join(' ');
 }
 
@@ -157,7 +190,8 @@ export async function scrapeBrand(brand: string, locale: string): Promise<Vinted
       ...item,
       source_price: parseVintedPrice(item.source_price_raw),
       locale: locale,
-      title: sanitizeTitle(item.title)
+      title: sanitizeTitle(item.title),
+      condition: translateTerm(item.condition)
     })).filter(item => item.source_price > 0);
   } catch (err) {
     return [];
@@ -195,10 +229,15 @@ export async function saveToSupabase(items: VintedItem[]) {
       seller_rating: 5.0,
       seller_reviews_count: 50,
       locale: item.locale,
-      shipping_zone: 'EU_ONLY', // Default for Vinted sources
+      shipping_zone: 'EU_ONLY',
       status: status,
       currency: 'EUR',
       is_auto_approved: status === 'available'
     }, { onConflict: 'vinted_id' });
   }
+}
+
+const brandToScrape = process.argv[2];
+if (brandToScrape) {
+  scrapeBrand(brandToScrape, "dk").then(saveToSupabase);
 }

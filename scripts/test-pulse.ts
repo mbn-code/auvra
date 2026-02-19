@@ -13,7 +13,7 @@ const supabase = createClient(
 async function testPulse() {
   console.log("🚀 Initializing Auvra Pulse Test...");
   const brand = "Carhartt";
-  const locale = "dk";
+  const locale = "pl";
 
   console.log(`🔍 Searching for ${brand} on Vinted.${locale}...`);
 
@@ -39,6 +39,7 @@ async function testPulse() {
           potential_profit: profit,
           images: [item.image],
           category: 'Clothing',
+          condition: item.condition,
           confidence_score: calculateConfidence(item),
           status: 'available', 
           locale: locale
