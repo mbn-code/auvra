@@ -16,17 +16,20 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* 1. ARCHIVE CAROUSEL HERO (Clothing First) */}
+      {/* 1. ARCHIVE CAROUSEL HERO */}
       <section className="relative pt-24 pb-12 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="absolute top-0 right-0 w-1/3 h-full z-0 opacity-[0.05] pointer-events-none">
+           <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover" alt="" />
+        </div>
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="flex justify-between items-end mb-12">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-4 flex items-center gap-2">
                 <Zap size={12} className="fill-zinc-900 text-zinc-900" />
                 Live Archive Pulse
               </p>
-              <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-zinc-900">
-                Fresh Archive Drops.
+              <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-zinc-900 leading-[0.9]">
+                Recent <br />Secured Drops.
               </h1>
             </div>
             <Link href="/archive" className="hidden md:flex items-center gap-2 text-xs font-black uppercase tracking-widest border-b-2 border-black pb-1">
@@ -72,19 +75,73 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 2. THE PHILOSOPHY */}
-      <section className="py-24 bg-zinc-900 text-white rounded-[5rem] mx-6">
-        <div className="max-w-4xl mx-auto px-6 text-center">
+      {/* 2. ATMOSPHERIC GRID (Mood Board - Commercial Safe) */}
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[600px]">
+           <div className="md:col-span-4 rounded-[3rem] overflow-hidden relative group border border-zinc-100">
+              <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" alt="" />
+              <div className="absolute inset-0 bg-black/20" />
+              <div className="absolute bottom-8 left-8 text-white">
+                 <p className="text-[9px] font-black uppercase tracking-[0.3em]">Curation 01</p>
+                 <h4 className="text-xl font-black tracking-tight uppercase">High House Heritage.</h4>
+              </div>
+           </div>
+           <div className="md:col-span-8 grid grid-cols-2 gap-6">
+              <div className="rounded-[3rem] overflow-hidden relative group border border-zinc-100">
+                 <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" alt="" />
+                 <div className="absolute inset-0 bg-black/40" />
+                 <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-white text-[10px] font-black uppercase tracking-[0.5em] opacity-0 group-hover:opacity-100 transition-opacity">Archive Pulse</p>
+                 </div>
+              </div>
+              <div className="rounded-[3rem] overflow-hidden relative group border border-zinc-100">
+                 <img src="https://images.unsplash.com/photo-1511405946472-a37e3b5ccd47?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" alt="" />
+                 <div className="absolute inset-0 bg-black/30" />
+              </div>
+           </div>
+        </div>
+      </section>
+
+      {/* 3. THE PHILOSOPHY (Atmospheric) */}
+      <section className="relative py-40 mx-6 overflow-hidden rounded-[5rem]">
+        <div className="absolute inset-0 z-0">
+           <img src="https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&q=80&w=2000" className="w-full h-full object-cover brightness-[0.3]" alt="" />
+        </div>
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10 text-white">
            <Sparkles size={32} className="mx-auto text-yellow-400 mb-8" />
            <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-8 leading-tight">We curate what <br /> the world forgets.</h2>
-           <p className="text-zinc-400 text-lg md:text-xl font-medium leading-relaxed mb-12">
+           <p className="text-zinc-300 text-lg md:text-xl font-medium leading-relaxed mb-12 max-w-2xl mx-auto">
              Auvra is a live-sync archive of unique objects and clothing. Our algorithm scans global marketplaces every hour to secure pieces that define modern culture.
            </p>
-           <div className="flex justify-center gap-12 opacity-30">
+           <div className="flex justify-center gap-12 opacity-50">
               <span className="text-[10px] font-black uppercase tracking-[0.4em]">24/7 Monitoring</span>
               <span className="text-[10px] font-black uppercase tracking-[0.4em]">Verified Authenticity</span>
            </div>
         </div>
+      </section>
+
+      {/* 4. SECOND ATMOSPHERIC SECTION */}
+      <section className="max-w-7xl mx-auto px-6 py-32">
+         <div className="flex flex-col md:flex-row items-center gap-20">
+            <div className="flex-1 space-y-8">
+               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">The Methodology</p>
+               <h2 className="text-5xl font-black tracking-tighter text-zinc-900 leading-[0.95]">Scanned. <br />Verified. <br />Secured.</h2>
+               <p className="text-zinc-500 font-medium text-lg max-w-sm">Every piece in the Auvra archive undergoes a multi-layer verification process before entering the pulse.</p>
+               <Link href="/archive" className="inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] border-b-2 border-black pb-1 hover:opacity-50 transition-opacity">
+                  Enter Archives <ArrowRight size={14} />
+               </Link>
+            </div>
+            <div className="flex-1 w-full">
+               <div className="aspect-square rounded-[4rem] overflow-hidden bg-zinc-50 relative border border-zinc-100 shadow-2xl shadow-zinc-100">
+                  <img src="https://images.unsplash.com/photo-1534452286302-53557a201552?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover transition-transform duration-[3000ms] hover:scale-110" alt="" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute bottom-12 left-12">
+                     <p className="text-white text-[10px] font-black uppercase tracking-[0.4em] mb-2 opacity-70">Current Location</p>
+                     <p className="text-white text-2xl font-black tracking-tighter uppercase">Regional Archive EU</p>
+                  </div>
+               </div>
+            </div>
+         </div>
       </section>
 
     </div>

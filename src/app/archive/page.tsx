@@ -42,8 +42,11 @@ export default function ArchivePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <section className="pt-40 pb-20 px-6 border-b border-zinc-50">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end gap-12">
+      <section className="relative pt-40 pb-20 px-6 border-b border-zinc-50 overflow-hidden">
+        <div className="absolute top-0 right-0 w-1/2 h-full z-0 opacity-[0.05] pointer-events-none rotate-12 scale-150">
+           <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover" alt="" />
+        </div>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end gap-12 relative z-10">
           <div className="max-w-2xl">
             <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-6 flex items-center gap-3">
               <Zap size={14} className="text-zinc-900" />
