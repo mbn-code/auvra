@@ -24,7 +24,12 @@ export async function sendOrderEmail(to: string, orderDetails: {
       <p style="font-size: 14px; line-height: 1.6; color: #555;">
         Every piece undergoes a multi-layer integrity check. You will receive a second notification containing your unique logistics tracking ID once the item is secured and verified at our regional node (24-48 hours).
       </p>
-      <p style="margin-top: 40px; font-size: 12px; color: #888;">&copy; ${new Date().getFullYear()} AUVRA. High-Fidelity Archive Sourcing.</p>
+      <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+        <p style="font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3em; color: #aaa;">Digital Certificate of Curation</p>
+        <p style="font-size: 11px; font-weight: 700; color: #333; margin-top: 10px;">AUVRA-PULSE-ID: ${Math.random().toString(36).toUpperCase().substring(2, 12)}</p>
+        <p style="font-size: 9px; color: #ccc; margin-top: 5px;">This document verifies that the item has been scanned, filtered, and secured via the Auvra Neural Network.</p>
+      </div>
+      <p style="margin-top: 40px; font-size: 12px; color: #888; text-align: center;">&copy; ${new Date().getFullYear()} AUVRA. High-Fidelity Archive Sourcing.</p>
     </div>
   `;
 

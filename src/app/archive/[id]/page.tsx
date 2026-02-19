@@ -5,7 +5,7 @@ import Accordion from "@/components/Accordion";
 import LiveActivity from "@/components/LiveActivity";
 import StickyBuy from "@/components/StickyBuy";
 import TrustPulse from "@/components/TrustPulse";
-import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle } from "lucide-react";
+import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle, Clock } from "lucide-react";
 
 interface ArchiveProductPageProps {
   params: Promise<{ id: string }>;
@@ -127,6 +127,10 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                    <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
                       <Truck size={14} strokeWidth={2} />
                       <span>Estimated Arrival: <span className="text-zinc-900">{deliveryString}</span></span>
+                   </div>
+                   <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
+                      <Clock size={14} strokeWidth={2} />
+                      <span>Last Archive Sync: <span className="text-zinc-900">{new Date(item.last_pulse_check || item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></span>
                    </div>
                    <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
                       <Globe size={14} strokeWidth={2} />

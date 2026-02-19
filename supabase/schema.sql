@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS pulse_inventory (
     is_auto_approved BOOLEAN DEFAULT FALSE,
     locale TEXT,
     shipping_zone TEXT DEFAULT 'EU_ONLY', -- EU_ONLY, GLOBAL, SCANDINAVIA_ONLY
+    last_pulse_check TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     last_seen_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

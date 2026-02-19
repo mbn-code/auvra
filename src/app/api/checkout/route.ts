@@ -17,33 +17,45 @@ export async function POST(req: NextRequest) {
     let shippingZone = "GLOBAL";
 
     if (!product) {
-      const { data, error } = await supabase
+      const { data: item, error } = await supabase
         .from('pulse_inventory')
         .select('*')
         .eq('id', productId)
         .eq('status', 'available')
         .single();
       
-      if (data && !error) {
-        // REAL-TIME PULSE CHECK (Simulated for speed, but logic is ready)
-        // In production, we can call a function that quickly checks the Vinted URL
-        
+      if (item && !error) {
+        // Pulse-Check: Verify item is still live
+        try {
+          const response = await fetch(item.source_url, {
+            headers: { 'User-Agent': 'Mozilla/5.0' },
+            next: { revalidate: 0 }
+          });
+          const html = await response.text();
+          if (html.toLowerCase().includes('sold') || html.toLowerCase().includes('solgt')) {
+             await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', productId);
+             return NextResponse.json({ error: "Archive Node Failure: This piece has just been secured by another party." }, { status: 410 });
+          }
+        } catch (e) {
+          console.error("Pulse-Check Error:", e);
+        }
+
         product = {
-          name: data.title,
-          price: data.listing_price * 100,
-          currency: data.currency.toLowerCase(),
-          images: data.images,
-          description: data.description || `Archive piece: ${data.brand}`,
+          name: item.title,
+          price: item.listing_price * 100,
+          currency: item.currency.toLowerCase(),
+          images: item.images,
+          description: item.description || `Archive piece: ${item.brand}`,
         };
         isArchive = true;
-        shippingZone = data.shipping_zone || "EU_ONLY";
+        shippingZone = item.shipping_zone || "EU_ONLY";
       }
     } else {
       shippingZone = product.shippingZone || "GLOBAL";
     }
 
     if (!product) {
-      return NextResponse.json({ error: "Product no longer available" }, { status: 404 });
+      return NextResponse.json({ error: "Archive Piece no longer available" }, { status: 404 });
     }
 
     const qty = Number(quantity) || 1;

@@ -238,12 +238,26 @@ export async function saveToSupabase(items: VintedItem[]) {
       shipping_zone: 'EU_ONLY',
       status: status,
       currency: 'EUR',
-      is_auto_approved: status === 'available'
+      is_auto_approved: status === 'available',
+      last_pulse_check: new Date().toISOString()
     }, { onConflict: 'vinted_id' });
   }
 }
 
-const brandToScrape = process.argv[2];
-if (brandToScrape) {
-  scrapeBrand(brandToScrape, "dk").then(saveToSupabase);
+export async function checkVintedLive(url: string): Promise<boolean> {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  try {
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 15000 });
+    const isSold = await page.evaluate(() => {
+      const text = document.body.innerText.toLowerCase();
+      return text.includes('sold') || text.includes('solgt') || text.includes('verkauft') || text.includes('sprzedane');
+    });
+    return !isSold;
+  } catch (err) {
+    return false;
+  } finally {
+    await browser.close();
+  }
 }

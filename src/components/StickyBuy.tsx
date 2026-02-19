@@ -10,24 +10,32 @@ interface StickyBuyProps {
 }
 
 export default function StickyBuy({ productId, price, quantity }: StickyBuyProps) {
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<"idle" | "securing" | "redirecting">("idle");
 
   const handleCheckout = async () => {
-    setLoading(true);
+    setStatus("securing");
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId, quantity }),
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || "Acquisition failed. The archive piece may have just been secured by another node.");
+        setStatus("idle");
+        return;
+      }
+
+      setStatus("redirecting");
       const data = await response.json();
       if (data.url) {
         window.location.href = data.url;
       }
     } catch (error) {
       console.error("Checkout failed:", error);
-    } finally {
-      setLoading(false);
+      setStatus("idle");
     }
   };
 
@@ -36,15 +44,23 @@ export default function StickyBuy({ productId, price, quantity }: StickyBuyProps
       <div className="max-w-md mx-auto space-y-4">
         <div className="flex items-center justify-center gap-3 text-[10px] font-bold text-zinc-900 uppercase tracking-[0.2em] mb-2 md:hidden">
           <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-          In stock & ready to ship
+          Archive Node Online
         </div>
         <button
           onClick={handleCheckout}
-          disabled={loading}
+          disabled={status !== "idle"}
           className="w-full bg-black text-white py-6 rounded-full font-black text-[13px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:opacity-80 transition-all active:scale-95 disabled:opacity-70 shadow-[0_20px_50px_rgba(0,0,0,0.1)] group"
         >
-          {loading ? (
-            <Loader2 className="animate-spin" />
+          {status === "securing" ? (
+            <>
+              <Loader2 className="animate-spin" size={16} />
+              Securing Archive Piece...
+            </>
+          ) : status === "redirecting" ? (
+            <>
+              <Loader2 className="animate-spin" size={16} />
+              Initiating Transfer...
+            </>
           ) : (
             <>
               Confirm Order <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
