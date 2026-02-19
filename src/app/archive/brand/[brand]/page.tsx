@@ -114,14 +114,14 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                 <div className="aspect-[4/5] bg-zinc-50 rounded-[2.5rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 group-hover:shadow-2xl group-hover:shadow-zinc-100 relative">
                   <img src={item.images[0]} className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-1000" alt={item.title} />
                 </div>
-                <div className="px-2 flex justify-between items-start">
+                <div className="px-2 flex justify-between items-center">
                   <div>
                     <h3 className="text-lg font-black text-zinc-900 tracking-tighter leading-tight mb-1 group-hover:underline decoration-1 underline-offset-4">
                       {item.title}
                     </h3>
                     <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{item.condition}</p>
                   </div>
-                  <div className="text-lg font-bold text-zinc-900">
+                  <div className="bg-zinc-900 text-white px-3 py-1.5 rounded-full text-base font-black shadow-md shrink-0">
                     €{Math.round(item.listing_price)}
                   </div>
                 </div>

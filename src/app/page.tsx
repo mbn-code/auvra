@@ -60,9 +60,11 @@ export default async function Home() {
                       </div>
                     )}
                   </div>
-                  <div className="flex justify-between items-start px-2">
+                  <div className="flex justify-between items-center px-2">
                     <h3 className="text-xl font-black text-zinc-900 tracking-tighter leading-tight">{item.title}</h3>
-                    <p className="text-lg font-bold">€{Math.round(item.listing_price)}</p>
+                    <div className="bg-zinc-900 text-white px-4 py-2 rounded-full text-lg font-black shadow-lg">
+                      €{Math.round(item.listing_price)}
+                    </div>
                   </div>
                 </Link>
               ))
@@ -120,24 +122,24 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 4. SECOND ATMOSPHERIC SECTION */}
+      {/* 4. THE PULSE LOGIC (Replacing physical storage with digital sync) */}
       <section className="max-w-7xl mx-auto px-6 py-32">
          <div className="flex flex-col md:flex-row items-center gap-20">
             <div className="flex-1 space-y-8">
-               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">The Methodology</p>
-               <h2 className="text-5xl font-black tracking-tighter text-zinc-900 leading-[0.95]">Scanned. <br />Verified. <br />Secured.</h2>
-               <p className="text-zinc-500 font-medium text-lg max-w-sm">Every piece in the Auvra archive undergoes a multi-layer verification process before entering the pulse.</p>
+               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">The Curation Engine</p>
+               <h2 className="text-5xl font-black tracking-tighter text-zinc-900 leading-[0.95]">Scanned. <br />Filtered. <br />Synced.</h2>
+               <p className="text-zinc-500 font-medium text-lg max-w-sm">Auvra's neural engine filters thousands of entries across global archives daily, isolating only the highest integrity pieces for the Pulse.</p>
                <Link href="/archive" className="inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] border-b-2 border-black pb-1 hover:opacity-50 transition-opacity">
                   Enter Archives <ArrowRight size={14} />
                </Link>
             </div>
             <div className="flex-1 w-full">
                <div className="aspect-square rounded-[4rem] overflow-hidden bg-zinc-50 relative border border-zinc-100 shadow-2xl shadow-zinc-100">
-                  <img src="https://images.unsplash.com/photo-1534452286302-53557a201552?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover transition-transform duration-[3000ms] hover:scale-110" alt="" />
+                  <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover transition-transform duration-[3000ms] hover:scale-110" alt="" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-12 left-12">
-                     <p className="text-white text-[10px] font-black uppercase tracking-[0.4em] mb-2 opacity-70">Current Location</p>
-                     <p className="text-white text-2xl font-black tracking-tighter uppercase">Regional Archive EU</p>
+                     <p className="text-white text-[10px] font-black uppercase tracking-[0.4em] mb-2 opacity-70">Active Network</p>
+                     <p className="text-white text-2xl font-black tracking-tighter uppercase">Global Sync Node 01</p>
                   </div>
                </div>
             </div>

@@ -92,7 +92,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                 </h1>
                 
                 <div className="flex items-center gap-6">
-                   <p className="text-4xl font-black text-zinc-900">
+                   <p className="text-5xl font-black text-zinc-900 tracking-tighter">
                      {formattedPrice}
                    </p>
                    <div className="bg-zinc-50 px-4 py-2 rounded-full border border-zinc-100 flex items-center gap-3">
