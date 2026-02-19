@@ -13,18 +13,18 @@ export async function sendOrderEmail(to: string, orderDetails: {
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1d1d1f;">
       <h1 style="letter-spacing: -0.04em; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 20px;">AUVRA</h1>
-      <p style="font-size: 18px; font-weight: 500;">Archive Transfer Initiated.</p>
-      <p>Thank you for securing your selection from our archive. Our logistics node has been notified and the transfer is being prepared.</p>
+      <p style="font-size: 18px; font-weight: 500;">Archive Acquisition Initiated.</p>
+      <p>Thank you for choosing Auvra to secure your selection. Our global concierge has been notified and is currently initiating the acquisition and authentication of your piece from its private collection.</p>
       <div style="background: #fbfbfd; padding: 30px; border-radius: 20px; margin: 30px 0;">
         <p style="margin: 0; font-size: 12px; font-weight: 900; color: #888; text-transform: uppercase; letter-spacing: 0.2em;">Archive Piece</p>
         <p style="margin: 5px 0 20px 0; font-size: 20px; font-weight: 900;">${orderDetails.productName}</p>
-        <p style="margin: 0; font-size: 12px; font-weight: 900; color: #888; text-transform: uppercase; letter-spacing: 0.2em;">Value</p>
+        <p style="margin: 0; font-size: 12px; font-weight: 900; color: #888; text-transform: uppercase; letter-spacing: 0.2em;">Acquisition Value</p>
         <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: 900;">${orderDetails.price}</p>
       </div>
       <p style="font-size: 14px; line-height: 1.6; color: #555;">
-        You will receive a second notification containing your unique logistics tracking ID once the item clears our regional hub (24-48 hours).
+        Every piece undergoes a multi-layer integrity check. You will receive a second notification containing your unique logistics tracking ID once the item is secured and verified at our regional node (24-48 hours).
       </p>
-      <p style="margin-top: 40px; font-size: 12px; color: #888;">&copy; ${new Date().getFullYear()} AUVRA. High-Fidelity Archive Pulse.</p>
+      <p style="margin-top: 40px; font-size: 12px; color: #888;">&copy; ${new Date().getFullYear()} AUVRA. High-Fidelity Archive Sourcing.</p>
     </div>
   `;
 

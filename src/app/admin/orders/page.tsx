@@ -59,6 +59,23 @@ export default function AdminOrdersPage() {
     }
   }
 
+  async function handleRefund(orderId: string) {
+    if (!confirm("Are you sure you want to issue a full refund for this order? This cannot be undone.")) return;
+
+    const res = await fetch("/api/admin/refund", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId }),
+    });
+
+    if (res.ok) {
+      setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'refunded' } : o));
+    } else {
+      const data = await res.json();
+      alert("Refund failed: " + data.error);
+    }
+  }
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
   };
@@ -167,6 +184,25 @@ export default function AdminOrdersPage() {
                         <p className="text-[10px] font-bold opacity-70">ID: {order.tracking_number}</p>
                      </div>
                   </div>
+                )}
+
+                {order.status === 'refunded' && (
+                  <div className="bg-red-50 text-red-700 p-6 rounded-[2rem] border border-red-100 flex items-center gap-4">
+                     <AlertCircle size={24} />
+                     <div>
+                        <p className="text-sm font-black uppercase tracking-tight">Refunded</p>
+                        <p className="text-[10px] font-bold opacity-70">Transaction Reversed</p>
+                     </div>
+                  </div>
+                )}
+
+                {order.status !== 'refunded' && (
+                  <button 
+                    onClick={() => handleRefund(order.id)}
+                    className="w-full bg-zinc-100 text-zinc-400 py-3 rounded-2xl font-bold text-[9px] uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all mt-4"
+                  >
+                    Issue Full Refund
+                  </button>
                 )}
               </div>
 

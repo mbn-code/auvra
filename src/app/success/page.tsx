@@ -56,11 +56,11 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
             <Zap className="absolute -top-2 -right-2 text-yellow-400 fill-yellow-400" size={24} />
           </div>
         </div>
-        <h1 className="text-4xl font-black mb-4 tracking-tighter uppercase">Transfer Initiated.</h1>
+        <h1 className="text-4xl font-black mb-4 tracking-tighter uppercase">Acquisition Initiated.</h1>
         <p className="text-zinc-500 mb-8 leading-relaxed font-medium px-6 text-sm">
           {type === 'archive' 
-            ? "Your unique archive piece has been secured. Our algorithm is currently initiating the logistics transfer from the regional archive. You will receive tracking details within 24-48 hours."
-            : "Thank you for securing your Auvra utility. Your order is being processed for immediate dispatch from our central logistics hub."
+            ? "Your request to secure this unique archive piece has been received. Our concierge is currently initiating the acquisition and authentication process from its global location. You will receive tracking details once the transfer is finalized (24-48 hours)."
+            : "Thank you for securing your Auvra utility. Your request is being processed for immediate acquisition and dispatch from our partner network."
           }
         </p>
         <Link

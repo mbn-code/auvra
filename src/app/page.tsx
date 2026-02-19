@@ -111,13 +111,13 @@ export default async function Home() {
         </div>
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10 text-white">
            <Sparkles size={32} className="mx-auto text-yellow-400 mb-8" />
-           <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-8 leading-tight">We curate what <br /> the world forgets.</h2>
+           <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-8 leading-tight">Archive Sourcing <br /> Reimagined.</h2>
            <p className="text-zinc-300 text-lg md:text-xl font-medium leading-relaxed mb-12 max-w-2xl mx-auto">
-             Auvra is a live-sync archive of unique objects and clothing. Our algorithm scans global marketplaces every hour to secure pieces that define modern culture.
+             Auvra is a premium sourcing concierge. Our neural engine monitors global private collections in real-time, securing 1-of-1 archive pieces for our clients. We don't just sell clothing; we manage the discovery and acquisition of modern artifacts.
            </p>
            <div className="flex justify-center gap-12 opacity-50">
-              <span className="text-[10px] font-black uppercase tracking-[0.4em]">24/7 Monitoring</span>
-              <span className="text-[10px] font-black uppercase tracking-[0.4em]">Verified Authenticity</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em]">Global Concierge</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em]">Neural Search Network</span>
            </div>
         </div>
       </section>
@@ -126,11 +126,11 @@ export default async function Home() {
       <section className="max-w-7xl mx-auto px-6 py-32">
          <div className="flex flex-col md:flex-row items-center gap-20">
             <div className="flex-1 space-y-8">
-               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">The Curation Engine</p>
-               <h2 className="text-5xl font-black tracking-tighter text-zinc-900 leading-[0.95]">Scanned. <br />Filtered. <br />Synced.</h2>
-               <p className="text-zinc-500 font-medium text-lg max-w-sm">Auvra's neural engine filters thousands of entries across global archives daily, isolating only the highest integrity pieces for the Pulse.</p>
+               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">The Acquisition Engine</p>
+               <h2 className="text-5xl font-black tracking-tighter text-zinc-900 leading-[0.95]">Discover. <br />Authenticate. <br />Acquire.</h2>
+               <p className="text-zinc-500 font-medium text-lg max-w-sm">When you secure a piece, our concierge network immediately initiates the acquisition and verification process from its current global location.</p>
                <Link href="/archive" className="inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] border-b-2 border-black pb-1 hover:opacity-50 transition-opacity">
-                  Enter Archives <ArrowRight size={14} />
+                  View Private Archives <ArrowRight size={14} />
                </Link>
             </div>
             <div className="flex-1 w-full">
