@@ -33,6 +33,13 @@ export interface VintedItem {
 const luxuryBrands = ["Louis Vuitton", "Hermès", "Chanel", "Chrome Hearts", "Prada"];
 const highRiskFakes = ["Essentials", "Corteiz", "Hellstar", "Sp5der"];
 const autoApproveBrands = ["Corteiz", "Stüssy", "Essentials", "Ralph Lauren", "Carhartt", "ASICS", "Lacoste", "Supreme", "The North Face", "Arc'teryx"];
+const highMarginSources = ["Louis Vuitton", "Chanel", "Hermès", "Chrome Hearts", "Moncler", "Stone Island", "Arc'teryx"];
+
+export async function scrapeGrailed(brand: string): Promise<VintedItem[]> {
+  // Placeholder for Grailed integration - usually requires more specific selectors
+  console.log(`[Pulse] Grailed search initiated for ${brand}...`);
+  return [];
+}
 
 // Conversion rates to EUR (Base currency for the store)
 const CONVERSION_RATES: Record<string, number> = {
@@ -46,7 +53,6 @@ const CONVERSION_RATES: Record<string, number> = {
 
 function parseVintedPrice(priceText: string): number {
   if (!priceText) return 0;
-  // Handle space/dot as thousands, comma as decimal
   let clean = priceText.replace(/\s/g, '').replace(/[^\d,.]/g, '');
   if (clean.includes(',') && clean.includes('.')) {
     const lastComma = clean.lastIndexOf(',');
@@ -127,19 +133,14 @@ export async function scrapeBrand(brand: string, locale: string): Promise<Vinted
     const items = await page.evaluate((brandName) => {
       const cards = Array.from(document.querySelectorAll('.feed-grid__item'));
       return cards.map(card => {
-        // Robust finding logic
         const linkEl = card.querySelector('a[href*="/items/"]');
         const priceEl = card.querySelector('h3, .web_ui__ItemBox__title, [data-testid$="price"]');
         const imgEl = card.querySelector('img');
         const subtitleEl = card.querySelector('.web_ui__ItemBox__subtitle');
-
         const href = linkEl?.getAttribute('href') || '';
         const vintedId = href.split('/')?.pop()?.split('-')?.[0] || '';
-        
-        // Vinted often stores the title in the alt attribute of the image or the title of the link
         const title = linkEl?.getAttribute('title') || imgEl?.getAttribute('alt') || '';
         const priceText = card.textContent?.match(/([0-9\s,.]+)\s?(?:kr|€|zł)/)?.[0] || '';
-
         return {
           vinted_id: vintedId,
           title: title,
@@ -194,6 +195,7 @@ export async function saveToSupabase(items: VintedItem[]) {
       seller_rating: 5.0,
       seller_reviews_count: 50,
       locale: item.locale,
+      shipping_zone: 'EU_ONLY', // Default for Vinted sources
       status: status,
       currency: 'EUR',
       is_auto_approved: status === 'available'

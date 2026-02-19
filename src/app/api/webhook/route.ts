@@ -25,19 +25,16 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
     
-    // Retrieve metadata we set in the checkout route
     const { productId, type } = session.metadata || {};
     const customerEmail = session.customer_details?.email;
     const customerName = session.customer_details?.name;
-    const customerAddress = JSON.stringify(session.customer_details?.address);
 
     if (customerEmail && productId) {
       let productName = "Archive Piece";
-      let price = `$${(session.amount_total / 100).toFixed(2)}`;
+      let price = `€${(session.amount_total / 100).toFixed(2)}`;
       let vintedUrl = "";
       let profit = 0;
 
-      // Fetch product info from Supabase or Static Config
       if (type === 'archive') {
         const { data: item } = await supabase
           .from('pulse_inventory')
@@ -50,36 +47,43 @@ export async function POST(req: NextRequest) {
           vintedUrl = item.source_url;
           profit = item.potential_profit;
           
-          // Mark as sold in Supabase
-          await supabase
-            .from('pulse_inventory')
-            .update({ status: 'sold' })
-            .eq('id', productId);
+          await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', productId);
         }
       } else {
         const staticProduct = products[productId];
         if (staticProduct) {
           productName = staticProduct.name;
           vintedUrl = staticProduct.sourceUrl || "";
-          profit = (staticProduct.price / 100) - 15; // Rough estimate
+          profit = (staticProduct.price / 100) - 15;
         }
       }
 
-      // 1. Send customer confirmation email
+      // Create Order Record for Terminal
+      await supabase.from('orders').insert({
+        stripe_session_id: session.id,
+        product_id: type === 'archive' ? productId : null,
+        customer_email: customerEmail,
+        customer_name: customerName,
+        shipping_address: session.customer_details?.address,
+        source_url: vintedUrl,
+        status: 'pending_secure'
+      });
+
+      // Send Order Confirmation
       await sendOrderEmail(customerEmail, {
         productName,
         price,
         type: type as any
       });
 
-      // 2. Send "Tap-to-Secure" notification
+      // Send Tap-to-Secure Notification
       if (vintedUrl) {
         await sendSecureNotification({
           productName,
-          vintedUrl, // This will be the AliExpress link for the fabric shaver
+          vintedUrl,
           profit,
           customerName: customerName || "Customer",
-          customerAddress: customerAddress || "Address in Stripe"
+          customerAddress: `${session.customer_details?.address?.line1}, ${session.customer_details?.address?.city}`
         });
       }
     }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Check, X, ExternalLink, ShieldCheck, AlertTriangle, TrendingUp, Star, Edit3, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function AdminReviewPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -74,9 +75,15 @@ export default function AdminReviewPage() {
     <div className="min-h-screen bg-zinc-50 pt-32 pb-24 px-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-12 flex justify-between items-end">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-2">Arbitrage Terminal</p>
-            <h1 className="text-4xl font-black tracking-tighter">Profit Review Board</h1>
+          <div className="flex items-end gap-12">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-2">Arbitrage Terminal</p>
+              <h1 className="text-4xl font-black tracking-tighter text-zinc-900">Profit Review Board</h1>
+            </div>
+            <nav className="flex gap-6 pb-1">
+               <Link href="/admin/review" className="text-[10px] font-black uppercase tracking-widest text-zinc-900 border-b-2 border-black pb-1">Review</Link>
+               <Link href="/admin/orders" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors">Orders</Link>
+            </nav>
           </div>
           <div className="flex items-center gap-8">
             <div className="text-right">

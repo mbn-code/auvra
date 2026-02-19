@@ -5,7 +5,7 @@ import Accordion from "@/components/Accordion";
 import LiveActivity from "@/components/LiveActivity";
 import StickyBuy from "@/components/StickyBuy";
 import TrustPulse from "@/components/TrustPulse";
-import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap } from "lucide-react";
+import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe } from "lucide-react";
 
 interface ArchiveProductPageProps {
   params: Promise<{ id: string }>;
@@ -115,9 +115,15 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                    <Zap size={80} className="absolute -bottom-4 -right-4 opacity-10 rotate-12" />
                 </div>
 
-                <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest py-4 border-y border-zinc-50">
-                   <Truck size={14} strokeWidth={2} />
-                   <span>Estimated Arrival: <span className="text-zinc-900">{deliveryString}</span></span>
+                <div className="flex flex-col gap-3 py-4 border-y border-zinc-50">
+                   <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
+                      <Truck size={14} strokeWidth={2} />
+                      <span>Estimated Arrival: <span className="text-zinc-900">{deliveryString}</span></span>
+                   </div>
+                   <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
+                      <Globe size={14} strokeWidth={2} />
+                      <span>Logistics Scope: <span className="text-zinc-900">{item.shipping_zone === 'GLOBAL' ? 'Global Dispatch' : 'European Union Only'}</span></span>
+                   </div>
                 </div>
               </div>
 

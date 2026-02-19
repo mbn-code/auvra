@@ -3,11 +3,18 @@ import { stripe } from "@/lib/stripe";
 import { products } from "@/config/products";
 import { supabase } from "@/lib/supabase";
 
+const ZONE_COUNTRIES: Record<string, string[]> = {
+  "EU_ONLY": ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"],
+  "SCANDINAVIA_ONLY": ["DK", "SE", "NO", "FI"],
+  "GLOBAL": ["US", "CA", "GB", "AU", "DE", "FR", "DK", "SE", "PL", "FI", "JP", "KR"]
+};
+
 export async function POST(req: NextRequest) {
   try {
     const { productId, quantity } = await req.json();
     let product: any = products[productId];
     let isArchive = false;
+    let shippingZone = "GLOBAL";
 
     if (!product) {
       const { data, error } = await supabase
@@ -26,7 +33,10 @@ export async function POST(req: NextRequest) {
           description: data.description || `Archive piece: ${data.brand}`,
         };
         isArchive = true;
+        shippingZone = data.shipping_zone || "EU_ONLY";
       }
+    } else {
+      shippingZone = product.shippingZone || "GLOBAL";
     }
 
     if (!product) {
@@ -42,6 +52,8 @@ export async function POST(req: NextRequest) {
       if (qty >= 3) discount = 0.25;
       unitAmount = Math.round(product.price * (1 - discount));
     }
+
+    const allowedCountries = ZONE_COUNTRIES[shippingZone] || ZONE_COUNTRIES["EU_ONLY"];
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -65,7 +77,7 @@ export async function POST(req: NextRequest) {
         type: isArchive ? 'archive' : 'static',
       },
       shipping_address_collection: {
-        allowed_countries: ["US", "CA", "GB", "AU", "DE", "FR", "DK", "SE", "PL", "FI"],
+        allowed_countries: allowedCountries as any,
       },
       billing_address_collection: "required",
       phone_number_collection: {

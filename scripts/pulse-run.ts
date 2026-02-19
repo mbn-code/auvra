@@ -18,6 +18,17 @@ const LOCALES = ["dk", "de", "pl", "se", "fi"];
 async function runPulseCycle() {
   console.log(`[${new Date().toISOString()}] 🚀 Starting Regional EUR Pulse Cycle...`);
 
+  // Phase 1: High Margin Luxury & Tech-wear
+  const highMarginBrands = ["Louis Vuitton", "Chanel", "Chrome Hearts", "Arc'teryx", "Stone Island"];
+  for (const brand of highMarginBrands) {
+    try {
+      // Prioritize France/Germany for Luxury
+      const items = await scrapeBrand(brand, "de");
+      if (items.length > 0) await saveToSupabase(items);
+    } catch (e) {}
+  }
+
+  // Phase 2: All Brands Cycle
   for (const brand of BRANDS) {
     const locale = LOCALES[Math.floor(Math.random() * LOCALES.length)];
     

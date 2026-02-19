@@ -9,23 +9,55 @@ export async function sendOrderEmail(to: string, orderDetails: {
 }) {
   const fromEmail = process.env.MAIL_FROM || 'malthe@mbn-code.dk';
 
-  const subject = `Order Confirmed: ${orderDetails.productName}`;
+  const subject = `Transfer Initiated: ${orderDetails.productName}`;
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1d1d1f;">
       <h1 style="letter-spacing: -0.04em; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 20px;">AUVRA</h1>
-      <p style="font-size: 18px; font-weight: 500;">Transfer Initiated.</p>
-      <p>Thank you for securing your selection from our archive.</p>
+      <p style="font-size: 18px; font-weight: 500;">Archive Transfer Initiated.</p>
+      <p>Thank you for securing your selection from our archive. Our logistics node has been notified and the transfer is being prepared.</p>
       <div style="background: #fbfbfd; padding: 30px; border-radius: 20px; margin: 30px 0;">
-        <p style="margin: 0; font-size: 12px; font-weight: 900; color: #888; text-transform: uppercase; letter-spacing: 0.2em;">Item</p>
+        <p style="margin: 0; font-size: 12px; font-weight: 900; color: #888; text-transform: uppercase; letter-spacing: 0.2em;">Archive Piece</p>
         <p style="margin: 5px 0 20px 0; font-size: 20px; font-weight: 900;">${orderDetails.productName}</p>
-        <p style="margin: 0; font-size: 12px; font-weight: 900; color: #888; text-transform: uppercase; letter-spacing: 0.2em;">Amount</p>
+        <p style="margin: 0; font-size: 12px; font-weight: 900; color: #888; text-transform: uppercase; letter-spacing: 0.2em;">Value</p>
         <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: 900;">${orderDetails.price}</p>
       </div>
       <p style="font-size: 14px; line-height: 1.6; color: #555;">
-        ${orderDetails.type === 'archive' 
-          ? "As this is a unique archive piece, our algorithm is currently initiating the logistics transfer from our regional hub. Tracking details will be provided within 24-48 hours."
-          : "Your utility is being processed for immediate dispatch. Tracking details will follow shortly."
-        }
+        You will receive a second notification containing your unique logistics tracking ID once the item clears our regional hub (24-48 hours).
+      </p>
+      <p style="margin-top: 40px; font-size: 12px; color: #888;">&copy; ${new Date().getFullYear()} AUVRA. High-Fidelity Archive Pulse.</p>
+    </div>
+  `;
+
+  try {
+    await resend.emails.send({
+      from: `AUVRA ARCHIVE <${fromEmail}>`,
+      to: [to],
+      subject: subject,
+      html: html,
+    });
+  } catch (error) {
+    console.error('Error sending email:', error);
+  }
+}
+
+export async function sendDispatchEmail(to: string, orderDetails: {
+  productName: string,
+  trackingNumber: string
+}) {
+  const fromEmail = process.env.MAIL_FROM || 'malthe@mbn-code.dk';
+
+  const subject = `Logistics Update: Item Dispatched [${orderDetails.trackingNumber}]`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1d1d1f;">
+      <h1 style="letter-spacing: -0.04em; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 20px;">AUVRA</h1>
+      <p style="font-size: 18px; font-weight: 500;">Archive Piece Dispatched.</p>
+      <p>Your piece has successfully cleared the regional node and is now in transit.</p>
+      <div style="background: #000; color: #fff; padding: 30px; border-radius: 20px; margin: 30px 0;">
+        <p style="margin: 0; font-size: 10px; font-weight: 900; text-transform: uppercase; opacity: 0.6; letter-spacing: 0.2em;">Logistics Tracking ID</p>
+        <p style="margin: 10px 0 0 0; font-size: 24px; font-weight: 900; font-family: monospace;">${orderDetails.trackingNumber}</p>
+      </div>
+      <p style="font-size: 14px; line-height: 1.6; color: #555;">
+        Please allow 24 hours for the tracking portal to synchronize. Your piece is expected to arrive within our standard EU logistics window.
       </p>
       <p style="margin-top: 40px; font-size: 12px; color: #888;">&copy; ${new Date().getFullYear()} AUVRA. Northern Europe Archive Pulse.</p>
     </div>
@@ -33,12 +65,11 @@ export async function sendOrderEmail(to: string, orderDetails: {
 
   try {
     await resend.emails.send({
-      from: `AUVRA <${fromEmail}>`,
+      from: `AUVRA LOGISTICS <${fromEmail}>`,
       to: [to],
       subject: subject,
       html: html,
     });
-    console.log(`Email sent to ${to}`);
   } catch (error) {
     console.error('Error sending email:', error);
   }

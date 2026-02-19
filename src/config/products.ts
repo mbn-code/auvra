@@ -20,6 +20,7 @@ export interface Product {
   isHero?: boolean;
   badge?: string;
   sourceUrl?: string;
+  shippingZone?: "EU_ONLY" | "GLOBAL" | "SCANDINAVIA_ONLY";
 }
 
 export const products: Record<string, Product> = {
@@ -47,7 +48,8 @@ export const products: Record<string, Product> = {
     ],
     trending: true,
     badge: "Best Seller",
-    sourceUrl: "https://www.aliexpress.com/item/1005008080390073.html"
+    sourceUrl: "https://www.aliexpress.com/item/1005008080390073.html",
+    shippingZone: "GLOBAL"
   },
   "fur-eraser-pet-hair-roller": {
     id: "fur-eraser-pet-hair-roller",
@@ -65,7 +67,8 @@ export const products: Record<string, Product> = {
       { label: "Durability", value: "Lifetime" }
     ],
     trending: true,
-    badge: "Community Choice"
+    badge: "Community Choice",
+    shippingZone: "GLOBAL"
   },
   "power-scrub-max-spin": {
     id: "power-scrub-max-spin",
@@ -86,6 +89,7 @@ export const products: Record<string, Product> = {
     stockUrgency: 8,
     isLimited: true,
     isHero: false,
-    badge: "Technical Grade"
+    badge: "Technical Grade",
+    shippingZone: "GLOBAL"
   }
 };
