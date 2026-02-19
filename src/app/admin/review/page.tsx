@@ -2,17 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Check, X, ExternalLink, ShieldCheck, AlertTriangle, TrendingUp, Star, Edit3 } from "lucide-react";
+import { Check, X, ExternalLink, ShieldCheck, AlertTriangle, TrendingUp, Star, Edit3, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function AdminReviewPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
+  const router = useRouter();
 
   useEffect(() => {
     fetchPendingItems();
   }, []);
+
+  async function handleLogout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.push("/admin/login");
+  }
 
   async function fetchPendingItems() {
     setLoading(true);
@@ -71,9 +78,18 @@ export default function AdminReviewPage() {
             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-2">Arbitrage Terminal</p>
             <h1 className="text-4xl font-black tracking-tighter">Profit Review Board</h1>
           </div>
-          <div className="text-right">
-            <p className="text-2xl font-black tracking-tighter text-zinc-900">{items.length}</p>
-            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Awaiting Command</p>
+          <div className="flex items-center gap-8">
+            <div className="text-right">
+              <p className="text-2xl font-black tracking-tighter text-zinc-900">{items.length}</p>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Awaiting Command</p>
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="p-4 bg-zinc-100 hover:bg-zinc-200 rounded-full transition-colors text-zinc-600"
+              title="Logout"
+            >
+              <LogOut size={20} strokeWidth={1.5} />
+            </button>
           </div>
         </header>
 
