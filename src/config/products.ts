@@ -31,7 +31,13 @@ export const products: Record<string, Product> = {
     price: 2999,
     currency: "eur",
     category: "Home",
-    images: ["https://ae01.alicdn.com/kf/S8de880000000000000000000000000000.jpg"], // Placeholder - real image from Ali
+    images: [
+      "https://ae-pic-a1.aliexpress-media.com/kf/S3c164082377c42eaa93372a1ffbfbd9fE.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S0298ef5d8615432992c60b30be7ce21b6.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S06c98a65a88e4c45afe2633e9f4fe286K.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/S5d82dc94360c4b5e9348dd82646e6e52F.jpg",
+      "https://ae-pic-a1.aliexpress-media.com/kf/Sdb1a6077d4ae43eab333638b289b6f27c.jpg"
+    ],
     benefits: ["3-Speed Intelligent Motor", "USB-C Fast Charging", "Safe for Delicate Knits"],
     stripePriceId: "price_lint_remover_premium",
     features: [
