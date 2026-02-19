@@ -35,8 +35,8 @@ export default function TermsOfService() {
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Authenticity & Condition</h2>
-          <p>Every piece in the Auvra archive is subjected to a rigorous internal verification process. However, because we specialize in pre-owned items, pieces are sold "as-is" based on the condition report provided on the product page. We guarantee the authenticity of every item sold; should an item be proven inauthentic by a certified third party, a full refund will be issued.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Authenticity & Money-Back Guarantee</h2>
+          <p>Every piece in the Auvra archive is subjected to a rigorous internal verification process involving algorithmic checks and manual inspection. We guarantee the authenticity of every item sold. If an item is proven inauthentic by a certified third-party authenticator within 30 days of purchase, Auvra will issue a full 100% refund, including all shipping and logistics fees. The item is sold "as-is" based on the high-fidelity condition report provided on the product page.</p>
         </section>
 
         <section>

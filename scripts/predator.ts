@@ -31,12 +31,14 @@ export interface VintedItem {
 }
 
 const luxuryBrands = ["Louis Vuitton", "Hermès", "Chanel", "Chrome Hearts", "Prada"];
-const highRiskFakes = ["Essentials", "Corteiz", "Hellstar", "Sp5der"];
-const autoApproveBrands = ["Corteiz", "Stüssy", "Essentials", "Ralph Lauren", "Carhartt", "ASICS", "Lacoste", "Supreme", "The North Face", "Arc'teryx"];
+const highRiskFakes = ["Essentials", "Corteiz", "Hellstar", "Sp5der", "Jordan", "Nike", "Yeezy"];
+const autoApproveBrands = ["Ralph Lauren", "Carhartt", "ASICS", "Lacoste", "Supreme", "The North Face", "Arc'teryx"];
+
+// Authenticity check keywords
+const PROOF_KEYWORDS = ["receipt", "kvittering", "invoice", "faktura", "rechnung", "bought from", "købt i", "authenticity", "authentic", "ægte", "original"];
 
 // Translation Mapping for common terms
 const TRANSLATIONS: Record<string, string> = {
-  // Common terms (merged)
   "jakke": "Jacket", "jacka": "Jacket", "jacke": "Jacket", "kurtka": "Jacket",
   "bukser": "Pants", "byxor": "Pants", "hose": "Pants", "spodnie": "Pants",
   "skjorte": "Shirt", "skjorta": "Shirt", "hemd": "Shirt", "koszula": "Shirt", "koszulowa": "Shirt",
@@ -56,8 +58,6 @@ const TRANSLATIONS: Record<string, string> = {
   "rød": "Red", "rot": "Red", "czerwony": "Red", "röd": "Red",
   "grøn": "Green", "grün": "Green", "zielony": "Green", "grön": "Green",
   "gul": "Yellow", "gelb": "Yellow", "żółty": "Yellow",
-  
-  // Conditions
   "meget god": "Very Good", "sehr gut": "Very Good", "bardzo dobry": "Very Good", "mycket bra": "Very Good",
   "ny uden prislapp": "New without tags", "neu ohne etikett": "New without tags", "nowy bez metki": "New without tags",
   "god": "Good", "gut": "Good", "dobry": "Good", "bra": "Good",
@@ -92,30 +92,16 @@ function translateTerm(text: string): string {
   if (!text) return text;
   const lower = text.toLowerCase().trim();
   if (TRANSLATIONS[lower]) return TRANSLATIONS[lower];
-  
   const words = lower.split(' ');
   const translatedWords = words.map(w => TRANSLATIONS[w] || w);
   const fullTranslated = translatedWords.join(' ');
-  
   return fullTranslated.charAt(0).toUpperCase() + fullTranslated.slice(1).toLowerCase();
 }
 
 function sanitizeTitle(rawTitle: string): string {
   let clean = rawTitle.split(',')[0].split(' – ')[0].split(' - ')[0].split(' | ')[0];
-  
-  clean = clean
-    .replace(/vinted/gi, '')
-    .replace(/sold/gi, '')
-    .replace(/buying/gi, '')
-    .replace(/\[.*?\]/g, '') 
-    .replace(/\(.*?\)/g, '') 
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return clean
-    .split(' ')
-    .map(word => translateTerm(word))
-    .join(' ');
+  clean = clean.replace(/vinted/gi, '').replace(/sold/gi, '').replace(/buying/gi, '').replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim();
+  return clean.split(' ').map(word => translateTerm(word)).join(' ');
 }
 
 function convertToEUR(price: number, locale: string): number {
@@ -131,17 +117,36 @@ export function calculateListingPrice(sourcePriceEUR: number) {
   return Math.round(sourcePriceEUR * margin + 20);
 }
 
-export function calculateConfidence(item: VintedItem) {
+export function calculateConfidence(item: VintedItem, description: string = "") {
   let score = 100;
   const priceEUR = convertToEUR(item.source_price, item.locale);
+  const desc = description.toLowerCase();
+
+  // 1. Price Floor Check
   const priceFloors: Record<string, number> = {
     "Louis Vuitton": 150, "Hermès": 200, "Chanel": 200, "Chrome Hearts": 100,
     "Prada": 100, "Moncler": 80, "Canada Goose": 150, "Stone Island": 60,
     "Corteiz": 40, "Essentials": 30
   };
+
   const floor = priceFloors[item.brand];
   if (floor && priceEUR < floor) score -= 95;
-  return score;
+
+  // 2. Keyword Check (Positive Signal)
+  const hasProof = PROOF_KEYWORDS.some(k => desc.includes(k));
+  if (hasProof) score += 10;
+
+  // 3. Keyword Check (Negative Signal)
+  if (desc.includes("replica") || desc.includes("fake") || desc.includes("ua") || desc.includes("copy") || desc.includes("kopi")) {
+    score -= 100;
+  }
+
+  // 4. Force manual review for high-risk brands without proof
+  if (highRiskFakes.includes(item.brand) && !hasProof) {
+    score -= 30;
+  }
+
+  return Math.min(100, Math.max(0, score));
 }
 
 function detectSubCategory(title: string): string {

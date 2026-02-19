@@ -5,7 +5,7 @@ import Accordion from "@/components/Accordion";
 import LiveActivity from "@/components/LiveActivity";
 import StickyBuy from "@/components/StickyBuy";
 import TrustPulse from "@/components/TrustPulse";
-import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe } from "lucide-react";
+import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle } from "lucide-react";
 
 interface ArchiveProductPageProps {
   params: Promise<{ id: string }>;
@@ -107,9 +107,17 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                    <div className="relative z-10">
                       <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-4 opacity-50">Archive Integrity</p>
                       <p className="text-lg font-medium leading-relaxed mb-6">Sourced from a verified archive with a <span className="text-yellow-400">5.0 rating</span> and {item.seller_reviews_count || '120'}+ successful transfers.</p>
-                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                         <ShieldCheck size={14} className="text-green-400" />
-                         Authenticity Guaranteed
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-green-400">
+                           <ShieldCheck size={14} />
+                           Authenticity Guaranteed
+                        </div>
+                        {item.confidence_score > 90 && (
+                          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-400">
+                             <CheckCircle size={14} />
+                             Confidence Score: High
+                          </div>
+                        )}
                       </div>
                    </div>
                    <Zap size={80} className="absolute -bottom-4 -right-4 opacity-10 rotate-12" />
