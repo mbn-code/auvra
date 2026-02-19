@@ -1,9 +1,51 @@
 import Link from "next/link";
 import { CheckCircle, Zap } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { products } from "@/config/products";
+import { sendSecureNotification } from "@/lib/notifications";
 
 export default async function SuccessPage({ searchParams }: { searchParams: Promise<any> }) {
   const params = await searchParams;
   const type = params.type;
+  const id = params.id;
+  const sessionId = params.session_id;
+
+  // Trigger "Tap-to-Secure" notification
+  if (id && sessionId) {
+    let productName = "";
+    let sourceUrl = "";
+    let profit = 0;
+
+    if (type === 'archive') {
+      const { data: item } = await supabase
+        .from('pulse_inventory')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (item) {
+        productName = item.title;
+        sourceUrl = item.source_url;
+        profit = item.potential_profit;
+      }
+    } else {
+      const staticProduct = products[id];
+      if (staticProduct) {
+        productName = staticProduct.name;
+        sourceUrl = staticProduct.sourceUrl || "";
+        profit = (staticProduct.price / 100) - 15;
+      }
+    }
+
+    if (sourceUrl) {
+      await sendSecureNotification({
+        productName,
+        vintedUrl: sourceUrl,
+        profit,
+        customerName: "New Order",
+        customerAddress: "Check Stripe Dashboard"
+      });
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4 text-center">

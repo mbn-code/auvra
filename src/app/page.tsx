@@ -59,7 +59,7 @@ export default async function Home() {
                   </div>
                   <div className="flex justify-between items-start px-2">
                     <h3 className="text-xl font-black text-zinc-900 tracking-tighter leading-tight">{item.title}</h3>
-                    <p className="text-lg font-bold">${Math.round(item.listing_price)}</p>
+                    <p className="text-lg font-bold">€{Math.round(item.listing_price)}</p>
                   </div>
                 </Link>
               ))
@@ -109,7 +109,7 @@ export default async function Home() {
                 <h3 className="text-2xl font-black text-zinc-900 tracking-tighter mb-4 group-hover:underline decoration-2 underline-offset-8">
                   {product.name}
                 </h3>
-                <p className="text-lg font-bold text-zinc-900">${(product.price / 100).toFixed(0)}</p>
+                <p className="text-lg font-bold text-zinc-900">€{(product.price / 100).toFixed(0)}</p>
               </div>
             </Link>
           ))}

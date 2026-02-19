@@ -21,9 +21,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  const formattedPrice = new Intl.NumberFormat("en-US", {
+  const formattedPrice = new Intl.NumberFormat("de-DE", {
     style: "currency",
-    currency: product.currency.toUpperCase(),
+    currency: "EUR",
   }).format(product.price / 100);
 
   // Subtle delivery info

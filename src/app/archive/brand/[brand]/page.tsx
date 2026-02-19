@@ -122,7 +122,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                     <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{item.condition}</p>
                   </div>
                   <div className="text-lg font-bold text-zinc-900">
-                    ${Math.round(item.listing_price)}
+                    €{Math.round(item.listing_price)}
                   </div>
                 </div>
               </Link>

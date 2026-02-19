@@ -3,7 +3,7 @@ export interface Product {
   name: string;
   tagline: string;
   description: string;
-  price: number;
+  price: number; // In cents
   currency: string;
   images: string[];
   category: "Footwear" | "Tech" | "Home" | "Wellness";
@@ -19,63 +19,67 @@ export interface Product {
   isLimited?: boolean;
   isHero?: boolean;
   badge?: string;
+  sourceUrl?: string;
 }
 
 export const products: Record<string, Product> = {
-  "pro-glide-lint-remover": {
-    id: "pro-glide-lint-remover",
-    name: "Pro-Glide Lint Remover",
-    tagline: "Restore your favorite garments.",
-    description: "The ultimate tool for restoring your favorite fabrics. Unlike electric shavers, the Pro-Glide uses a precision-engineered copper blade to safely lift lint, pills, and fuzz without damaging the weave.",
-    price: 1999,
-    currency: "usd",
+  "coldsky-fabric-shaver": {
+    id: "coldsky-fabric-shaver",
+    name: "Auvra Precision Fabric Shaver",
+    tagline: "Unparalleled garment restoration.",
+    description: "The ColdSky system features a 3-speed high-torque motor and precision-honed stainless steel blades to eliminate pilling, lint, and fuzz from any fabric. Engineered for luxury knitwear, furniture, and heavy coats.",
+    price: 2999,
+    currency: "eur",
     category: "Home",
-    images: ["https://images.unsplash.com/photo-1567113463300-102a7eb3cb26?auto=format&fit=crop&q=80&w=800"],
-    benefits: ["Zero Damage to Fabrics", "No Batteries Required", "Lifetime Durability"],
-    stripePriceId: "price_lint_remover",
+    images: ["https://ae01.alicdn.com/kf/S8de880000000000000000000000000000.jpg"], // Placeholder - real image from Ali
+    benefits: ["3-Speed Intelligent Motor", "USB-C Fast Charging", "Safe for Delicate Knits"],
+    stripePriceId: "price_lint_remover_premium",
     features: [
-      { label: "Material", value: "Solid Wood & Pure Copper" },
-      { label: "Portability", value: "Travel Friendly" }
+      { label: "Battery", value: "Rechargeable Li-ion" },
+      { label: "Speeds", value: "3 Modes" },
+      { label: "Safety", value: "Auto-Stop Sensor" }
     ],
-    trending: false
+    trending: true,
+    badge: "Best Seller",
+    sourceUrl: "https://www.aliexpress.com/item/1005008080390073.html"
   },
   "fur-eraser-pet-hair-roller": {
     id: "fur-eraser-pet-hair-roller",
-    name: "Fur-Eraser Pet Hair Roller",
-    tagline: "The end of pet hair on furniture.",
-    description: "Forget sticky rollers that run out. The Fur-Eraser uses two-way motion and electro-static charge to trap every single strand of pet hair from sofas, rugs, and beds into a built-in disposal chamber.",
-    price: 2499,
-    currency: "usd",
+    name: "Fur-Eraser Archive Roller",
+    tagline: "The definitive solution for pet owners.",
+    description: "Utilizing kinetic electro-static technology, the Fur-Eraser lifts pet hair from deep within upholstery fibers without the need for adhesive strips or power. 100% reusable and built for permanence.",
+    price: 3499,
+    currency: "eur",
     category: "Home",
     images: ["https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=800"],
-    benefits: ["100% Reusable Forever", "One-Click Disposal", "Works on All Fabrics"],
-    stripePriceId: "price_pet_hair",
+    benefits: ["Perpetual Reuse System", "One-Click Instant Disposal", "Museum-Grade Fabric Care"],
+    stripePriceId: "price_pet_hair_eur",
     features: [
-      { label: "Operation", value: "Mechanical / No Electricity" },
-      { label: "Capacity", value: "High-Volume Chamber" }
+      { label: "Mechanism", value: "Mechanical Kinetic" },
+      { label: "Durability", value: "Lifetime" }
     ],
     trending: true,
-    badge: "Most Popular"
+    badge: "Community Choice"
   },
   "power-scrub-max-spin": {
     id: "power-scrub-max-spin",
-    name: "PowerScrub Max Spin",
-    tagline: "Efficiency in motion.",
-    description: "Stop breaking your back over stubborn grout and grime. This high-torque electric scrubber spins at 300RPM to blast through soap scum and stains in seconds. Perfect for bathrooms, kitchens, and car wheels.",
-    price: 4499,
-    currency: "usd",
+    name: "PowerScrub Precision Spin",
+    tagline: "Technical cleaning, simplified.",
+    description: "A high-performance rotational tool designed for precision sanitation. Spinning at 300RPM with specialized brush heads, it removes architectural grime and kitchen buildup with zero physical effort.",
+    price: 5999,
+    currency: "eur",
     category: "Tech",
     images: ["https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800"],
-    benefits: ["3 Replaceable Brush Heads", "IPX7 Fully Waterproof", "USB-C Fast Charging"],
-    stripePriceId: "price_spin_scrubber",
+    benefits: ["Submersible Waterproofing", "High-Torque 300RPM", "Multi-Surface Compatibility"],
+    stripePriceId: "price_spin_scrubber_eur",
     features: [
-      { label: "Battery Life", value: "90 Minutes Continuous" },
-      { label: "Motor", value: "High-Torque 300RPM" },
+      { label: "Motor", value: "High-Output Brushed" },
+      { label: "Charging", value: "USB-C Rapid" },
       { label: "Edition", value: "Stealth Titanium" }
     ],
-    stockUrgency: 12,
+    stockUrgency: 8,
     isLimited: true,
-    isHero: true,
-    badge: "Editor's Choice"
+    isHero: false,
+    badge: "Technical Grade"
   }
 };

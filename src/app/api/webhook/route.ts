@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabase } from "@/lib/supabase";
+import { products } from "@/config/products";
 import { sendOrderEmail } from "@/lib/email";
 import { sendSecureNotification } from "@/lib/notifications";
 
@@ -55,6 +56,13 @@ export async function POST(req: NextRequest) {
             .update({ status: 'sold' })
             .eq('id', productId);
         }
+      } else {
+        const staticProduct = products[productId];
+        if (staticProduct) {
+          productName = staticProduct.name;
+          vintedUrl = staticProduct.sourceUrl || "";
+          profit = (staticProduct.price / 100) - 15; // Rough estimate
+        }
       }
 
       // 1. Send customer confirmation email
@@ -64,11 +72,11 @@ export async function POST(req: NextRequest) {
         type: type as any
       });
 
-      // 2. Send "Tap-to-Secure" notification if archive
-      if (type === 'archive') {
+      // 2. Send "Tap-to-Secure" notification
+      if (vintedUrl) {
         await sendSecureNotification({
           productName,
-          vintedUrl,
+          vintedUrl, // This will be the AliExpress link for the fabric shaver
           profit,
           customerName: customerName || "Customer",
           customerAddress: customerAddress || "Address in Stripe"

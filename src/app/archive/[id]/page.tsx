@@ -24,9 +24,9 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
     notFound();
   }
 
-  const formattedPrice = new Intl.NumberFormat("en-US", {
+  const formattedPrice = new Intl.NumberFormat("de-DE", {
     style: "currency",
-    currency: item.currency.toUpperCase(),
+    currency: "EUR",
   }).format(item.listing_price);
 
   const deliveryDate = new Date();

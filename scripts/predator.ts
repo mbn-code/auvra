@@ -46,18 +46,13 @@ const CONVERSION_RATES: Record<string, number> = {
 
 function parseVintedPrice(priceText: string): number {
   if (!priceText) return 0;
-  // Clean string: handle space as thousands, comma as decimal
-  // Example: "11 733,87 kr"
+  // Handle space/dot as thousands, comma as decimal
   let clean = priceText.replace(/\s/g, '').replace(/[^\d,.]/g, '');
-  
   if (clean.includes(',') && clean.includes('.')) {
     const lastComma = clean.lastIndexOf(',');
     const lastDot = clean.lastIndexOf('.');
-    if (lastComma > lastDot) {
-      clean = clean.replace(/\./g, '').replace(',', '.');
-    } else {
-      clean = clean.replace(/,/g, '');
-    }
+    if (lastComma > lastDot) clean = clean.replace(/\./g, '').replace(',', '.');
+    else clean = clean.replace(/,/g, '');
   } else if (clean.includes(',')) {
     const parts = clean.split(',');
     if (parts[parts.length - 1].length <= 2) clean = clean.replace(/,/g, '.');
@@ -66,7 +61,6 @@ function parseVintedPrice(priceText: string): number {
     const parts = clean.split('.');
     if (parts[parts.length - 1].length > 2) clean = clean.replace(/\./g, '');
   }
-  
   return parseFloat(clean) || 0;
 }
 
@@ -91,7 +85,7 @@ function convertToEUR(price: number, locale: string): number {
 }
 
 export function calculateListingPrice(sourcePriceEUR: number) {
-  let margin = 1.6; // 60% markup
+  let margin = 1.6;
   if (sourcePriceEUR > 50) margin = 1.5; 
   if (sourcePriceEUR > 200) margin = 1.4;
   if (sourcePriceEUR > 1000) margin = 1.3;
@@ -101,26 +95,14 @@ export function calculateListingPrice(sourcePriceEUR: number) {
 export function calculateConfidence(item: VintedItem) {
   let score = 100;
   const priceEUR = convertToEUR(item.source_price, item.locale);
-
   const priceFloors: Record<string, number> = {
     "Louis Vuitton": 150, "Hermès": 200, "Chanel": 200, "Chrome Hearts": 100,
     "Prada": 100, "Moncler": 80, "Canada Goose": 150, "Stone Island": 60,
     "Corteiz": 40, "Essentials": 30
   };
-
   const floor = priceFloors[item.brand];
-  if (floor && priceEUR < floor) score -= 95; // Extreme confidence drop for suspicious prices
+  if (floor && priceEUR < floor) score -= 95;
   return score;
-}
-
-async function processImage(imageUrl: string): Promise<{ url: string, hasFace: boolean }> {
-  try {
-    const result = await cloudinary.uploader.upload(imageUrl, { detection: "adv_face" });
-    const hasFace = (result.info?.detection?.adv_face?.data?.length || 0) > 0;
-    return { url: result.secure_url, hasFace };
-  } catch (err) {
-    return { url: imageUrl, hasFace: false };
-  }
 }
 
 function detectSubCategory(title: string): string {
@@ -143,23 +125,29 @@ export async function scrapeBrand(brand: string, locale: string): Promise<Vinted
   try {
     await page.goto(searchUrl, { waitUntil: 'networkidle', timeout: 60000 });
     const items = await page.evaluate((brandName) => {
-      const cards = Array.from(document.querySelectorAll('[data-testid^="grid-item"], .feed-grid__item'));
+      const cards = Array.from(document.querySelectorAll('.feed-grid__item'));
       return cards.map(card => {
-        const titleLink = card.querySelector('a[href*="/items/"], a[data-testid="item-link"]');
-        const priceElement = card.querySelector('[data-testid$="price"], .feed-grid__item-price');
-        const titleElement = card.querySelector('.web_ui__ItemBox__title');
-        const img = card.querySelector('img');
-        const href = titleLink?.getAttribute('href');
-        const vintedId = href?.split('/')?.pop()?.split('-')?.[0];
+        // Robust finding logic
+        const linkEl = card.querySelector('a[href*="/items/"]');
+        const priceEl = card.querySelector('h3, .web_ui__ItemBox__title, [data-testid$="price"]');
+        const imgEl = card.querySelector('img');
+        const subtitleEl = card.querySelector('.web_ui__ItemBox__subtitle');
+
+        const href = linkEl?.getAttribute('href') || '';
+        const vintedId = href.split('/')?.pop()?.split('-')?.[0] || '';
         
+        // Vinted often stores the title in the alt attribute of the image or the title of the link
+        const title = linkEl?.getAttribute('title') || imgEl?.getAttribute('alt') || '';
+        const priceText = card.textContent?.match(/([0-9\s,.]+)\s?(?:kr|€|zł)/)?.[0] || '';
+
         return {
-          vinted_id: vintedId || '',
-          title: titleElement?.textContent || titleLink?.getAttribute('title') || '',
-          source_url: href ? (href.startsWith('http') ? href : `https://www.vinted.${document.location.hostname.split('.').pop()}${href}`) : '',
-          source_price_raw: priceElement?.textContent || '',
-          image: img?.src || '',
+          vinted_id: vintedId,
+          title: title,
+          source_url: href ? (href.startsWith('http') ? href : `https://www.vinted.${document.location.hostname.split('.').pop() || 'dk'}${href}`) : '',
+          source_price_raw: priceText,
+          image: imgEl?.src || '',
           brand: brandName,
-          condition: card.querySelector('.web_ui__ItemBox__subtitle')?.textContent?.trim() || 'Very Good'
+          condition: subtitleEl?.textContent?.trim() || 'Very Good'
         };
       });
     }, brand);
@@ -211,9 +199,4 @@ export async function saveToSupabase(items: VintedItem[]) {
       is_auto_approved: status === 'available'
     }, { onConflict: 'vinted_id' });
   }
-}
-
-const brandToScrape = process.argv[2];
-if (brandToScrape) {
-  scrapeBrand(brandToScrape, "dk").then(saveToSupabase);
 }
