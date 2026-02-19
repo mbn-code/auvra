@@ -11,7 +11,7 @@ export default async function Home() {
     .from('pulse_inventory')
     .select('*')
     .eq('status', 'available')
-    .order('created_at', { ascending: false }) // Temporary fallback sorting
+    .order('potential_profit', { ascending: false })
     .limit(10);
 
   return (

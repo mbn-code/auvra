@@ -20,11 +20,12 @@ export default function AdminReviewPage() {
       .from('pulse_inventory')
       .select('*')
       .eq('status', 'pending_review')
-      .order('created_at', { ascending: false });
+      .order('potential_profit', { ascending: false });
 
     if (!error) setItems(data || []);
     setLoading(false);
   }
+
 
   async function updateStatus(id: string, newStatus: string) {
     const { error } = await supabase
