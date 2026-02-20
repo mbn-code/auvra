@@ -17,7 +17,13 @@ npx playwright install chromium
 Create a `.env.local` file on your Pi with the following:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://cfyqifaaveryrbunknaw.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+CLOUDINARY_CLOUD_NAME=dvdjz4igb
+CLOUDINARY_API_KEY=799968242112243
+CLOUDINARY_API_SECRET=your_cloudinary_secret_here
+PUSHOVER_USER_KEY=umv3rx6n3r4kwwwnsdpkygsaa6svof
+PUSHOVER_TOKEN=a3hmnaorgc4b83qf5wchi8hm62fdi3
 ```
 
 ## 4. Running the Algorithm
