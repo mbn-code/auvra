@@ -19,21 +19,29 @@ export default function ArchivePage() {
     // Get all available items
     const { data, error } = await supabase
       .from('pulse_inventory')
-      .select('brand, images')
+      .select('brand, images, listing_price')
       .eq('status', 'available');
 
     if (!error && data) {
-      const brandMap: Record<string, { preview: string; count: number }> = {};
+      const brandMap: Record<string, { preview: string; count: number; maxPrice: number }> = {};
       data.forEach(item => {
         if (!brandMap[item.brand]) {
-          brandMap[item.brand] = { preview: item.images[0], count: 0 };
+          brandMap[item.brand] = { preview: item.images[0], count: 0, maxPrice: 0 };
         }
+        
+        // Update preview if this item is more expensive
+        if (item.listing_price > brandMap[item.brand].maxPrice) {
+          brandMap[item.brand].maxPrice = item.listing_price;
+          brandMap[item.brand].preview = item.images[0];
+        }
+        
         brandMap[item.brand].count++;
       });
 
       const formattedBrands = Object.entries(brandMap).map(([name, stats]) => ({
         name,
-        ...stats
+        preview: stats.preview,
+        count: stats.count
       })).sort((a, b) => b.count - a.count);
 
       setBrands(formattedBrands);
