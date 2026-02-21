@@ -167,10 +167,13 @@ export async function scrapeBrand(brand: string, locale: string): Promise<Vinted
   const page = await context.newPage();
   const searchUrl = `https://www.vinted.${locale}/vetements?search_text=${encodeURIComponent(brand)}&order=newest_first&new_with_tags=1`;
   
+  console.log(`[Predator] Navigating to: ${searchUrl}`);
   try {
     await page.goto(searchUrl, { waitUntil: 'networkidle', timeout: 60000 });
+    console.log(`[Predator] Page loaded: ${page.url()}`);
     const items = await page.evaluate((brandName) => {
       const cards = Array.from(document.querySelectorAll('.feed-grid__item'));
+      console.log(`[Predator - Page Eval] Found ${cards.length} cards.`);
       return cards.map(card => {
         const linkEl = card.querySelector('a[href*="/items/"]');
         const priceEl = card.querySelector('h3, .web_ui__ItemBox__title, [data-testid$="price"]');
@@ -192,6 +195,9 @@ export async function scrapeBrand(brand: string, locale: string): Promise<Vinted
       });
     }, brand);
     
+    console.log(`[Predator] Scraped ${items.length} raw items.`);
+    if (items.length > 0) console.log(`[Predator] First raw item:`, items[0]);
+
     return items.filter(item => item.vinted_id).map(item => ({
       ...item,
       source_price: parseVintedPrice(item.source_price_raw),
@@ -200,6 +206,7 @@ export async function scrapeBrand(brand: string, locale: string): Promise<Vinted
       condition: translateTerm(item.condition)
     })).filter(item => item.source_price > 0);
   } catch (err) {
+    console.error(`[Predator] ScrapeBrand failed for ${brand} on .${locale}:`, err);
     return [];
   } finally {
     await browser.close();
@@ -217,11 +224,19 @@ export async function saveToSupabase(items: VintedItem[]) {
     let displayImage = item.image;
     const subCategory = detectSubCategory(item.title);
 
+    // Auto-approve logic based on profit and confidence
     if (confidence > 95 && profit > 40 && autoApproveBrands.includes(item.brand)) {
       status = 'available';
     }
 
-    await supabase.from('pulse_inventory').upsert({
+    // Uncomment for Cloudinary image processing in production
+    // if (status === 'available') {
+    //   const processed = await processImage(item.image);
+    //   displayImage = processed.url;
+    //   if (processed.hasFace) status = 'pending_review';
+    // }
+
+    const { error: upsertError } = await supabase.from('pulse_inventory').upsert({
       vinted_id: item.vinted_id,
       brand: item.brand,
       title: item.title,
@@ -241,6 +256,12 @@ export async function saveToSupabase(items: VintedItem[]) {
       is_auto_approved: status === 'available',
       last_pulse_check: new Date().toISOString()
     }, { onConflict: 'vinted_id' });
+
+    if (upsertError) {
+      console.error(`❌ [Predator - Upsert Error] Failed to save ${item.vinted_id}:`, upsertError.message);
+    } else {
+      // console.log(`✅ Saved ${item.vinted_id}`);
+    }
   }
 }
 
