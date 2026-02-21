@@ -10,7 +10,9 @@ const BRANDS = [
   "Supreme", "Lacoste", "Zara", "Prada", "Essentials", "Burberry", 
   "Timberland", "Ralph Lauren", "Amiri", "Sp5der", "Stüssy", 
   "A Bathing Ape", "Broken Planet", "Denim Tears", "Hellstar", 
-  "Eric Emanuel", "Gallery Dept", "Stone Island"
+  "Eric Emanuel", "Gallery Dept", "Stone Island", "Patagonia", 
+  "New Balance", "Salomon", "Oakley", "Dickies", "Diesel", "Levis", 
+  "Adidas", "Nike"
 ];
 
 const LOCALES = ["dk", "de", "pl", "se", "fi"];
