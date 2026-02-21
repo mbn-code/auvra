@@ -109,12 +109,38 @@ function convertToEUR(price: number, locale: string): number {
   return price * rate;
 }
 
-export function calculateListingPrice(sourcePriceEUR: number) {
-  let margin = 1.6;
-  if (sourcePriceEUR > 50) margin = 1.5; 
-  if (sourcePriceEUR > 200) margin = 1.4;
-  if (sourcePriceEUR > 1000) margin = 1.3;
-  return Math.round(sourcePriceEUR * margin + 20);
+function calculateListingPrice(sourcePriceEUR: number, brand: string) {
+  // Base shipping/logistics buffer
+  const logisticsBuffer = 20;
+
+  // Dynamic Margin Curve (Higher price = Lower % margin, but higher absolute profit)
+  let margin = 1.6; // Default 60% markup for items < 50
+  
+  if (sourcePriceEUR > 50) margin = 1.5;   // 50%
+  if (sourcePriceEUR > 150) margin = 1.4;  // 40%
+  if (sourcePriceEUR > 300) margin = 1.35; // 35%
+  if (sourcePriceEUR > 600) margin = 1.25; // 25%
+  if (sourcePriceEUR > 1200) margin = 1.2; // 20%
+
+  // Brand Premium Adjustments (Market Demand)
+  // High-demand brands can sustain higher markups
+  const highDemand = ["Chrome Hearts", "Corteiz", "Arc'teryx", "Louis Vuitton", "Prada"];
+  if (highDemand.includes(brand)) {
+    margin += 0.1; // Add 10% extra premium
+  }
+
+  // Psychological Pricing Adjustment (e.g., 149 instead of 143)
+  let price = Math.round(sourcePriceEUR * margin + logisticsBuffer);
+  
+  // Round to nearest 9 or 5 for boutique feel
+  const remainder = price % 10;
+  if (remainder < 5) {
+    price = price - remainder - 1; // End in 9 (e.g. 143 -> 139)
+  } else {
+    price = price + (9 - remainder); // End in 9 (e.g. 146 -> 149)
+  }
+
+  return price;
 }
 
 export function calculateConfidence(item: VintedItem, description: string = "") {
@@ -217,7 +243,7 @@ export async function saveToSupabase(items: VintedItem[]) {
   for (const item of items) {
     const priceEUR = convertToEUR(item.source_price, item.locale);
     const confidence = calculateConfidence(item);
-    const listingPrice = calculateListingPrice(priceEUR);
+    const listingPrice = calculateListingPrice(priceEUR, item.brand);
     const profit = listingPrice - priceEUR - 20;
     
     let status = 'pending_review';
