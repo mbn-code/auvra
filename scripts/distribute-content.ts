@@ -43,6 +43,23 @@ export async function sendTelegramMedia(files: string[], caption: string) {
     return;
   }
 
+  // Send separator message first
+  const date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  const separator = `##############################\n🚀 NEW CONTENT BATCH\n📅 ${date}\n##############################`;
+  
+  try {
+    await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: separator
+      })
+    });
+  } catch (e) {
+    console.error("Telegram Separator Error:", e);
+  }
+
   console.log(`📤 Sending ${files.length} assets to Telegram...`);
 
   // Send Images as Group (Album)

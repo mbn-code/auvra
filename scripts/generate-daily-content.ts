@@ -27,6 +27,7 @@ const CAPTIONS = [
 async function fetchAndConvertImage(url: string): Promise<Buffer | null> {
   try {
     const response = await fetch(url);
+    if (!response.ok) return null;
     const arrayBuffer = await response.arrayBuffer();
     return await sharp(Buffer.from(arrayBuffer)).png().toBuffer();
   } catch (e) { return null; }
@@ -44,260 +45,242 @@ function roundRect(ctx: any, x: number, y: number, w: number, h: number, r: numb
   ctx.closePath();
 }
 
-async function generateBatch(items: any[], type: 'high' | 'mid') {
-  console.log(`📸 Generating 10 ${type}-tier Static Posts...`);
-  for (const [index, item] of items.entries()) {
-    await generateStaticPost(item, index, type);
-  }
-}
-
-async function generateStaticPost(item: any, index: number, type: 'high' | 'mid') {
+async function generateStaticPost(item: any, filename: string) {
+  if (!item || !item.images || !item.images[0]) return;
+  
   const canvas = createCanvas(1080, 1920);
   const ctx = canvas.getContext('2d');
 
-  // Background (Dimmed Product)
   const imageBuffer = await fetchAndConvertImage(item.images[0]);
   if (!imageBuffer) return;
   const img = await loadImage(imageBuffer);
 
   ctx.drawImage(img, -200, -200, 1480, 2320); 
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; 
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; 
   ctx.fillRect(0, 0, 1080, 1920);
 
-  // Card UI
   ctx.fillStyle = '#FFFFFF';
-  ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
-  ctx.shadowBlur = 80;
-  ctx.shadowOffsetY = 40;
-  roundRect(ctx, 100, 350, 880, 1100, 50);
+  ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+  ctx.shadowBlur = 100;
+  ctx.shadowOffsetY = 50;
+  roundRect(ctx, 80, 350, 920, 1150, 60);
   ctx.fill();
   ctx.shadowColor = "transparent";
 
-  // Product inside card
-  const scale = Math.max(880 / img.width, 880 / img.height);
+  const scale = Math.max(920 / img.width, 920 / img.height);
   const w = img.width * scale;
   const h = img.height * scale;
   ctx.save();
-  roundRect(ctx, 100, 350, 880, 880, 50);
+  roundRect(ctx, 80, 350, 920, 920, 60);
   ctx.clip();
-  ctx.drawImage(img, 100 - (w - 880)/2, 350, w, h);
+  ctx.drawImage(img, 80 - (w - 920)/2, 350, w, h);
   ctx.restore();
 
-  // Info
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#888';
-  ctx.font = 'bold 28px sans-serif';
-  ctx.fillText(item.brand.toUpperCase(), 160, 1300);
+  ctx.fillStyle = '#A1A1AA';
+  ctx.font = 'bold 32px sans-serif';
+  ctx.fillText(item.brand.toUpperCase(), 140, 1330);
 
-  ctx.fillStyle = '#000';
-  ctx.font = 'bold 48px sans-serif';
-  const cleanTitle = item.title.length > 22 ? item.title.substring(0, 22) + "..." : item.title;
-  ctx.fillText(cleanTitle, 160, 1360);
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 52px sans-serif';
+  const cleanTitle = item.title.length > 20 ? item.title.substring(0, 20) + "..." : item.title;
+  ctx.fillText(cleanTitle, 140, 1400);
 
-  ctx.font = 'bold 64px sans-serif';
-  ctx.fillText(`€${Math.round(item.listing_price)}`, 780, 1360);
+  ctx.font = 'bold 72px sans-serif';
+  ctx.fillText(`€${Math.round(item.listing_price)}`, 740, 1400);
 
-  // Discount Badge (NEW - High Impact)
   const discounts = ["-30%", "-50%", "-70%"];
-  const discount = discounts[index % 3];
-  
-  ctx.fillStyle = '#FF3B30'; // Urgent Red
-  roundRect(ctx, 750, 450, 200, 80, 20); // Top right of card
+  const discount = discounts[Math.floor(Math.random() * discounts.length)];
+  ctx.fillStyle = '#EF4444'; 
+  roundRect(ctx, 780, 430, 180, 90, 25); 
   ctx.fill();
-  
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 40px sans-serif';
+  ctx.font = 'bold 44px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(discount, 850, 505);
+  ctx.fillText(discount, 870, 490);
 
-  // Message Overlay
-  const msgY = 200 + Math.random() * 100;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-  ctx.shadowColor = "rgba(0,0,0,0.15)";
-  ctx.shadowBlur = 30;
-  roundRect(ctx, 60, msgY, 700, 140, 40);
+  const msgY = 180 + Math.random() * 80;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
+  ctx.shadowColor = "rgba(0,0,0,0.2)";
+  ctx.shadowBlur = 40;
+  roundRect(ctx, 60, msgY, 750, 150, 45);
   ctx.fill();
   ctx.shadowColor = "transparent";
 
-  // Avatar
-  ctx.fillStyle = '#111';
+  ctx.fillStyle = '#18181B';
   ctx.beginPath();
-  ctx.arc(130, msgY + 70, 40, 0, Math.PI * 2);
+  ctx.arc(135, msgY + 75, 45, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#FFF';
-  ctx.font = 'bold 24px sans-serif';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 28px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(NAMES[Math.floor(Math.random() * NAMES.length)], 130, msgY + 80);
+  ctx.fillText(NAMES[Math.floor(Math.random() * NAMES.length)], 135, msgY + 85);
 
-  // Caption
   const caption = CAPTIONS[Math.floor(Math.random() * CAPTIONS.length)];
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#000';
-  ctx.font = '36px sans-serif';
-  ctx.fillText(caption.replace('€', `€${Math.round(item.listing_price)}`), 200, msgY + 82);
+  ctx.fillStyle = '#000000';
+  ctx.font = '38px sans-serif';
+  ctx.fillText(caption.replace('€', `€${Math.round(item.listing_price)}`), 210, msgY + 88);
 
   const buffer = canvas.toBuffer('image/png');
-  fs.writeFileSync(path.join(OUTPUT_DIR, `${type}_post_${index}.png`), buffer);
-  console.log(`📸 Generated ${type} Post: ${item.brand}`);
+  fs.writeFileSync(path.join(OUTPUT_DIR, filename), buffer);
 }
 
-async function generateScrollVideo(items: any[]) {
-  console.log("🎥 Generating Scroll Video (this takes a moment)...");
-  
-  // 1. Create the Long Screenshot Canvas
-  const cardHeight = 500;
-  const gap = 40;
-  const totalHeight = items.length * (cardHeight + gap) + 400; // Extra padding
+async function generateScrollVideo(items: any[], filename: string, duration: number = 10) {
+  console.log(`🎥 Generating Scroll Video: ${filename}...`);
+  const cardHeight = 550;
+  const gap = 50;
+  const totalHeight = items.length * (cardHeight + gap) + 500;
   const canvas = createCanvas(1080, totalHeight);
   const ctx = canvas.getContext('2d');
 
-  // Background
-  ctx.fillStyle = '#FBFBFD'; // Apple-like grey
+  ctx.fillStyle = '#F4F4F5';
   ctx.fillRect(0, 0, 1080, totalHeight);
 
   // Header
-  ctx.fillStyle = '#FFF';
-  ctx.fillRect(0, 0, 1080, 250);
-  ctx.fillStyle = '#000';
-  ctx.font = 'bold 60px sans-serif';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, 1080, 300);
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 70px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText("ARCHIVE PULSE", 540, 150);
-  ctx.font = '30px sans-serif';
-  ctx.fillStyle = '#34C759';
-  ctx.fillText("● Live Sync Active", 540, 200);
+  ctx.fillText("AUVRA ARCHIVE", 540, 160);
+  ctx.font = 'bold 32px sans-serif';
+  ctx.fillStyle = '#10B981';
+  ctx.fillText("● GLOBAL PULSE ACTIVE", 540, 220);
 
-  // Draw Items
-  let currentY = 290;
+  let currentY = 350;
   for (const item of items) {
-    // Card BG
-    ctx.fillStyle = '#FFF';
-    ctx.shadowColor = "rgba(0,0,0,0.05)";
-    ctx.shadowBlur = 20;
-    roundRect(ctx, 40, currentY, 1000, cardHeight, 40);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = "rgba(0,0,0,0.08)";
+    ctx.shadowBlur = 30;
+    roundRect(ctx, 50, currentY, 980, cardHeight, 50);
     ctx.fill();
     ctx.shadowColor = "transparent";
 
-    // Image
     try {
       const imgBuffer = await fetchAndConvertImage(item.images[0]);
       if (imgBuffer) {
         const img = await loadImage(imgBuffer);
-        // Square crop on left
-        const size = 420;
+        const size = 450;
         ctx.save();
-        roundRect(ctx, 80, currentY + 40, size, size, 30);
+        roundRect(ctx, 100, currentY + 50, size, size, 40);
         ctx.clip();
-        ctx.drawImage(img, 80, currentY + 40, size, size);
+        ctx.drawImage(img, 100, currentY + 50, size, size);
         ctx.restore();
       }
     } catch(e) {}
 
-    // Text
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#888';
-    ctx.font = 'bold 24px sans-serif';
-    ctx.fillText(item.brand.toUpperCase(), 540, currentY + 140);
+    ctx.fillStyle = '#71717A';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText(item.brand.toUpperCase(), 580, currentY + 160);
 
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 40px sans-serif';
-    let title = item.title.substring(0, 20) + (item.title.length>20 ? "..." : "");
-    ctx.fillText(title, 540, currentY + 200);
+    ctx.fillStyle = '#000000';
+    ctx.font = 'bold 44px sans-serif';
+    let title = item.title.substring(0, 18) + (item.title.length > 18 ? "..." : "");
+    ctx.fillText(title, 580, currentY + 230);
 
-    // Price Pill
-    ctx.fillStyle = '#000';
-    roundRect(ctx, 540, currentY + 280, 240, 80, 40);
+    ctx.fillStyle = '#000000';
+    roundRect(ctx, 580, currentY + 320, 260, 90, 45);
     ctx.fill();
-    ctx.fillStyle = '#FFF';
-    ctx.font = 'bold 40px sans-serif';
-    ctx.fillText(`€${Math.round(item.listing_price)}`, 580, currentY + 335);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 44px sans-serif';
+    ctx.fillText(`€${Math.round(item.listing_price)}`, 620, currentY + 382);
 
-    // Discount Tag
-    const discounts = ["-30%", "-50%", "-70%"];
-    const discount = discounts[Math.floor(Math.random() * discounts.length)];
-    ctx.fillStyle = '#FF3B30';
-    roundRect(ctx, 800, currentY + 280, 140, 80, 20);
+    const discount = ["-30%", "-50%", "-70%"][Math.floor(Math.random() * 3)];
+    ctx.fillStyle = '#EF4444';
+    roundRect(ctx, 860, currentY + 320, 140, 90, 25);
     ctx.fill();
-    ctx.fillStyle = '#FFF';
-    ctx.font = 'bold 32px sans-serif';
-    ctx.fillText(discount, 830, currentY + 332);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(discount, 930, 378 + currentY);
 
     currentY += cardHeight + gap;
   }
 
-  // Save the long image temp
-  const longImagePath = path.join(OUTPUT_DIR, 'temp_long_scroll.png');
+  const longImagePath = path.join(OUTPUT_DIR, `temp_${filename}.png`);
   fs.writeFileSync(longImagePath, canvas.toBuffer('image/png'));
 
-  // 2. Animate with FFmpeg (Pan Down)
-  const videoPath = path.join(OUTPUT_DIR, `post_video_scroll.mp4`);
-  
+  const videoPath = path.join(OUTPUT_DIR, filename);
+  const scrollDistance = totalHeight - 1920;
+
   return new Promise((resolve, reject) => {
     ffmpeg()
       .input(longImagePath)
-      .loop(8)
+      .loop(duration)
+      .fps(30)
       .videoFilters([
-        `crop=1080:1920:0:'min(t*${(totalHeight-1920)/8}, ${totalHeight-1920})'`
+        `crop=1080:1920:0:t/${duration}*${scrollDistance}`
       ])
-      .outputOptions([
-        '-c:v libx264',
-        '-pix_fmt yuv420p',
-        '-preset ultrafast',
-        '-r 30'
-      ])
+      .outputOptions(['-c:v libx264', '-pix_fmt yuv420p', '-preset ultrafast', '-t', duration.toString()])
       .save(videoPath)
       .on('end', () => {
-        console.log("🎥 Scroll Video Generated!");
-        fs.unlinkSync(longImagePath);
+        if (fs.existsSync(longImagePath)) fs.unlinkSync(longImagePath);
         resolve(true);
       })
       .on('error', (err) => {
-        console.error("FFmpeg Error:", err);
-        resolve(false);
+        console.error(`Video Gen Failed: ${filename}`, err.message);
+        resolve(false); 
       });
   });
 }
 
 async function runDailyFactory() {
-  console.log("🏭 Auvra Content Factory Initializing...");
+  console.log("🏭 Auvra Multi-Batch Factory Initializing...");
 
-  const { data: highItems } = await supabase
+  const oldFiles = fs.readdirSync(OUTPUT_DIR);
+  oldFiles.forEach(f => { if(f !== '.gitkeep') {
+    try { fs.unlinkSync(path.join(OUTPUT_DIR, f)); } catch(e) {}
+  }});
+
+  const { data: allAvailable } = await supabase
     .from('pulse_inventory')
     .select('*')
     .eq('status', 'available')
-    .order('listing_price', { ascending: false })
-    .limit(10);
+    .order('listing_price', { ascending: false });
 
-  if (highItems && highItems.length > 0) {
-    await generateBatch(highItems, 'high');
+  if (!allAvailable || allAvailable.length < 30) {
+    console.log("❌ Not enough inventory for 30 images.");
+    return;
   }
 
-  const { data: midItems } = await supabase
-    .from('pulse_inventory')
-    .select('*')
-    .eq('status', 'available')
-    .lt('listing_price', 300)
-    .gt('listing_price', 50)
-    .limit(10);
-
-  if (midItems && midItems.length > 0) {
-    await generateBatch(midItems, 'mid');
+  // 1. Batch High (Top 10)
+  console.log("💎 Generating High-Tier Batch...");
+  const highItems = allAvailable.slice(0, 10);
+  for (let i = 0; i < 10; i++) {
+    await generateStaticPost(highItems[i], `high_post_${i}.png`);
   }
 
-  const mixItems = [...(highItems || []).slice(0, 5), ...(midItems || []).slice(0, 5)];
-  if (mixItems.length > 0) {
-    await generateScrollVideo(mixItems);
+  // 2. Batch Mid (10 Items around €100-300)
+  console.log("🔥 Generating Mid-Tier Batch...");
+  const midItems = allAvailable.filter(i => i.listing_price < 400 && i.listing_price > 80).slice(0, 10);
+  for (let i = 0; i < 10; i++) {
+    await generateStaticPost(midItems[i], `mid_post_${i}.png`);
   }
+
+  // 3. Batch Mix (10 Random from remaining)
+  console.log("🌪️ Generating Mix Batch...");
+  const mixItems = allAvailable.sort(() => 0.5 - Math.random()).slice(0, 10);
+  for (let i = 0; i < 10; i++) {
+    await generateStaticPost(mixItems[i], `mix_post_${i}.png`);
+  }
+
+  // 4. Videos
+  console.log("🎬 Generating Videos...");
+  await generateScrollVideo(highItems, "video_luxury_scroll.mp4", 12);
+  await generateScrollVideo(midItems, "video_steals_scroll.mp4", 10);
 
   // Send to Telegram
   const files = fs.readdirSync(OUTPUT_DIR)
-    .filter(f => f.startsWith('high_') || f.startsWith('mid_') || f.startsWith('post_video'))
+    .filter(f => f.endsWith('.png') || f.endsWith('.mp4'))
     .map(f => path.join(OUTPUT_DIR, f));
   
   if (files.length > 0) {
-    await sendTelegramMedia(files, "🔥 Auvra Content Drop: " + new Date().toLocaleDateString());
+    await sendTelegramMedia(files, `📦 AUVRA DAILY BUNDLE\n30 Static Posts\n2 Motion Videos\n\nTotal: ${files.length} Assets`);
   }
 
-  console.log("✅ Daily Content Batch Complete & Sent.");
+  console.log("✅ All Assets Processed.");
 }
 
 runDailyFactory();
