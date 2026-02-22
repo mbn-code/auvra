@@ -5,7 +5,8 @@ import Accordion from "@/components/Accordion";
 import LiveActivity from "@/components/LiveActivity";
 import StickyBuy from "@/components/StickyBuy";
 import TrustPulse from "@/components/TrustPulse";
-import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle, Clock } from "lucide-react";
+import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle, Clock, Lock } from "lucide-react";
+import { createClient } from "@/lib/supabase-server";
 
 interface ArchiveProductPageProps {
   params: Promise<{ id: string }>;
@@ -13,7 +14,22 @@ interface ArchiveProductPageProps {
 
 export default async function ArchiveProductPage({ params }: ArchiveProductPageProps) {
   const { id } = await params;
+  const authSupabase = await createClient();
+  
+  // Check membership status
+  const { data: { session } } = await authSupabase.auth.getSession();
+  let isMember = false;
+  
+  if (session) {
+    const { data: profile } = await authSupabase
+      .from('profiles')
+      .select('membership_tier')
+      .eq('id', session.user.id)
+      .single();
+    if (profile?.membership_tier === 'society') isMember = true;
+  }
 
+  // Fetch product
   const { data: item, error } = await supabase
     .from('pulse_inventory')
     .select('*')
@@ -24,10 +40,11 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
     notFound();
   }
 
-  const formattedPrice = new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-  }).format(item.listing_price);
+  const listingPrice = item.listing_price;
+  const memberPrice = item.member_price || Math.round(listingPrice * 0.9);
+  
+  const formattedListingPrice = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(listingPrice);
+  const formattedMemberPrice = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(memberPrice);
 
   const deliveryDate = new Date();
   deliveryDate.setDate(deliveryDate.getDate() + 7);
@@ -91,16 +108,36 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                   {item.title}
                 </h1>
                 
-                <div className="flex items-center gap-6">
-                   <p className="text-5xl font-black text-zinc-900 tracking-tighter">
-                     {formattedPrice}
-                   </p>
-                   <div className="bg-zinc-50 px-4 py-2 rounded-full border border-zinc-100 flex items-center gap-3">
-                      <div className="flex gap-0.5">
-                        {[...Array(5)].map((_, i) => <Star key={i} size={10} className="fill-black text-black" />)}
-                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Verified Seller</span>
-                   </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 rounded-3xl border border-zinc-100 bg-zinc-50/50">
+                     <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Public Price</span>
+                        <span className={`text-2xl font-black tracking-tighter ${isMember ? 'text-zinc-400 line-through decoration-zinc-900/20' : 'text-zinc-900'}`}>
+                           {formattedListingPrice}
+                        </span>
+                     </div>
+                     {!isMember && (
+                       <Link href="/login" className="px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:opacity-80 transition-opacity flex items-center gap-2">
+                          <Lock size={10} /> Unlock Member Price
+                       </Link>
+                     )}
+                  </div>
+
+                  <div className={`flex items-center justify-between p-4 rounded-3xl border-2 ${isMember ? 'border-yellow-400 bg-yellow-50/10' : 'border-zinc-100 bg-white opacity-60'}`}>
+                     <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-yellow-600 uppercase tracking-widest flex items-center gap-2">
+                           <Zap size={10} className="fill-yellow-600" /> Society Member Price
+                        </span>
+                        <span className="text-3xl font-black tracking-tighter text-zinc-900">
+                           {formattedMemberPrice}
+                        </span>
+                     </div>
+                     {isMember && (
+                       <div className="px-3 py-1 bg-yellow-400 text-black text-[9px] font-black uppercase tracking-widest rounded-full">
+                          Active
+                       </div>
+                     )}
+                  </div>
                 </div>
 
                 <div className="bg-zinc-900 text-white p-8 rounded-[2.5rem] relative overflow-hidden">
@@ -129,18 +166,22 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                       <span>Estimated Arrival: <span className="text-zinc-900">{deliveryString}</span></span>
                    </div>
                    <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
-                      <Clock size={14} strokeWidth={2} />
-                      <span>Last Archive Sync: <span className="text-zinc-900">{new Date(item.last_pulse_check || item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></span>
-                   </div>
-                   <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
                       <Globe size={14} strokeWidth={2} />
                       <span>Logistics Scope: <span className="text-zinc-900">{item.shipping_zone === 'GLOBAL' ? 'Global Dispatch' : 'European Union Only'}</span></span>
+                   </div>
+                   <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
+                      <Clock size={14} strokeWidth={2} />
+                      <span>Last Archive Sync: <span className="text-zinc-900">{new Date(item.last_pulse_check || item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></span>
                    </div>
                 </div>
               </div>
 
               <div className="space-y-8">
-                <StickyBuy productId={item.id} price={formattedPrice} quantity={1} />
+                <StickyBuy 
+                  productId={item.id} 
+                  price={isMember ? formattedMemberPrice : formattedListingPrice} 
+                  quantity={1} 
+                />
                 <TrustPulse />
               </div>
 
