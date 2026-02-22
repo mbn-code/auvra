@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Instagram, Twitter, Youtube } from "lucide-react";
+import { Instagram, Twitter, Youtube, ShieldCheck } from "lucide-react";
 import Logo from "./Logo";
 
 export default function Footer() {
@@ -66,6 +66,10 @@ export default function Footer() {
           </p>
         </div>
         <div className="flex gap-4 items-center opacity-40 grayscale">
+            <div className="flex items-center gap-1.5 mr-4 border-r border-zinc-300 pr-6">
+               <ShieldCheck size={12} className="text-zinc-900" />
+               <span className="text-[8px] font-black uppercase tracking-widest text-zinc-900">PCI DSS Compliant</span>
+            </div>
             <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" className="h-4" />
             <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-3" />
             <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-5" />
