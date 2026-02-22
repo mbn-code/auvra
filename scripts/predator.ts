@@ -143,10 +143,23 @@ function calculateListingPrice(sourcePriceEUR: number, brand: string) {
   return price;
 }
 
+const NON_CLOTHING_KEYWORDS = [
+  "pioneer", "dj", "controller", "audio", "speaker", "sound", "headphone", 
+  "console", "xbox", "playstation", "nintendo", "camera", "lens", 
+  "furniture", "chair", "table", "lamp", "rug", "carpet", 
+  "funko", "lego", "toy", "plush", "poster", "art", "print"
+];
+
 export function calculateConfidence(item: VintedItem, description: string = "") {
   let score = 100;
   const priceEUR = convertToEUR(item.source_price, item.locale);
   const desc = description.toLowerCase();
+  const title = item.title.toLowerCase();
+
+  // 0. Non-Clothing Filter (Critical)
+  if (NON_CLOTHING_KEYWORDS.some(k => title.includes(k) || desc.includes(k))) {
+    return 0; // Immediate reject
+  }
 
   // 1. Price Floor Check
   const priceFloors: Record<string, number> = {
