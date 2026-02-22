@@ -77,6 +77,38 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* 1.5. SOCIETY MEMBERSHIP CTA */}
+      <section className="px-6 mb-12">
+        <div className="max-w-7xl mx-auto bg-zinc-900 rounded-[3rem] p-12 md:p-20 relative overflow-hidden text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-12">
+           <div className="absolute top-0 right-0 p-64 bg-yellow-400 blur-[150px] opacity-10 rounded-full pointer-events-none"></div>
+           
+           <div className="relative z-10 max-w-2xl">
+              <div className="inline-flex items-center gap-2 bg-yellow-400 text-black px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
+                <Zap size={12} className="fill-black" />
+                Auvra Society
+              </div>
+              <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-6 leading-[0.95]">
+                Unlock the <br /> Inner Archive.
+              </h2>
+              <p className="text-zinc-400 text-lg font-medium max-w-lg leading-relaxed">
+                Members gain exclusive access to direct source links for steals, priority acquisition on high-heat drops, and up to 15% off concierge pricing.
+              </p>
+           </div>
+
+           <div className="relative z-10 flex-shrink-0">
+              <Link 
+                href="/pricing" 
+                className="inline-flex items-center gap-4 bg-white text-black px-12 py-6 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:bg-yellow-400 transition-all shadow-xl shadow-yellow-900/20"
+              >
+                Join Society <ArrowRight size={16} />
+              </Link>
+              <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mt-4 text-center">
+                Limited Intakes Open
+              </p>
+           </div>
+        </div>
+      </section>
+
       {/* 2. ATMOSPHERIC GRID (Mood Board - Commercial Safe) */}
       <section className="max-w-7xl mx-auto px-6 py-24">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[600px]">

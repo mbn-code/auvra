@@ -15,8 +15,8 @@ export default function Header() {
           
           <nav className="hidden lg:flex items-center gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">
             <Link href="/archive" className="hover:text-black transition-colors text-zinc-900">Archive Pulse</Link>
+            <Link href="/pricing" className="text-yellow-600 hover:text-yellow-700 transition-colors">Join Society</Link>
             <Link href="/shipping" className="hover:text-black transition-colors">Logistics</Link>
-            <Link href="/refunds" className="hover:text-black transition-colors">Guarantee</Link>
           </nav>
 
           <div className="absolute left-1/2 -translate-x-1/2">
