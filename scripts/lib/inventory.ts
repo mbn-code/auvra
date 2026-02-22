@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { createClient } from '@supabase/supabase-js';
+import { v2 as cloudinary } from 'cloudinary';
 import * as dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
@@ -8,6 +9,12 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export interface ScrapedItem {
   source_id: string;
@@ -24,7 +31,10 @@ export interface ScrapedItem {
   platform: 'vinted' | 'grailed' | 'aliexpress';
 }
 
-const luxuryBrands = ["Louis Vuitton", "Hermès", "Chanel", "Chrome Hearts", "Prada"];
+const luxuryBrands = ["Louis Vuitton", "Hermès", "Chanel", "Chrome Hearts", "Prada", "Burberry"];
+const gorpcoreBrands = ["Arc'teryx", "The North Face", "Patagonia", "Salomon", "Oakley"];
+const streetwearBrands = ["Corteiz", "Stüssy", "Essentials", "Hellstar", "Sp5der", "Supreme", "A Bathing Ape", "Broken Planet", "Denim Tears", "Gallery Dept"];
+
 const highRiskFakes = ["Essentials", "Corteiz", "Hellstar", "Sp5der", "Jordan", "Nike", "Yeezy"];
 const autoApproveBrands = ["Ralph Lauren", "Carhartt", "ASICS", "Lacoste", "Supreme", "The North Face", "Arc'teryx", "Patagonia", "New Balance", "Salomon", "Oakley", "Dickies", "Diesel", "Levis", "Adidas", "Nike"];
 
@@ -68,6 +78,44 @@ const CONVERSION_RATES: Record<string, number> = {
   "dk": 0.13, "pl": 0.23, "de": 1.0, "fi": 1.0, "se": 0.088, "fr": 1.0,
   "USD": 0.92, "GBP": 1.17 
 };
+
+async function processImage(imageUrl: string, brand: string): Promise<{ url: string, hasFace: boolean }> {
+  try {
+    let prompt = "minimalist white studio background"; 
+    
+    if (luxuryBrands.includes(brand)) {
+      prompt = "luxury travertine stone surface, minimalist, warm studio lighting";
+    } else if (gorpcoreBrands.includes(brand)) {
+      prompt = "brutalist raw concrete wall, industrial, cold natural light";
+    } else if (streetwearBrands.includes(brand)) {
+      prompt = "dark asphalt texture, urban mood, flash photography";
+    }
+
+    const uploadOptions: any = {
+      folder: "auvra/archive",
+      // detection: "adv_face", // REMOVED: Requires paid subscription
+      // background_removal: "cloudinary_ai", // REMOVED: Requires paid subscription
+    };
+
+    const result = await cloudinary.uploader.upload(imageUrl, uploadOptions);
+
+    const hasFace = false; // Disabled face detection for now to avoid errors
+    
+    // Use a simple transformation for a consistent premium look
+    const transformedUrl = cloudinary.url(result.public_id, {
+      transformation: [
+        { width: 1000, height: 1250, crop: "fill", gravity: "center" },
+        { quality: "auto" },
+        { fetch_format: "auto" }
+      ]
+    });
+
+    return { url: transformedUrl, hasFace };
+  } catch (err) {
+    console.error(`[Pulse] Image processing failed:`, err);
+    return { url: imageUrl, hasFace: false };
+  }
+}
 
 export function parseVintedPrice(priceText: string): number {
   if (!priceText) return 0;
@@ -185,17 +233,16 @@ export async function saveToSupabase(item: ScrapedItem) {
   const profit = listingPrice - priceEUR - 20;
   
   let status = 'pending_review';
+  let displayImage = item.image;
   const subCategory = detectSubCategory(item.title);
 
+  // Relaxed Auto-approve logic: Confidence > 85, Profit > 25
   if (confidence > 85 && profit > 25 && autoApproveBrands.includes(item.brand)) {
     status = 'available';
+    // Use processed image for available items
+    const processed = await processImage(item.image, item.brand);
+    displayImage = processed.url;
   }
-
-  // Map to DB Schema
-  // Note: we are using upsert with vinted_id as key. If source is not Vinted, we need to handle that.
-  // The 'vinted_id' column in DB is a TEXT UNIQUE constraint. We can use it for 'source_id'.
-  // However, we should probably rename it eventually or just treat it as 'external_id'.
-  // For Grailed, we'll prefix with 'grailed_'.
 
   const { error } = await supabase.from('pulse_inventory').upsert({
     vinted_id: item.source_id,
@@ -206,12 +253,12 @@ export async function saveToSupabase(item: ScrapedItem) {
     listing_price: listingPrice,
     member_price: memberPrice,
     potential_profit: profit,
-    images: [item.image],
+    images: [displayImage],
     category: subCategory,
     confidence_score: confidence,
     seller_rating: item.seller_rating || 5.0,
     seller_reviews_count: item.seller_reviews || 50,
-    locale: item.locale || 'US', // Default for Grailed
+    locale: item.locale || 'US',
     shipping_zone: item.platform === 'grailed' ? 'GLOBAL' : 'EU_ONLY',
     status: status,
     currency: 'EUR',
@@ -221,11 +268,8 @@ export async function saveToSupabase(item: ScrapedItem) {
 
   if (error) {
     console.error(`❌ [Inventory] Error saving ${item.source_id}:`, error.message);
-  } else {
-    // console.log(`✅ [Inventory] Saved ${item.source_id}`);
   }
 }
-
 
 export async function checkVintedLive(url: string): Promise<boolean> {
   const browser = await chromium.launch({ headless: true });
@@ -244,4 +288,3 @@ export async function checkVintedLive(url: string): Promise<boolean> {
     await browser.close();
   }
 }
-

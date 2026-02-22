@@ -6,37 +6,27 @@ export default function TermsOfService() {
       <div className="space-y-8">
         <section>
           <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Acceptance of Terms</h2>
-          <p>By accessing and using Auvra, you agree to be bound by these Terms of Service. Auvra is a curated archive marketplace that facilitates the transfer of unique, pre-owned items sourced globally.</p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Inventory & Availability</h2>
-          <p>The Auvra Archive Pulse is a real-time sync engine. Most archive pieces are "one-of-one." In the rare event that an item is secured by two individuals simultaneously, we prioritize the first timestamped transaction and issue an immediate full refund to the second party.</p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Pricing</h2>
-          <p>Prices are final at the time of purchase. Auvra reserves the right to adjust archive pricing based on market fluctuation and rarity without prior notice.</p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Payment Security</h2>
-          <p>Transactions are processed via Stripe using high-level encryption. Auvra never sees or stores your full financial details.</p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Limitation of Liability</h2>
-          <p>Auvra shall not be liable for any indirect, incidental, or consequential damages resulting from the use of our services or the purchase of archive items.</p>
+          <p>By accessing and using Auvra, you agree to be bound by these Terms of Service. Auvra is a premium sourcing concierge that facilitates the acquisition of unique, pre-owned archival items sourced globally.</p>
         </section>
 
         <section>
           <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Non-Affiliation</h2>
-          <p>Auvra is an independent curation platform specializing in pre-owned luxury and streetwear. We are not an authorized dealer, nor are we affiliated, associated, or officially connected with any of the brands featured in our archive. All trademarks, logos, and brand names are the property of their respective owners.</p>
+          <p>Auvra is an independent curation platform. We are not an authorized dealer, nor are we affiliated, associated, or officially connected with any of the brands featured in our archive. All trademarks, logos, and brand names are the property of their respective owners.</p>
         </section>
 
         <section>
           <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Authenticity & Money-Back Guarantee</h2>
-          <p>Every piece in the Auvra archive is subjected to a rigorous internal verification process involving algorithmic checks and manual inspection. We guarantee the authenticity of every item sold. If an item is proven inauthentic by a certified third-party authenticator within 30 days of purchase, Auvra will issue a full 100% refund, including all shipping and logistics fees. The item is sold "as-is" based on the high-fidelity condition report provided on the product page.</p>
+          <p>We guarantee the authenticity of every item secured through our concierge. If an item is proven inauthentic by a certified third-party authenticator within 30 days of purchase, Auvra will issue a full 100% refund.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">The 48-Hour Inspection Period</h2>
+          <p>All archive acquisitions are final after a 48-hour inspection period starting from the timestamp of delivery. Any condition discrepancies must be reported within this window to be eligible for resolution.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Logistics & Availability</h2>
+          <p>The Auvra Archive Pulse is a real-time sync engine. In the event that an item becomes unavailable at the source before acquisition can be finalized, Auvra will issue an immediate full refund and notify the client.</p>
         </section>
 
         <section>

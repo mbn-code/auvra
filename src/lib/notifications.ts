@@ -7,32 +7,57 @@ export async function sendSecureNotification(orderData: {
 }) {
   const pushoverToken = process.env.PUSHOVER_TOKEN;
   const pushoverUser = process.env.PUSHOVER_USER_KEY;
+  const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+  const telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
-  if (!pushoverToken || !pushoverUser) {
-    console.log("⚠️ Pushover keys missing. Logging sale to console instead.");
-    console.log(`🚨 SALE SECURED: ${orderData.productName} (Profit: $${orderData.profit})`);
-    console.log(`🔗 Vinted: ${orderData.vintedUrl}`);
-    return;
+  const message = `🚨 NEW SALE: ${orderData.productName}\n💰 Profit: €${Math.round(orderData.profit)}\n👤 Customer: ${orderData.customerName}\n📍 Address: ${orderData.customerAddress}`;
+
+  // 1. Pushover Notification (Native Alarm)
+  if (pushoverToken && pushoverUser) {
+    try {
+      await fetch("https://api.pushover.net/1/messages.json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: pushoverToken,
+          user: pushoverUser,
+          message: message,
+          title: "AUVRA: Secure Item Now",
+          url: orderData.vintedUrl,
+          url_title: "Open Source Listing",
+          priority: 1, 
+          sound: "cashregister"
+        }),
+      });
+    } catch (err) {
+      console.error("Pushover Error:", err);
+    }
   }
 
-  const message = `🚨 NEW SALE: ${orderData.productName}\n💰 Profit: $${orderData.profit}\n👤 Customer: ${orderData.customerName}\n📍 Address: ${orderData.customerAddress}`;
+  // 2. Telegram Notification (Instant Message)
+  if (telegramToken && telegramChatId) {
+    try {
+      await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: telegramChatId,
+          text: message,
+          reply_markup: {
+            inline_keyboard: [[
+              { text: "📦 Open Source Link", url: orderData.vintedUrl }
+            ]]
+          }
+        }),
+      });
+    } catch (err) {
+      console.error("Telegram Notification Error:", err);
+    }
+  }
 
-  try {
-    await fetch("https://api.pushover.net/1/messages.json", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        token: pushoverToken,
-        user: pushoverUser,
-        message: message,
-        title: "AUVRA: Secure Item Now",
-        url: orderData.vintedUrl,
-        url_title: "Open Vinted Checkout",
-        priority: 1, // High priority
-        sound: "cashregister"
-      }),
-    });
-  } catch (err) {
-    console.error("Failed to send notification:", err);
+  // Log to console if everything fails
+  if (!pushoverToken && !telegramToken) {
+    console.log(`🚨 SALE SECURED: ${orderData.productName} (Profit: €${orderData.profit})`);
+    console.log(`🔗 Vinted: ${orderData.vintedUrl}`);
   }
 }

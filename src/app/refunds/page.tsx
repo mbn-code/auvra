@@ -5,28 +5,28 @@ export default function RefundPolicy() {
     <PolicyLayout title="Returns & Transfers">
       <div className="space-y-8">
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Our Guarantee</h2>
-          <p>We stand behind the authenticity and quality of every archive piece. If an item does not match the description or condition report provided in the archive pulse, we offer a full return and refund.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Authenticity Guarantee</h2>
+          <p>We stand behind the absolute authenticity of every archive piece. If an item is proven inauthentic by a certified third-party authenticator within <strong>30 days</strong> of purchase, Auvra will issue a full 100% refund, including all logistics fees.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">30-Day Protection</h2>
-          <p>You have 30 days from the date of delivery to initiate a return request. To be eligible, the Auvra Archive Tag must remain attached and the item must be in the same condition as received.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">48-Hour Integrity Window</h2>
+          <p>Due to the unique, one-of-one nature of archive pieces sourced from global private collections, we operate a strict 48-hour inspection window. Upon delivery, you have <strong>48 hours</strong> to report any discrepancies in condition or description. After this period, the acquisition is considered final.</p>
         </section>
 
         <section>
           <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Non-Returnable Items</h2>
-          <p>Certain limited-edition archive pieces marked as "Final Sale" or items where the security tag has been removed are not eligible for returns due to the unique nature of the inventory.</p>
+          <p>Items marked as "Museum Grade" or "Final Sale" are not eligible for returns. Additionally, any item where the Auvra Archive Security Tag has been removed or tampered with is ineligible for return under the integrity window.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Initiating a Return</h2>
-          <p>To start a return, please contact our logistics team at <strong>malthe@mbn-code.dk</strong> with your order ID. We will provide a pre-paid regional shipping label for our EU customers.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Initiating a Report</h2>
+          <p>To report a condition discrepancy, please email <strong>malthe@mbn-code.dk</strong> within the 48-hour window with your order ID and high-resolution photographic evidence of the issue.</p>
         </section>
 
         <section>
           <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Refund Processing</h2>
-          <p>Once your return is received and inspected at our hub, your refund will be processed back to your original payment method within 3-5 business days.</p>
+          <p>Once a return is authorized and received at our regional hub, your refund will be processed back to your original payment method within 3-5 business days.</p>
         </section>
       </div>
     </PolicyLayout>

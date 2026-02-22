@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS pulse_inventory (
     condition TEXT,
     source_price DECIMAL NOT NULL,
     listing_price DECIMAL NOT NULL,
+    member_price DECIMAL, -- NEW: Member-only price
     potential_profit DECIMAL NOT NULL,
     currency TEXT DEFAULT 'EUR',
     images TEXT[] NOT NULL,
