@@ -30,6 +30,25 @@ CREATE TABLE IF NOT EXISTS pulse_inventory (
     last_seen_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- User Profiles for Membership
+CREATE TABLE IF NOT EXISTS profiles (
+    id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    membership_tier TEXT DEFAULT 'free', -- free, society
+    stripe_customer_id TEXT,
+    subscription_status TEXT, -- active, past_due, canceled
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS for Profiles
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own profile" ON profiles
+    FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile" ON profiles
+    FOR UPDATE USING (auth.uid() = id);
+
 -- Orders Table for Fulfillment
 CREATE TABLE IF NOT EXISTS orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
