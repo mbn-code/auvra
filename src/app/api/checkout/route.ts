@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { products } from "@/config/products";
 import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 const ZONE_COUNTRIES: Record<string, string[]> = {
   "EU_ONLY": ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"],
@@ -12,6 +13,21 @@ const ZONE_COUNTRIES: Record<string, string[]> = {
 export async function POST(req: NextRequest) {
   try {
     const { productId, quantity } = await req.json();
+    
+    // Check Membership Status
+    const authSupabase = await createClient();
+    const { data: { session } } = await authSupabase.auth.getSession();
+    let isMember = false;
+
+    if (session) {
+      const { data: profile } = await authSupabase
+        .from('profiles')
+        .select('membership_tier')
+        .eq('id', session.user.id)
+        .single();
+      if (profile?.membership_tier === 'society') isMember = true;
+    }
+
     let product: any = products[productId];
     let isArchive = false;
     let shippingZone = "GLOBAL";
@@ -40,9 +56,12 @@ export async function POST(req: NextRequest) {
           console.error("Pulse-Check Error:", e);
         }
 
+        const basePrice = item.listing_price;
+        const finalPrice = isMember ? (item.member_price || Math.round(basePrice * 0.9)) : basePrice;
+
         product = {
           name: item.title,
-          price: item.listing_price * 100,
+          price: finalPrice * 100, // Convert to cents
           currency: item.currency.toLowerCase(),
           images: item.images,
           description: item.description || `Archive piece: ${item.brand}`,
@@ -62,22 +81,30 @@ export async function POST(req: NextRequest) {
     let unitAmount = product.price;
 
     if (!isArchive) {
-      let discount = 0;
-      if (qty === 2) discount = 0.15;
-      if (qty >= 3) discount = 0.25;
-      unitAmount = Math.round(product.price * (1 - discount));
+      // Static products discount logic
+      if (isMember) {
+         // Apply member discount on top or instead? 
+         // Let's say members get 10% off static items too
+         unitAmount = Math.round(unitAmount * 0.9);
+      } else {
+        // Quantity discounts for non-members (or both)
+        let discount = 0;
+        if (qty === 2) discount = 0.15;
+        if (qty >= 3) discount = 0.25;
+        unitAmount = Math.round(product.price * (1 - discount));
+      }
     }
 
     const allowedCountries = ZONE_COUNTRIES[shippingZone] || ZONE_COUNTRIES["EU_ONLY"];
 
-    const session = await stripe.checkout.sessions.create({
+    const stripeSession = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
             currency: product.currency,
             product_data: {
-              name: `${product.name} ${qty > 1 ? `(${qty} Pack Bundle)` : ""}`,
+              name: `${product.name} ${isMember ? '(Member Price)' : ''}`,
               images: product.images,
               description: product.description,
             },
@@ -90,6 +117,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         productId: productId,
         type: isArchive ? 'archive' : 'static',
+        isMember: isMember ? 'true' : 'false'
       },
       shipping_address_collection: {
         allowed_countries: allowedCountries as any,
@@ -102,7 +130,7 @@ export async function POST(req: NextRequest) {
       cancel_url: isArchive ? `${req.nextUrl.origin}/archive/${productId}` : `${req.nextUrl.origin}/product/${productId}`,
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: stripeSession.url });
   } catch (error: any) {
     console.error("Stripe Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -25,10 +25,26 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
     
-    const { productId, type } = session.metadata || {};
+    const { productId, type, userId } = session.metadata || {};
     const customerEmail = session.customer_details?.email;
     const customerName = session.customer_details?.name;
 
+    // HANDLE MEMBERSHIP SUBSCRIPTION
+    if (type === 'membership' && userId) {
+      await supabase
+        .from('profiles')
+        .update({
+          membership_tier: 'society',
+          stripe_customer_id: session.customer,
+          subscription_status: 'active'
+        })
+        .eq('id', userId);
+        
+      console.log(`✅ Membership activated for user ${userId}`);
+      return NextResponse.json({ received: true });
+    }
+
+    // HANDLE PRODUCT PURCHASE
     if (customerEmail && productId) {
       let productName = "Archive Piece";
       let price = `€${(session.amount_total / 100).toFixed(2)}`;

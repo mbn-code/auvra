@@ -263,8 +263,8 @@ export async function saveToSupabase(items: VintedItem[]) {
     let displayImage = item.image;
     const subCategory = detectSubCategory(item.title);
 
-    // Auto-approve logic based on profit and confidence
-    if (confidence > 95 && profit > 40 && autoApproveBrands.includes(item.brand)) {
+    // Relaxed Auto-approve logic: Confidence > 85, Profit > 25
+    if (confidence > 85 && profit > 25 && autoApproveBrands.includes(item.brand)) {
       status = 'available';
     }
 
