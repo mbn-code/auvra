@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { checkVintedLive } from './predator';
+import { checkVintedLive } from './lib/inventory';
 import * as dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
