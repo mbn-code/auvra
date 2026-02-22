@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { use } from "react";
 import { supabase } from "@/lib/supabase";
-import { Zap, ArrowLeft, Filter, ChevronDown, SortAsc, SortDesc, Clock } from "lucide-react";
+import { Zap, ArrowLeft, Filter, ChevronDown, SortAsc, SortDesc, Clock, Search } from "lucide-react";
+import PulseHeartbeat from "@/components/PulseHeartbeat";
 
 export default function BrandArchivePage({ params }: { params: Promise<{ brand: string }> }) {
   const { brand: brandName } = use(params);
@@ -14,8 +15,11 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
   const [filteredItems, setFilteredItems] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [conditions, setConditions] = useState<string[]>([]);
+  const [sizes, setSizes] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [activeCondition, setActiveCondition] = useState<string>("All");
+  const [activeSize, setActiveSize] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -40,12 +44,21 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
 
       const uniqueConditions = Array.from(new Set(data.map(item => item.condition).filter(Boolean)));
       setConditions(["All", ...uniqueConditions]);
+
+      const uniqueSizes = Array.from(new Set(data.map(item => item.size).filter(Boolean)));
+      setSizes(["All", ...uniqueSizes]);
     }
     setLoading(false);
   }
 
   useEffect(() => {
     let result = [...items];
+
+    if (searchQuery) {
+      result = result.filter(item => 
+        item.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
 
     if (activeCategory !== "All") {
       result = result.filter(item => item.category === activeCategory);
@@ -55,20 +68,27 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
       result = result.filter(item => item.condition === activeCondition);
     }
 
+    if (activeSize !== "All") {
+      result = result.filter(item => item.size === activeSize);
+    }
+
     // Sorting
     if (sortBy === "price-asc") {
       result.sort((a, b) => a.listing_price - b.listing_price);
     } else if (sortBy === "price-desc") {
       result.sort((a, b) => b.listing_price - a.listing_price);
+    } else if (sortBy === "savings") {
+      result.sort((a, b) => (b.listing_price - (b.member_price || b.listing_price * 0.9)) - (a.listing_price - (a.member_price || a.listing_price * 0.9)));
     } else {
       result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
 
     setFilteredItems(result);
-  }, [activeCategory, activeCondition, sortBy, items]);
+  }, [activeCategory, activeCondition, activeSize, sortBy, items]);
 
   return (
     <div className="min-h-screen bg-white">
+      <PulseHeartbeat />
       <section className="pt-40 pb-20 px-6 border-b border-zinc-50">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end gap-12">
           <div className="max-w-2xl">
@@ -108,7 +128,20 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
               {showFilters ? "Close Filters" : "Filters"}
             </button>
 
-            <div className="h-4 w-[1px] bg-zinc-200 mx-2" />
+            {items.length > 15 && (
+              <div className="relative flex-1 max-w-xs hidden md:block">
+                <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
+                <input 
+                  type="text"
+                  placeholder="Search Archive..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-zinc-50 border border-zinc-100 pl-10 pr-4 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest outline-none focus:border-black transition-all"
+                />
+              </div>
+            )}
+
+            <div className="h-4 w-[1px] bg-zinc-200 mx-2 hidden md:block" />
 
             {/* Quick Category Access if not many */}
             {categories.length <= 6 && categories.map(cat => (
@@ -134,6 +167,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                 <option value="newest">Newest Arrivals</option>
                 <option value="price-asc">Price: Low to High</option>
                 <option value="price-desc">Price: High to Low</option>
+                <option value="savings">Highest Member Savings</option>
               </select>
               <ChevronDown size={12} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400" />
             </div>
@@ -162,6 +196,23 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                 </div>
               </div>
             )}
+
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Size</h4>
+              <div className="flex flex-wrap gap-2">
+                {sizes.map(sz => (
+                  <button
+                    key={sz}
+                    onClick={() => setActiveSize(sz)}
+                    className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all ${
+                      activeSize === sz ? "bg-zinc-900 text-white" : "bg-zinc-50 text-zinc-500 hover:bg-zinc-100"
+                    }`}
+                  >
+                    {sz}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div className="space-y-4">
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Condition</h4>
@@ -212,7 +263,18 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
             {filteredItems.map((item) => (
               <Link key={item.id} href={`/archive/${item.id}`} className="group block">
                 <div className="aspect-[4/5] bg-zinc-50 rounded-[2.5rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 group-hover:shadow-2xl group-hover:shadow-zinc-100 relative">
-                  <img src={item.images[0]} className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-1000" alt={item.title} />
+                  <img 
+                    src={item.images[0]} 
+                    className={`w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-1000 ${item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
+                    alt={item.title} 
+                  />
+                  {item.images.length > 1 && (
+                    <img 
+                      src={item.images[1]} 
+                      className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-110 group-hover:scale-100" 
+                      alt={`${item.title} alternate`} 
+                    />
+                  )}
                 </div>
                 <div className="px-2 flex justify-between items-center">
                   <div>

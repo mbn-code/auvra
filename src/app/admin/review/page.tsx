@@ -11,6 +11,7 @@ export default function AdminReviewPage() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
+  const [editMemberValue, setEditMemberValue] = useState<string>("");
   const [actionedIds, setActionedIds] = useState<Set<string>>(new Set());
   const router = useRouter();
 
@@ -59,7 +60,8 @@ export default function AdminReviewPage() {
 
   async function savePrice(id: string) {
     const newPrice = parseFloat(editValue);
-    if (isNaN(newPrice)) return;
+    const newMemberPrice = parseFloat(editMemberValue);
+    if (isNaN(newPrice) || isNaN(newMemberPrice)) return;
 
     const item = items.find(i => i.id === id);
     if (!item) return;
@@ -70,12 +72,13 @@ export default function AdminReviewPage() {
       .from('pulse_inventory')
       .update({ 
         listing_price: newPrice,
+        member_price: newMemberPrice,
         potential_profit: newProfit
       })
       .eq('id', id);
 
     if (!error) {
-      setItems(items.map(i => i.id === id ? { ...i, listing_price: newPrice, potential_profit: newProfit } : i));
+      setItems(items.map(i => i.id === id ? { ...i, listing_price: newPrice, member_price: newMemberPrice, potential_profit: newProfit } : i));
       setEditingId(null);
     }
   }
@@ -192,8 +195,10 @@ export default function AdminReviewPage() {
                       <div className="flex flex-col gap-2">
                         <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Source: <span className="text-zinc-900">€{item.source_price.toFixed(2)}</span></p>
                         
-                        {editingId === item.id ? (
+                      {editingId === item.id ? (
+                        <div className="flex flex-col gap-3">
                           <div className="flex gap-2 items-center">
+                            <span className="text-[9px] font-black text-zinc-400 uppercase w-12">Public:</span>
                             <input 
                               type="number" 
                               value={editValue} 
@@ -201,20 +206,36 @@ export default function AdminReviewPage() {
                               className="w-24 bg-zinc-50 border border-zinc-200 px-3 py-1 rounded text-sm font-bold"
                               autoFocus
                             />
-                            <button onClick={() => savePrice(item.id)} className="text-[10px] font-black uppercase text-green-600">Save</button>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                            <span className="text-[9px] font-black text-yellow-600 uppercase w-12">Society:</span>
+                            <input 
+                              type="number" 
+                              value={editMemberValue} 
+                              onChange={(e) => setEditMemberValue(e.target.value)}
+                              className="w-24 bg-zinc-50 border border-zinc-200 px-3 py-1 rounded text-sm font-bold"
+                            />
+                          </div>
+                          <div className="flex gap-4">
+                            <button onClick={() => savePrice(item.id)} className="text-[10px] font-black uppercase text-green-600">Save Changes</button>
                             <button onClick={() => setEditingId(null)} className="text-[10px] font-black uppercase text-zinc-400">Cancel</button>
                           </div>
-                        ) : (
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
                           <div className="flex items-center gap-3">
                             <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Listing: <span className="text-zinc-900">€{item.listing_price}</span></p>
                             <button 
-                              onClick={() => { setEditingId(item.id); setEditValue(item.listing_price.toString()); }}
+                              onClick={() => { setEditingId(item.id); setEditValue(item.listing_price.toString()); setEditMemberValue(item.member_price?.toString() || ""); }}
                               className="text-zinc-300 hover:text-black transition-colors"
                             >
                               <Edit3 size={12} />
                             </button>
                           </div>
-                        )}
+                          <p className="text-yellow-600 text-[10px] font-black uppercase tracking-widest">Society: <span className="text-zinc-900">€{item.member_price}</span></p>
+                        </div>
+                      )}
+
                       </div>
                     </div>
   

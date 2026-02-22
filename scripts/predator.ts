@@ -22,6 +22,11 @@ export async function scrapeVinted(brand: string, locale: string): Promise<Scrap
         const vintedId = href.split('/')?.pop()?.split('-')?.[0] || '';
         const title = linkEl?.getAttribute('title') || imgEl?.getAttribute('alt') || '';
         const priceText = card.textContent?.match(/([0-9\s,.]+)\s?(?:kr|€|zł)/)?.[0] || '';
+        
+        // Extract size from subtitle (e.g. "XL / 42 / 14" -> "XL")
+        const subtitle = subtitleEl?.textContent?.trim() || '';
+        const size = subtitle.split('/')[0].trim();
+
         return {
           vinted_id: vintedId,
           title: title,
@@ -29,7 +34,8 @@ export async function scrapeVinted(brand: string, locale: string): Promise<Scrap
           source_price_raw: priceText,
           image: imgEl?.src || '',
           brand: brandName,
-          condition: subtitleEl?.textContent?.trim() || 'Very Good'
+          condition: 'Very Good', // Subtitle often contains size, not condition in grid
+          size: size
         };
       });
     }, brand);
@@ -43,6 +49,7 @@ export async function scrapeVinted(brand: string, locale: string): Promise<Scrap
       image: item.image,
       brand: brand,
       condition: translateTerm(item.condition),
+      size: item.size,
       seller_rating: 5.0,
       seller_reviews: 50,
       locale: locale,

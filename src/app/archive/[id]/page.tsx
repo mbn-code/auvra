@@ -5,7 +5,7 @@ import Accordion from "@/components/Accordion";
 import LiveActivity from "@/components/LiveActivity";
 import StickyBuy from "@/components/StickyBuy";
 import TrustPulse from "@/components/TrustPulse";
-import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle, Clock, Lock } from "lucide-react";
+import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle, Clock, Lock, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase-server";
 
 interface ArchiveProductPageProps {
@@ -55,6 +55,15 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
       <LiveActivity productName={item.title} />
       
       <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-12">
+          <Link href="/archive" className="hover:text-black">Archive</Link>
+          <span className="opacity-30">/</span>
+          <Link href={`/archive/brand/${encodeURIComponent(item.brand)}`} className="hover:text-black">{item.brand}</Link>
+          <span className="opacity-30">/</span>
+          <span className="text-zinc-900 truncate max-w-[150px]">{item.title}</span>
+        </nav>
+
         <div className="flex flex-col lg:flex-row gap-20 xl:gap-32">
           
           <section className="lg:w-[55%] space-y-6">
@@ -177,17 +186,47 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
               </div>
 
               <div className="space-y-8">
-                <StickyBuy 
-                  productId={item.id} 
-                  price={isMember ? formattedMemberPrice : formattedListingPrice} 
-                  quantity={1} 
-                />
+                {isMember && item.potential_profit < 20 ? (
+                  <div className="space-y-4">
+                    <div className="bg-zinc-900 text-white p-8 rounded-[2.5rem] border border-zinc-800">
+                       <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-4 text-yellow-400">Society Benefit: Direct Access</p>
+                       <p className="text-lg font-medium leading-relaxed mb-8">As this item represents a low-margin steal, you have unlocked direct source access. Secure it directly from the archive source to bypass concierge fees.</p>
+                       <a 
+                        href={item.source_url} 
+                        target="_blank"
+                        className="w-full bg-white text-black py-6 rounded-full font-black text-[13px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-yellow-400 transition-all shadow-xl shadow-yellow-900/20"
+                       >
+                         Secure at Source <ExternalLink size={16} />
+                       </a>
+                    </div>
+                    <p className="text-[10px] text-center text-zinc-400 font-bold uppercase tracking-widest">
+                      Note: Direct purchases are managed by the source marketplace.
+                    </p>
+                  </div>
+                ) : (
+                  <StickyBuy 
+                    productId={item.id} 
+                    price={isMember ? formattedMemberPrice : formattedListingPrice} 
+                    quantity={1} 
+                  />
+                )}
                 <TrustPulse />
               </div>
 
               <div className="pt-8 border-t border-zinc-50">
                 <Accordion title="Pulse Report" defaultOpen={true}>
                   <p className="mb-6 leading-relaxed">{item.description || "This specific piece was captured by our algorithm due to its exceptional condition and brand provenance. A rare find within the current European archive cluster."}</p>
+                  
+                  <div className="mb-8 p-6 bg-zinc-50 rounded-2xl border border-zinc-100">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3">Fit Recommendation</h4>
+                    <p className="text-sm font-bold text-zinc-900 leading-relaxed">
+                      This item is tagged as <span className="underline">{item.size}</span>. 
+                      {['Louis Vuitton', 'Chanel', 'Prada'].includes(item.brand) 
+                        ? " Heritage houses often use vintage tailoring; we recommend securing this if you value a precise, structured fit."
+                        : " For this specific archive selection, the fit is consistent with standard house dimensions."}
+                    </p>
+                  </div>
+
                   <ul className="space-y-3">
                      <li className="flex items-center gap-3 text-[12px] font-bold uppercase tracking-widest text-zinc-900">
                         <ShieldCheck size={14} className="text-green-500" />

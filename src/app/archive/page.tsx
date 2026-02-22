@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Zap, ChevronRight, Search } from "lucide-react";
+import PulseHeartbeat from "@/components/PulseHeartbeat";
 
 export default function ArchivePage() {
   const [brands, setBrands] = useState<{ name: string; preview: string; count: number }[]>([]);
@@ -55,6 +56,7 @@ export default function ArchivePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <PulseHeartbeat />
       <section className="relative pt-40 pb-20 px-6 border-b border-zinc-50 overflow-hidden">
         <div className="absolute top-0 right-0 w-1/2 h-full z-0 opacity-[0.05] pointer-events-none rotate-12 scale-150">
            <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover" alt="" />

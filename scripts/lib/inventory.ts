@@ -25,6 +25,7 @@ export interface ScrapedItem {
   image: string;
   brand: string;
   condition: string;
+  size?: string; // NEW: Size field
   seller_rating?: number;
   seller_reviews?: number;
   locale?: string; // Optional if currency provided
@@ -255,6 +256,7 @@ export async function saveToSupabase(item: ScrapedItem) {
     potential_profit: profit,
     images: [displayImage],
     category: subCategory,
+    size: item.size || 'OS', // NEW: Store size
     confidence_score: confidence,
     seller_rating: item.seller_rating || 5.0,
     seller_reviews_count: item.seller_reviews || 50,

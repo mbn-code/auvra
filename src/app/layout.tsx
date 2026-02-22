@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CookieConsent from "@/components/CookieConsent";
+import MobileNav from "@/components/MobileNav";
 
 export const metadata: Metadata = {
   title: "Auvra | Premium Curated Finds",
@@ -33,11 +34,12 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className="antialiased selection:bg-black selection:text-white pt-28">
+      <body className="antialiased selection:bg-black selection:text-white pt-28 pb-20 lg:pb-0">
         <Header />
         {children}
         <Footer />
         <CookieConsent />
+        <MobileNav />
       </body>
     </html>
   );

@@ -79,6 +79,7 @@ export async function scrapeGrailed(brand: string): Promise<ScrapedItem[]> {
         image: item.image,
         brand: brand,
         condition: 'Very Good',
+        size: item.size,
         seller_rating: 5.0, // Assumption for now
         seller_reviews: 10,
         locale: 'US', // Grailed is mostly US/Global
