@@ -3,6 +3,7 @@ import Image from "next/image";
 import { products } from "@/config/products";
 import { supabase } from "@/lib/supabase";
 import { ArrowRight, Sparkles, Flame, Zap } from "lucide-react";
+import NeuralFeed from "@/components/NeuralFeed";
 
 export default async function Home() {
   const staticProducts = Object.values(products);
@@ -121,16 +122,21 @@ export default async function Home() {
               </p>
            </div>
 
-           <div className="relative z-10 flex-shrink-0">
+           <div className="relative z-10 flex-shrink-0 text-center">
               <Link 
                 href="/pricing" 
                 className="inline-flex items-center gap-4 bg-white text-black px-12 py-6 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:bg-yellow-400 transition-all shadow-xl shadow-yellow-900/20"
               >
                 Join Society <ArrowRight size={16} />
               </Link>
-              <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mt-4 text-center">
-                Limited Intakes Open
-              </p>
+              <div className="mt-6 space-y-1">
+                <p className="text-yellow-400 text-[10px] font-black uppercase tracking-widest animate-pulse">
+                  Only 7 Invites Left Today
+                </p>
+                <p className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest">
+                  Batch 01/2026 Intake
+                </p>
+              </div>
            </div>
         </div>
       </section>
@@ -211,14 +217,7 @@ export default async function Home() {
                </Link>
             </div>
             <div className="flex-1 w-full">
-               <div className="aspect-square rounded-[4rem] overflow-hidden bg-zinc-50 relative border border-zinc-100 shadow-2xl shadow-zinc-100">
-                  <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover transition-transform duration-[3000ms] hover:scale-110" alt="" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-12 left-12">
-                     <p className="text-white text-[10px] font-black uppercase tracking-[0.4em] mb-2 opacity-70">Active Network</p>
-                     <p className="text-white text-2xl font-black tracking-tighter uppercase">Global Sync Node 01</p>
-                  </div>
-               </div>
+               <NeuralFeed />
             </div>
          </div>
       </section>
