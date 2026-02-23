@@ -5,7 +5,8 @@ import Accordion from "@/components/Accordion";
 import LiveActivity from "@/components/LiveActivity";
 import StickyBuy from "@/components/StickyBuy";
 import TrustPulse from "@/components/TrustPulse";
-import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle, Clock, Lock, ExternalLink } from "lucide-react";
+import NeuralDecrypt from "@/components/NeuralDecrypt";
+import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle, Clock, Lock, ExternalLink, Cpu } from "lucide-react";
 import { createClient } from "@/lib/supabase-server";
 import { Metadata } from "next";
 
@@ -64,6 +65,9 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
   if (error || !item) {
     notFound();
   }
+
+  const isVault = item.potential_profit > 200 || ['Hermès', 'Chanel', 'Louis Vuitton'].includes(item.brand);
+  const showLockedVisual = isVault && !isMember;
 
   const listingPrice = item.listing_price;
   const memberPrice = item.member_price || Math.round(listingPrice * 0.9);
@@ -146,28 +150,32 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
           
           <section className="lg:w-[55%] space-y-6">
             <div className="sticky top-32 space-y-6">
-               <div className="rounded-[3.5rem] overflow-hidden bg-zinc-50 border border-zinc-100 relative group transition-all duration-1000">
-                  <img 
-                    src={item.images[0]} 
-                    className="w-full aspect-[4/5] object-cover transition-transform duration-1000 group-hover:scale-105" 
-                    alt={item.title} 
+               <div className="rounded-[3.5rem] overflow-hidden bg-zinc-50 border border-zinc-100 relative group transition-all duration-1000 aspect-[4/5]">
+                  <NeuralDecrypt 
+                    imageUrl={item.images[0]} 
+                    isLocked={showLockedVisual} 
                   />
-                  <div className="absolute top-8 left-8 flex flex-col gap-3">
-                     <div className="bg-zinc-900/90 backdrop-blur-md text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2 shadow-sm">
-                        <Zap size={10} className="text-yellow-400" />
-                        Auvra Pulse Selection
-                     </div>
-                     <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-zinc-100 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                        Regional Dispatch: {item.locale?.toUpperCase()}
-                     </div>
-                  </div>
+                  {!showLockedVisual && (
+                    <div className="absolute top-8 left-8 flex flex-col gap-3">
+                       <div className="bg-zinc-900/90 backdrop-blur-md text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2 shadow-sm">
+                          <Zap size={10} className="text-yellow-400" />
+                          Auvra Pulse Selection
+                       </div>
+                       <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-zinc-100 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                          Regional Dispatch: {item.locale?.toUpperCase()}
+                       </div>
+                    </div>
+                  )}
                </div>
                
                <div className="grid grid-cols-2 gap-6">
                   {item.images.slice(1).map((img: string, i: number) => (
-                    <div key={i} className="aspect-[4/5] bg-zinc-50 rounded-[2.5rem] overflow-hidden border border-zinc-100">
-                      <img src={img} className="w-full h-full object-cover" alt={`${item.title} ${i}`} />
+                    <div key={i} className="aspect-[4/5] bg-zinc-50 rounded-[2.5rem] overflow-hidden border border-zinc-100 relative">
+                      <NeuralDecrypt 
+                        imageUrl={img} 
+                        isLocked={showLockedVisual} 
+                      />
                     </div>
                   ))}
                </div>
@@ -200,9 +208,9 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                       <span className="text-[11px] font-black uppercase tracking-widest opacity-50">Size</span>
                       <span className="text-xl font-black uppercase tracking-tighter">{item.size || 'OS'}</span>
                    </div>
-                   <div className="bg-zinc-50 text-zinc-400 px-4 py-3 rounded-full border border-zinc-100 flex items-center gap-2">
-                      <Zap size={14} className="fill-zinc-400" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Archive Selection</span>
+                   <div className="bg-zinc-50 text-zinc-400 px-4 py-3 rounded-full border border-zinc-100 flex items-center gap-3">
+                      <Cpu size={14} className="fill-zinc-400" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Asset ID: AV-{item.vinted_id.substring(0, 6).toUpperCase()}</span>
                    </div>
                 </div>
                 
@@ -275,6 +283,19 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
               </div>
 
               <div className="space-y-8">
+                <div className="flex items-center gap-3 px-6 py-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+                   <div className="flex -space-x-2">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="w-6 h-6 rounded-full bg-zinc-200 border-2 border-white flex items-center justify-center">
+                           <span className="text-[8px] font-bold text-zinc-500">N{i+1}</span>
+                        </div>
+                      ))}
+                   </div>
+                   <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                      <span className="text-zinc-900">3 other nodes</span> currently inspecting this asset
+                   </p>
+                </div>
+
                 {isMember && item.potential_profit < 20 ? (
                   <div className="space-y-4">
                     <div className="bg-zinc-900 text-white p-8 rounded-[2.5rem] border border-zinc-800">

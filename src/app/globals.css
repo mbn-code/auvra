@@ -27,6 +27,19 @@ body {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
+  .mask-fade-right {
+    mask-image: linear-gradient(to right, black 80%, transparent 100%);
+  }
+}
+
+@keyframes scan {
+  from { top: 0%; opacity: 0; }
+  50% { opacity: 1; }
+  to { top: 100%; opacity: 0; }
+}
+
+.animate-scan {
+  animation: scan 3s ease-in-out infinite;
 }
 
 h1, h2, h3, h4 {

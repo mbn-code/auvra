@@ -1,13 +1,31 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import "./marquee.css";
 
 export default function AnnouncementMarquee() {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      const nextHour = new Date();
+      nextHour.setHours(now.getHours() + 1, 0, 0, 0);
+      const diff = nextHour.getTime() - now.getTime();
+      const mins = Math.floor(diff / 1000 / 60);
+      const secs = Math.floor((diff / 1000) % 60);
+      setTimeLeft(`${mins}:${secs.toString().padStart(2, "0")}`);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const messages = [
     "AUTHENTICITY GUARANTEED ON ALL ARCHIVE PIECES",
+    `NEXT ARCHIVE INJECTION IN ${timeLeft || "00:00"}`,
     "COMPLIMENTARY EU SHIPPING ON ORDERS OVER $150",
     "ONE-OF-ONE CURATED SELECTIONS",
     "REAL-TIME PULSE UPDATES EVERY 60 MINUTES",
     "SECURED BY AUVRA ARCHIVE INTEGRITY",
-    "NORTHERN EUROPEAN LOGISTICS NETWORK ACTIVE",
   ];
 
   return (

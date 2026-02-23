@@ -4,15 +4,18 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { use } from "react";
 import { supabase } from "@/lib/supabase";
-import { Zap, ArrowLeft, Filter, ChevronDown, SortAsc, SortDesc, Clock, Search } from "lucide-react";
+import { Zap, ArrowLeft, Filter, ChevronDown, SortAsc, SortDesc, Clock, Search, Lock } from "lucide-react";
 import PulseHeartbeat from "@/components/PulseHeartbeat";
+import { createClient } from "@/lib/supabase-client";
 
 export default function BrandArchivePage({ params }: { params: Promise<{ brand: string }> }) {
   const { brand: brandName } = use(params);
   const decodedBrand = decodeURIComponent(brandName);
+  const supabaseClient = createClient();
   
   const [items, setItems] = useState<any[]>([]);
   const [filteredItems, setFilteredItems] = useState<any[]>([]);
+  const [isMember, setIsMember] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const [conditions, setConditions] = useState<string[]>([]);
   const [sizes, setSizes] = useState<string[]>([]);
@@ -25,6 +28,18 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
+    const checkMembership = async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('membership_tier')
+          .eq('id', session.user.id)
+          .single();
+        if (profile?.membership_tier === 'society') setIsMember(true);
+      }
+    };
+    checkMembership();
     fetchBrandItems();
   }, [decodedBrand]);
 
@@ -34,9 +49,11 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
       .from('pulse_inventory')
       .select('*')
       .eq('brand', decodedBrand)
-      .eq('status', 'available');
+      .in('status', ['available', 'sold'])
+      .order('created_at', { ascending: false });
 
     if (!error && data) {
+
       setItems(data);
       
       const uniqueCategories = Array.from(new Set(data.map(item => item.category)));
@@ -283,40 +300,69 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8">
-            {filteredItems.map((item) => (
-              <Link key={item.id} href={`/archive/${item.id}`} className="group block">
-                <div className="aspect-[4/5] bg-zinc-50 rounded-[2.5rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 group-hover:shadow-2xl group-hover:shadow-zinc-100 relative">
-                  <img 
-                    src={item.images[0]} 
-                    className={`w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-1000 ${item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
-                    alt={item.title} 
-                  />
-                  {item.images.length > 1 && (
+            {filteredItems.map((item) => {
+              const isSold = item.status === 'sold';
+              const isVault = item.potential_profit > 200 || ['Hermès', 'Chanel', 'Louis Vuitton'].includes(item.brand);
+              const isLocked = isVault && !isMember && !isSold;
+
+              return (
+                <Link 
+                  key={item.id} 
+                  href={isSold ? "#" : `/archive/${item.id}`} 
+                  className={`group block ${isSold ? 'cursor-not-allowed' : ''}`}
+                >
+                  <div className={`aspect-[4/5] bg-zinc-50 rounded-[2.5rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 relative ${isSold ? 'grayscale' : 'group-hover:shadow-2xl group-hover:shadow-zinc-100'} ${isLocked ? 'bg-zinc-950' : ''}`}>
                     <img 
-                      src={item.images[1]} 
-                      className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-110 group-hover:scale-100" 
-                      alt={`${item.title} alternate`} 
+                      src={item.images[0]} 
+                      className={`w-full h-full object-cover transition-all duration-1000 ${isLocked ? 'blur-3xl opacity-30 scale-110' : ''} ${isSold ? 'opacity-40' : 'grayscale-[0.2] group-hover:grayscale-0'} ${!isSold && !isLocked && item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
+                      alt={item.title} 
                     />
-                  )}
-                  <div className="absolute top-6 right-6">
-                    <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm">
-                      {item.size || 'OS'}
+                    
+                    {isLocked && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                        <Lock size={20} className="text-yellow-400 mb-3 animate-pulse" />
+                        <span className="text-[8px] font-black text-white uppercase tracking-[0.4em] leading-tight">
+                          Society Access Required
+                        </span>
+                      </div>
+                    )}
+
+                    {!isSold && !isLocked && item.images.length > 1 && (
+                      <img 
+                        src={item.images[1]} 
+                        className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-110 group-hover:scale-100" 
+                        alt={`${item.title} alternate`} 
+                      />
+                    )}
+                    
+                    {isSold && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-black/80 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 -rotate-12">
+                          <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Acquired</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="absolute top-6 right-6">
+                      <div className={`bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm ${isSold ? 'opacity-50' : ''}`}>
+                        {item.size || 'OS'}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="px-2 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-black text-zinc-900 tracking-tighter leading-tight mb-1 group-hover:underline decoration-1 underline-offset-4">
-                      {item.title}
-                    </h3>
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{item.condition}</p>
+                  <div className="px-2 flex justify-between items-center">
+                    <div className={isSold ? 'opacity-40' : ''}>
+                      <h3 className="text-lg font-black text-zinc-900 tracking-tighter leading-tight mb-1 group-hover:underline decoration-1 underline-offset-4">
+                        {item.title}
+                      </h3>
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{item.condition}</p>
+                    </div>
+                    <div className={`bg-zinc-900 text-white px-3 py-1.5 rounded-full text-base font-black shadow-md shrink-0 ${isSold ? 'opacity-20' : ''}`}>
+                      €{Math.round(item.listing_price)}
+                    </div>
                   </div>
-                  <div className="bg-zinc-900 text-white px-3 py-1.5 rounded-full text-base font-black shadow-md shrink-0">
-                    €{Math.round(item.listing_price)}
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>

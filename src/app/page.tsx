@@ -2,19 +2,34 @@ import Link from "next/link";
 import Image from "next/image";
 import { products } from "@/config/products";
 import { supabase } from "@/lib/supabase";
-import { ArrowRight, Sparkles, Flame, Zap } from "lucide-react";
+import { ArrowRight, Sparkles, Flame, Zap, Lock } from "lucide-react";
 import NeuralFeed from "@/components/NeuralFeed";
+import { createClient } from "@/lib/supabase-server";
+import LimitedIntakes from "@/components/LimitedIntakes";
 
 export default async function Home() {
   const staticProducts = Object.values(products);
+  const authSupabase = await createClient();
   
-  // Fetch high-margin available clothing for the carousel
+  // Check membership status
+  const { data: { session } } = await authSupabase.auth.getSession();
+  let isMember = false;
+  if (session) {
+    const { data: profile } = await authSupabase
+      .from('profiles')
+      .select('membership_tier')
+      .eq('id', session.user.id)
+      .single();
+    if (profile?.membership_tier === 'society') isMember = true;
+  }
+  
+  // Fetch high-margin available + recently sold clothing
   const { data: archiveItems } = await supabase
     .from('pulse_inventory')
     .select('*')
-    .eq('status', 'available')
-    .order('potential_profit', { ascending: false })
-    .limit(10);
+    .in('status', ['available', 'sold'])
+    .order('created_at', { ascending: false })
+    .limit(12);
 
   // Fetch last sync time
   const { data: latestItem } = await supabase
@@ -51,50 +66,81 @@ export default async function Home() {
 
           <div className="flex gap-8 overflow-x-auto pb-12 scrollbar-hide -mx-6 px-6 mask-fade-right">
             {archiveItems && archiveItems.length > 0 ? (
-              archiveItems.map((item) => (
-                <Link key={item.id} href={`/archive/${item.id}`} className="min-w-[300px] md:min-w-[400px] group">
-                  <div className="aspect-[4/5] rounded-[3rem] overflow-hidden bg-zinc-50 border border-zinc-100 mb-6 relative">
-                    <img 
-                      src={item.images[0]} 
-                      className={`w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 ${item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
-                      alt={`${item.brand} ${item.title} - Auvra Archive Selection`} 
-                    />
-                    {item.images.length > 1 && (
+              archiveItems.map((item) => {
+                const isSold = item.status === 'sold';
+                const isVault = item.potential_profit > 200 || ['Hermès', 'Chanel', 'Louis Vuitton'].includes(item.brand);
+                const isLocked = isVault && !isMember && !isSold;
+
+                return (
+                  <Link 
+                    key={item.id} 
+                    href={isSold ? "#" : `/archive/${item.id}`} 
+                    className={`min-w-[300px] md:min-w-[400px] group ${isSold ? 'cursor-not-allowed' : ''}`}
+                  >
+                    <div className={`aspect-[4/5] rounded-[3rem] overflow-hidden bg-zinc-50 border border-zinc-100 mb-6 relative transition-all duration-700 ${isSold ? 'grayscale' : ''} ${isLocked ? 'bg-zinc-950' : ''}`}>
                       <img 
-                        src={item.images[1]} 
-                        className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-110 group-hover:scale-100" 
-                        alt={`${item.brand} ${item.title} - View 2`} 
+                        src={item.images[0]} 
+                        className={`w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 ${isLocked ? 'blur-3xl opacity-30' : ''} ${isSold ? 'opacity-40' : ''} ${!isSold && !isLocked && item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
+                        alt={`${item.brand} ${item.title} - Auvra Archive Selection`} 
                       />
-                    )}
-                    <div className="absolute top-6 left-6">
-                       <div className="bg-black/90 backdrop-blur-md text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10">
-                          {item.brand}
-                       </div>
-                    </div>
-                    <div className="absolute top-6 right-6 flex flex-col gap-2 items-end">
-                       <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm">
-                          Size: {item.size || 'OS'}
-                       </div>
-                       <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm">
-                          Best Seller
-                       </div>
-                    </div>
-                    {item.potential_profit > 60 && (
-                      <div className="absolute bottom-6 left-6">
-                        <div className="bg-yellow-400 text-black px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
-                          Rare Find
+                      
+                      {isLocked && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
+                          <Lock size={24} className="text-yellow-400 mb-4 animate-pulse" />
+                          <span className="text-[10px] font-black text-white uppercase tracking-[0.5em] leading-relaxed">
+                            Society <br /> Decryption Required
+                          </span>
                         </div>
+                      )}
+
+                      {!isSold && !isLocked && item.images.length > 1 && (
+                        <img 
+                          src={item.images[1]} 
+                          className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-110 group-hover:scale-100" 
+                          alt={`${item.brand} ${item.title} - View 2`} 
+                        />
+                      )}
+                      <div className="absolute top-6 left-6">
+                         <div className="bg-black/90 backdrop-blur-md text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10">
+                            {item.brand}
+                         </div>
                       </div>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-center px-2">
-                    <h3 className="text-xl font-black text-zinc-900 tracking-tighter leading-tight">{item.title}</h3>
-                    <div className="bg-zinc-900 text-white px-4 py-2 rounded-full text-lg font-black shadow-lg">
-                      €{Math.round(item.listing_price)}
+                      
+                      {isSold && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="bg-black/80 backdrop-blur-md px-8 py-3 rounded-full border border-white/10 -rotate-12">
+                            <span className="text-xs font-black text-white uppercase tracking-[0.4em]">Secured</span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="absolute top-6 right-6 flex flex-col gap-2 items-end">
+                         <div className={`bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm ${isSold ? 'opacity-50' : ''}`}>
+                            Size: {item.size || 'OS'}
+                         </div>
+                         {!isSold && (
+                           <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm">
+                              Best Seller
+                           </div>
+                         )}
+                      </div>
+                      {!isSold && item.potential_profit > 60 && (
+                        <div className="absolute bottom-6 left-6">
+                          <div className="bg-yellow-400 text-black px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
+                            Rare Find
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </Link>
-              ))
+                    <div className="flex justify-between items-center px-2">
+                      <h3 className={`text-xl font-black text-zinc-900 tracking-tighter leading-tight ${isSold ? 'opacity-40' : ''}`}>{item.title}</h3>
+                      <div className={`bg-zinc-900 text-white px-4 py-2 rounded-full text-lg font-black shadow-lg ${isSold ? 'opacity-20' : ''}`}>
+                        €{Math.round(item.listing_price)}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })
             ) : (
               <div className="w-full py-24 text-center bg-zinc-50 rounded-[3rem] border border-dashed border-zinc-200">
                 <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs">Awaiting Pulse Sync...</p>
@@ -130,9 +176,7 @@ export default async function Home() {
                 Join Society <ArrowRight size={16} />
               </Link>
               <div className="mt-6 space-y-1">
-                <p className="text-yellow-400 text-[10px] font-black uppercase tracking-widest animate-pulse">
-                  Only 7 Invites Left Today
-                </p>
+                <LimitedIntakes />
                 <p className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest">
                   Batch 01/2026 Intake
                 </p>

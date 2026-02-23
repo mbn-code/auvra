@@ -20,11 +20,11 @@ export default function ArchivePage() {
 
   async function fetchBrands() {
     setLoading(true);
-    // Get all available items
+    // Get available + recently sold items
     let query = supabase
       .from('pulse_inventory')
-      .select('brand, images, listing_price, category')
-      .eq('status', 'available');
+      .select('brand, images, listing_price, category, status')
+      .in('status', ['available', 'sold']);
 
     if (initialCategory) {
       query = query.eq('category', initialCategory);
