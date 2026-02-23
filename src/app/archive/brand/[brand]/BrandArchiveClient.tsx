@@ -86,8 +86,31 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
     setFilteredItems(result);
   }, [activeCategory, activeCondition, activeSize, sortBy, items]);
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Archive",
+        "item": "https://auvra-nine.vercel.app/archive"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": decodedBrand,
+        "item": `https://auvra-nine.vercel.app/archive/brand/${brandName}`
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <PulseHeartbeat />
       <section className="pt-40 pb-20 px-6 border-b border-zinc-50">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end gap-12">
