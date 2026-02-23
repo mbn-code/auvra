@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import ArchiveClient from './ArchiveClient';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: "Curated Archives | Discover One-of-One Luxury Pieces",
@@ -14,5 +15,9 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <ArchiveClient />;
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+      <ArchiveClient />
+    </Suspense>
+  );
 }
