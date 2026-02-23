@@ -46,7 +46,12 @@ export async function scrapeGrailed(brand: string): Promise<ScrapedItem[]> {
         
         const title = titleEl?.textContent || imgEl?.getAttribute('alt') || '';
         const priceText = priceEl?.textContent || '';
-        const size = sizeEl?.textContent || '';
+        let size = sizeEl?.textContent || '';
+
+        if (!size) {
+          const sizeMatch = title.match(/(XXS|XS|S|M|L|XL|XXL|XXXL|OS)/i);
+          if (sizeMatch) size = sizeMatch[1];
+        }
 
         // Only "New" or "Gently Used" from Grailed usually. 
         // We can't easily see condition on grid always, assume 'Very Good' if not specified.

@@ -8,9 +8,30 @@ import LiveActivity from "@/components/LiveActivity";
 import ProductInteraction from "@/components/ProductInteraction";
 import TrustPulse from "@/components/TrustPulse";
 import { Star, ShieldCheck, Truck, RotateCcw, Share2, Heart, Eye, PackageCheck, Sparkles } from "lucide-react";
+import { Metadata } from "next";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const product = products[id];
+
+  if (!product) return { title: "Product Not Found" };
+
+  return {
+    title: `${product.name} | Auvra Utility`,
+    description: product.description,
+    alternates: {
+      canonical: `https://auvra-nine.vercel.app/product/${id}`,
+    },
+    openGraph: {
+      title: `${product.name} | Auvra`,
+      description: product.tagline,
+      images: [product.images[0]],
+    },
+  };
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
@@ -31,8 +52,32 @@ export default async function ProductPage({ params }: ProductPageProps) {
   deliveryDate.setDate(deliveryDate.getDate() + 5);
   const deliveryString = deliveryDate.toLocaleDateString("en-US", { month: "long", day: "numeric" });
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.images,
+    "description": product.description,
+    "brand": {
+      "@type": "Brand",
+      "name": "Auvra"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `https://auvra-nine.vercel.app/product/${id}`,
+      "priceCurrency": "EUR",
+      "price": product.price / 100,
+      "availability": "https://schema.org/InStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <LiveActivity productName={product.name} />
       
       <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">

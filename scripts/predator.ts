@@ -17,28 +17,47 @@ export async function scrapeVinted(brand: string, locale: string): Promise<Scrap
         const linkEl = card.querySelector('a[href*="/items/"]');
         const priceEl = card.querySelector('h3, .web_ui__ItemBox__title, [data-testid$="price"]');
         const imgEl = card.querySelector('img');
-        const subtitleEl = card.querySelector('.web_ui__ItemBox__subtitle');
+        
         const href = linkEl?.getAttribute('href') || '';
         const vintedId = href.split('/')?.pop()?.split('-')?.[0] || '';
         const title = linkEl?.getAttribute('title') || imgEl?.getAttribute('alt') || '';
         const priceText = card.textContent?.match(/([0-9\s,.]+)\s?(?:kr|€|zł)/)?.[0] || '';
         
-        // Extract size from subtitle (e.g. "XL / 42 / 14" -> "XL")
-        const subtitle = subtitleEl?.textContent?.trim() || '';
-        const size = subtitle.split('/')[0].trim();
-
+        // Robust Size Extraction
+        const fullText = card.textContent || '';
+        let size = 'OS';
+        
+        // Vinted typical format: [Brand][Size] · [Condition]
+        // The size is usually the text right before the '·'
+        const parts = fullText.split('·');
+        if (parts.length > 0) {
+          const infoPart = parts[0].trim();
+          // Extract the last word or alphanumeric sequence from infoPart
+          // which is almost always the size
+          const words = infoPart.split(/\s+/);
+          const lastWord = words[words.length - 1];
+          
+          // Match standard size patterns at the end of the brand/info string
+          // This matches "CorteizXL" or just "XL"
+          const sizeMatch = lastWord.match(/(XXS|XS|S|M|L|XL|XXL|XXXL|[0-9]{2,3})$/i);
+          if (sizeMatch) {
+            size = sizeMatch[0];
+          }
+        }
+        
         return {
           vinted_id: vintedId,
           title: title,
-          source_url: href ? (href.startsWith('http') ? href : `https://www.vinted.${document.location.hostname.split('.').pop() || 'dk'}${href}`) : '',
+          source_url: href ? (href.startsWith('http') ? href : `https://www.vinted.de${href}`) : '',
           source_price_raw: priceText,
           image: imgEl?.src || '',
           brand: brandName,
-          condition: 'Very Good', // Subtitle often contains size, not condition in grid
-          size: size
+          condition: 'Very Good', 
+          size: size.toUpperCase()
         };
       });
     }, brand);
+
     
     return items.filter(item => item.vinted_id).map(item => ({
       source_id: item.vinted_id,
@@ -61,4 +80,16 @@ export async function scrapeVinted(brand: string, locale: string): Promise<Scrap
   } finally {
     await browser.close();
   }
+}
+
+// CLI Execution
+if (process.argv[2]) {
+  const brand = process.argv[2];
+  console.log(`🚀 Starting CLI hunt for: ${brand}`);
+  scrapeVinted(brand, "de").then(items => {
+    console.log(`✅ Found ${items.length} items.`);
+    import('./lib/inventory').then(lib => {
+      items.forEach(item => lib.saveToSupabase(item));
+    });
+  });
 }

@@ -7,9 +7,34 @@ import StickyBuy from "@/components/StickyBuy";
 import TrustPulse from "@/components/TrustPulse";
 import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle, Clock, Lock, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase-server";
+import { Metadata } from "next";
 
 interface ArchiveProductPageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: ArchiveProductPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const { data: item } = await supabase
+    .from('pulse_inventory')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (!item) return { title: "Archive Piece Not Found" };
+
+  return {
+    title: `${item.title} | ${item.brand} Archive`,
+    description: `Secure this unique ${item.brand} ${item.category} from the Auvra Archive. Sourced and verified quality archive piece in ${item.condition} condition.`,
+    alternates: {
+      canonical: `https://auvra-nine.vercel.app/archive/${item.id}`,
+    },
+    openGraph: {
+      title: `${item.title} | Auvra Archive`,
+      description: `Secured 1-of-1 ${item.brand} archive piece.`,
+      images: [item.images[0]],
+    },
+  };
 }
 
 export default async function ArchiveProductPage({ params }: ArchiveProductPageProps) {
@@ -50,8 +75,61 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
   deliveryDate.setDate(deliveryDate.getDate() + 7);
   const deliveryString = deliveryDate.toLocaleDateString("en-US", { month: "long", day: "numeric" });
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": item.title,
+    "image": item.images,
+    "description": item.description || `Archive piece: ${item.brand}`,
+    "brand": {
+      "@type": "Brand",
+      "name": item.brand
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `https://auvra-nine.vercel.app/archive/${item.id}`,
+      "priceCurrency": "EUR",
+      "price": item.listing_price,
+      "availability": "https://schema.org/InStock",
+      "itemCondition": "https://schema.org/UsedCondition"
+    }
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Archive",
+        "item": "https://auvra-nine.vercel.app/archive"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": item.brand,
+        "item": `https://auvra-nine.vercel.app/archive/brand/${encodeURIComponent(item.brand)}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": item.title,
+        "item": `https://auvra-nine.vercel.app/archive/${item.id}`
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <LiveActivity productName={item.title} />
       
       <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">
@@ -116,6 +194,17 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                 <h1 className="text-5xl md:text-6xl font-black tracking-tighter leading-[0.95] text-zinc-900">
                   {item.title}
                 </h1>
+
+                <div className="flex flex-wrap items-center gap-3">
+                   <div className="bg-zinc-900 text-white px-6 py-3 rounded-full border border-zinc-800 flex items-center gap-3 shadow-xl">
+                      <span className="text-[11px] font-black uppercase tracking-widest opacity-50">Size</span>
+                      <span className="text-xl font-black uppercase tracking-tighter">{item.size || 'OS'}</span>
+                   </div>
+                   <div className="bg-zinc-50 text-zinc-400 px-4 py-3 rounded-full border border-zinc-100 flex items-center gap-2">
+                      <Zap size={14} className="fill-zinc-400" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Archive Selection</span>
+                   </div>
+                </div>
                 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 rounded-3xl border border-zinc-100 bg-zinc-50/50">

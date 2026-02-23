@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { products } from "@/config/products";
 import { supabase } from "@/lib/supabase";
 import { ArrowRight, Sparkles, Flame, Zap } from "lucide-react";
@@ -55,18 +56,26 @@ export default async function Home() {
                     <img 
                       src={item.images[0]} 
                       className={`w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 ${item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
-                      alt={item.title} 
+                      alt={`${item.brand} ${item.title} - Auvra Archive Selection`} 
                     />
                     {item.images.length > 1 && (
                       <img 
                         src={item.images[1]} 
                         className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-110 group-hover:scale-100" 
-                        alt={`${item.title} preview`} 
+                        alt={`${item.brand} ${item.title} - View 2`} 
                       />
                     )}
                     <div className="absolute top-6 left-6">
                        <div className="bg-black/90 backdrop-blur-md text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10">
                           {item.brand}
+                       </div>
+                    </div>
+                    <div className="absolute top-6 right-6 flex flex-col gap-2 items-end">
+                       <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm">
+                          Size: {item.size || 'OS'}
+                       </div>
+                       <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm">
+                          Best Seller
                        </div>
                     </div>
                     {item.potential_profit > 60 && (
@@ -171,7 +180,26 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 4. THE PULSE LOGIC (Replacing physical storage with digital sync) */}
+      {/* 3.5. BROWSE BY CATEGORY (SEO & Navigation) */}
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <div className="flex justify-between items-end mb-12">
+          <h2 className="text-3xl font-black tracking-tighter uppercase">Browse Categories</h2>
+          <Link href="/archive" className="text-[10px] font-black uppercase tracking-widest border-b border-black pb-1">Archive Pulse</Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {["Jackets", "Pants", "Sweaters", "Tops", "Headwear", "Accessories"].map((cat) => (
+            <Link 
+              key={cat} 
+              href={`/archive?category=${cat}`}
+              className="bg-zinc-50 border border-zinc-100 p-8 rounded-[2.5rem] text-center hover:bg-black hover:text-white transition-all group"
+            >
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100">{cat}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. THE PULSE LOGIC */}
       <section className="max-w-7xl mx-auto px-6 py-32">
          <div className="flex flex-col md:flex-row items-center gap-20">
             <div className="flex-1 space-y-8">

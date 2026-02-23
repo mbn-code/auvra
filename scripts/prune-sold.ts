@@ -15,6 +15,7 @@ async function pruneSold() {
     .from('pulse_inventory')
     .select('id, source_url, title')
     .eq('status', 'available')
+    .neq('status', 'owned') // Skip owned items
     .order('last_seen_at', { ascending: true })
     .limit(50);
 

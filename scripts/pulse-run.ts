@@ -14,7 +14,7 @@ const BRANDS = [
   "A Bathing Ape", "Broken Planet", "Denim Tears", "Hellstar", 
   "Eric Emanuel", "Gallery Dept", "Stone Island", "Patagonia", 
   "New Balance", "Salomon", "Oakley", "Dickies", "Diesel", "Levis", 
-  "Adidas", "Nike"
+  "Adidas", "Nike", "Gucci", "New Era", "MLB", "Takashi Murakami"
 ];
 
 const LOCALES = ["dk", "de", "pl", "se", "fi"];
