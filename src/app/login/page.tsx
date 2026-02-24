@@ -48,7 +48,7 @@ export default function AuthPage() {
           <Lock className="text-white" size={24} />
         </div>
         <h1 className="text-3xl font-black tracking-tighter mb-2 uppercase">Society Access</h1>
-        <p className="text-zinc-400 text-xs font-bold uppercase tracking-[0.3em] mb-12">Members Only Area</p>
+        <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.3em] mb-12">Members Only Area</p>
 
         {message ? (
           <div className="bg-zinc-900 text-white p-6 rounded-2xl text-sm font-medium mb-8">
@@ -60,7 +60,7 @@ export default function AuthPage() {
               <button
                 onClick={() => setMode("magic")}
                 className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                  mode === "magic" ? "bg-white shadow-sm text-black" : "text-zinc-400"
+                  mode === "magic" ? "bg-white shadow-sm text-black" : "text-zinc-500"
                 }`}
               >
                 Magic Link
@@ -68,7 +68,7 @@ export default function AuthPage() {
               <button
                 onClick={() => setMode("password")}
                 className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                  mode === "password" ? "bg-white shadow-sm text-black" : "text-zinc-400"
+                  mode === "password" ? "bg-white shadow-sm text-black" : "text-zinc-500"
                 }`}
               >
                 Password
@@ -105,7 +105,7 @@ export default function AuthPage() {
           </>
         )}
         
-        <p className="mt-8 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+        <p className="mt-8 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
           Not a member? <Link href="/pricing" className="text-black underline">Apply for Access</Link>
         </p>
       </div>

@@ -6,7 +6,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-zinc-50 py-32 px-6">
       <div className="max-w-7xl mx-auto">
         <header className="text-center mb-24">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-6 flex items-center justify-center gap-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-6 flex items-center justify-center gap-2">
             <Lock size={12} />
             Members Only
           </p>
@@ -23,7 +23,7 @@ export default function PricingPage() {
           <div className="bg-white p-12 rounded-[3rem] border border-zinc-100 flex flex-col relative">
             <div className="mb-8">
               <h3 className="text-2xl font-black tracking-tighter mb-2">Guest Access</h3>
-              <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Public Archive</p>
+              <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">Public Archive</p>
             </div>
             <div className="text-4xl font-black mb-12">€0<span className="text-lg font-bold text-zinc-300">/mo</span></div>
             <ul className="space-y-4 mb-12 flex-1">

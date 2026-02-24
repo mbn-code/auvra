@@ -147,7 +147,7 @@ export default function PersonalHuntPage() {
                     key={opt.id}
                     onClick={() => setSortBy(opt.id)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
-                      sortBy === opt.id ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800'
+                      sortBy === opt.id ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-800'
                     }`}
                   >
                     <opt.icon size={14} />
@@ -249,7 +249,7 @@ export default function PersonalHuntPage() {
                     </div>
                     <div className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 text-center">
                       <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-1">Auvra Listing</p>
-                      <p className="text-2xl font-black text-zinc-400">€{Math.round(item.listing_price)}</p>
+                      <p className="text-2xl font-black text-zinc-500">€{Math.round(item.listing_price)}</p>
                     </div>
                   </div>
 

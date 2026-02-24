@@ -89,7 +89,7 @@ export default function WelcomeModal() {
               Unlock the <br /> Inner Archive.
             </h2>
             
-            <p className="text-zinc-400 font-medium mb-8 leading-relaxed">
+            <p className="text-zinc-500 font-medium mb-8 leading-relaxed">
               Join the Auvra Pulse network to get <span className="text-white font-bold">10% off</span> your first Concierge Acquisition and 1-hour early access to daily drops.
             </p>
 
@@ -122,7 +122,7 @@ export default function WelcomeModal() {
               <Zap size={24} className="text-green-400 fill-green-400" />
             </div>
             <h2 className="text-2xl font-black tracking-tighter mb-4">Access Granted.</h2>
-            <p className="text-zinc-400 font-medium">Check your inbox for your exclusive access link and discount code.</p>
+            <p className="text-zinc-500 font-medium">Check your inbox for your exclusive access link and discount code.</p>
           </div>
         )}
       </div>

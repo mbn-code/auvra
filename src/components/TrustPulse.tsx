@@ -17,11 +17,11 @@ export default function TrustPulse() {
         <div className={`w-2 h-2 rounded-full bg-green-500 transition-opacity duration-1000 ${pulse ? "opacity-100" : "opacity-40"}`} />
         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900">Live Secure Connection</span>
       </div>
-      <div className="flex items-center gap-2 text-zinc-400">
+      <div className="flex items-center gap-2 text-zinc-500">
         <Lock size={12} strokeWidth={2.5} />
         <span className="text-[10px] font-black uppercase tracking-widest">SSL Encrypted</span>
       </div>
-      <div className="flex items-center gap-2 text-zinc-400">
+      <div className="flex items-center gap-2 text-zinc-500">
         <CreditCard size={12} strokeWidth={2.5} />
         <span className="text-[10px] font-black uppercase tracking-widest">PCI Compliant</span>
       </div>

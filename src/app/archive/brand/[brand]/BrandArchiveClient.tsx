@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { use } from "react";
 import { supabase } from "@/lib/supabase";
 import { Zap, ArrowLeft, Filter, ChevronDown, SortAsc, SortDesc, Clock, Search, Lock } from "lucide-react";
@@ -134,12 +135,12 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
           <div className="max-w-2xl">
             <Link 
               href="/archive" 
-              className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black mb-12 transition-colors"
+              className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-black mb-12 transition-colors"
             >
               <ArrowLeft size={14} />
               All Brands
             </Link>
-            <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-6 flex items-center gap-3">
+            <p className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.4em] mb-6 flex items-center gap-3">
               <Zap size={14} className="text-zinc-900" />
               Archive Collection
             </p>
@@ -149,7 +150,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
           </div>
           <div className="text-right">
              <p className="text-2xl font-black tracking-tighter text-zinc-900">{filteredItems.length}</p>
-             <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Available Pieces</p>
+             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Available Pieces</p>
           </div>
         </div>
       </section>
@@ -170,7 +171,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
 
             {items.length > 15 && (
               <div className="relative flex-1 max-w-xs hidden md:block">
-                <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
+                <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                 <input 
                   type="text"
                   placeholder="Search Archive..."
@@ -189,7 +190,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
                 className={`whitespace-nowrap px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
-                  activeCategory === cat ? "text-zinc-900 border-b-2 border-black" : "text-zinc-400 hover:text-zinc-600"
+                  activeCategory === cat ? "text-zinc-900 border-b-2 border-black" : "text-zinc-500 hover:text-zinc-600"
                 }`}
               >
                 {cat}
@@ -209,7 +210,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                 <option value="price-desc">Price: High to Low</option>
                 <option value="savings">Highest Member Savings</option>
               </select>
-              <ChevronDown size={12} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400" />
+              <ChevronDown size={12} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500" />
             </div>
           </div>
         </div>
@@ -220,7 +221,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
             {/* Categories if more than 6 */}
             {categories.length > 6 && (
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Category</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Category</h4>
                 <div className="flex flex-wrap gap-2">
                   {categories.map(cat => (
                     <button
@@ -238,7 +239,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
             )}
 
             <div className="space-y-4">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Size</h4>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Size</h4>
               <div className="flex flex-wrap gap-2">
                 {sizes.map(sz => (
                   <button
@@ -255,7 +256,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
             </div>
 
             <div className="space-y-4">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Condition</h4>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Condition</h4>
               <div className="flex flex-wrap gap-2">
                 {conditions.map(cond => (
                   <button
@@ -272,15 +273,15 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
             </div>
 
             <div className="space-y-4">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Price Points</h4>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Price Points</h4>
               <div className="space-y-2">
-                <button onClick={() => setSortBy("price-asc")} className={`flex items-center gap-2 text-[11px] font-bold uppercase ${sortBy === "price-asc" ? "text-zinc-900" : "text-zinc-400"}`}>
+                <button onClick={() => setSortBy("price-asc")} className={`flex items-center gap-2 text-[11px] font-bold uppercase ${sortBy === "price-asc" ? "text-zinc-900" : "text-zinc-500"}`}>
                   <SortAsc size={14} /> Value First
                 </button>
-                <button onClick={() => setSortBy("price-desc")} className={`flex items-center gap-2 text-[11px] font-bold uppercase ${sortBy === "price-desc" ? "text-zinc-900" : "text-zinc-400"}`}>
+                <button onClick={() => setSortBy("price-desc")} className={`flex items-center gap-2 text-[11px] font-bold uppercase ${sortBy === "price-desc" ? "text-zinc-900" : "text-zinc-500"}`}>
                   <SortDesc size={14} /> Premium First
                 </button>
-                <button onClick={() => setSortBy("newest")} className={`flex items-center gap-2 text-[11px] font-bold uppercase ${sortBy === "newest" ? "text-zinc-900" : "text-zinc-400"}`}>
+                <button onClick={() => setSortBy("newest")} className={`flex items-center gap-2 text-[11px] font-bold uppercase ${sortBy === "newest" ? "text-zinc-900" : "text-zinc-500"}`}>
                   <Clock size={14} /> Recent Drops
                 </button>
               </div>
@@ -291,7 +292,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
 
       <section className="max-w-7xl mx-auto px-6 py-24">
         {loading ? (
-          <div className="py-32 text-center text-zinc-400 font-bold uppercase tracking-[0.3em] text-[10px]">
+          <div className="py-32 text-center text-zinc-500 font-bold uppercase tracking-[0.3em] text-[10px]">
             Syncing Archive...
           </div>
         ) : filteredItems.length === 0 ? (
@@ -312,9 +313,11 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                   className={`group block ${isSold ? 'cursor-not-allowed' : ''}`}
                 >
                   <div className={`aspect-[4/5] bg-zinc-50 rounded-[2.5rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 relative ${isSold ? 'grayscale' : 'group-hover:shadow-2xl group-hover:shadow-zinc-100'} ${isLocked ? 'bg-zinc-950' : ''}`}>
-                    <img 
+                    <Image 
                       src={item.images[0]} 
-                      className={`w-full h-full object-cover transition-all duration-1000 ${isLocked ? 'blur-md opacity-90 scale-105' : ''} ${isSold ? 'opacity-40' : 'grayscale-[0.2] group-hover:grayscale-0'} ${!isSold && !isLocked && item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                      className={`object-cover transition-all duration-1000 ${isLocked ? 'blur-md opacity-90 scale-105' : ''} ${isSold ? 'opacity-40' : 'grayscale-[0.2] group-hover:grayscale-0'} ${!isSold && !isLocked && item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
                       alt={item.title} 
                     />
                     
@@ -328,9 +331,11 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                     )}
 
                     {!isSold && !isLocked && item.images.length > 1 && (
-                      <img 
+                      <Image 
                         src={item.images[1]} 
-                        className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-110 group-hover:scale-100" 
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                        className="object-cover opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-110 group-hover:scale-100" 
                         alt={`${item.title} alternate`} 
                       />
                     )}
@@ -354,10 +359,10 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                       <h3 className="text-lg font-black text-zinc-900 tracking-tighter leading-tight mb-1 group-hover:underline decoration-1 underline-offset-4">
                         {item.title}
                       </h3>
-                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{item.condition}</p>
+                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{item.condition}</p>
                     </div>
                     <div className={`flex flex-col items-end shrink-0 ${isSold ? 'opacity-20' : ''}`}>
-                      <span className="text-[10px] font-bold text-zinc-400 line-through decoration-red-500 mb-1">€{Math.ceil((item.listing_price * 1.5) / 10) * 10}</span>
+                      <span className="text-[10px] font-bold text-zinc-500 line-through decoration-red-500 mb-1">€{Math.ceil((item.listing_price * 1.5) / 10) * 10}</span>
                       <div className="bg-zinc-900 text-white px-3 py-1.5 rounded-full text-base font-black shadow-md">
                         €{Math.round(item.listing_price)}
                       </div>

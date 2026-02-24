@@ -34,7 +34,7 @@ export default function AdminLoginPage() {
           <Lock className="text-white" size={24} />
         </div>
         <h1 className="text-3xl font-black tracking-tighter mb-2">TERMINAL ACCESS</h1>
-        <p className="text-zinc-400 text-xs font-bold uppercase tracking-[0.3em] mb-12">Restricted Area</p>
+        <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.3em] mb-12">Restricted Area</p>
         
         <form onSubmit={handleLogin} className="space-y-6">
           <div>

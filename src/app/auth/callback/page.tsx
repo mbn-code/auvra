@@ -25,7 +25,7 @@ export default function AuthCallbackPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
-      <div className="text-sm font-bold uppercase tracking-widest text-zinc-400 animate-pulse">
+      <div className="text-sm font-bold uppercase tracking-widest text-zinc-500 animate-pulse">
         Verifying Society Access...
       </div>
     </div>

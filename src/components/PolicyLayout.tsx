@@ -13,7 +13,7 @@ export default function PolicyLayout({
       <div className="max-w-3xl mx-auto">
         <Link 
           href="/" 
-          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black mb-12 transition-colors"
+          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-black mb-12 transition-colors"
         >
           <ArrowLeft size={14} />
           Return to Archive

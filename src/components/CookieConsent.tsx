@@ -37,7 +37,7 @@ export default function CookieConsent() {
         <div className="flex gap-3">
           <button 
             onClick={reject}
-            className="flex-1 bg-zinc-50 text-zinc-400 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-zinc-100 transition-all"
+            className="flex-1 bg-zinc-50 text-zinc-500 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-zinc-100 transition-all"
           >
             Essential Only
           </button>

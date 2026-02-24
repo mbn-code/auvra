@@ -145,7 +145,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
       
       <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-12">
+        <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-12">
           <Link href="/archive" className="hover:text-black">Archive</Link>
           <span className="opacity-30">/</span>
           <Link href={`/archive/brand/${encodeURIComponent(item.brand)}`} className="hover:text-black">{item.brand}</Link>
@@ -199,7 +199,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                           <Star key={i} size={11} className="fill-zinc-900 text-zinc-900" />
                         ))}
                      </div>
-                     <span className="text-[10px] font-black text-zinc-400 ml-2 tracking-widest uppercase">Expertly Curated</span>
+                     <span className="text-[10px] font-black text-zinc-500 ml-2 tracking-widest uppercase">Expertly Curated</span>
                    </div>
                    <button className="text-zinc-200 hover:text-zinc-900 transition-colors">
                       <Heart size={20} strokeWidth={1.5} />
@@ -215,7 +215,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                       <span className="text-[11px] font-black uppercase tracking-widest opacity-50">Size</span>
                       <span className="text-xl font-black uppercase tracking-tighter">{item.size || 'OS'}</span>
                    </div>
-                   <div className="bg-zinc-50 text-zinc-400 px-4 py-3 rounded-full border border-zinc-100 flex items-center gap-3">
+                   <div className="bg-zinc-50 text-zinc-500 px-4 py-3 rounded-full border border-zinc-100 flex items-center gap-3">
                       <Cpu size={14} className="fill-zinc-400" />
                       <span className="text-[10px] font-black uppercase tracking-widest">Asset ID: AV-{item.vinted_id.substring(0, 6).toUpperCase()}</span>
                    </div>
@@ -225,11 +225,11 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                   <div className="flex items-center justify-between p-4 rounded-3xl border border-zinc-100 bg-zinc-50/50">
                      <div className="flex flex-col">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Est. Market Value:</span>
-                          <span className="text-[11px] font-bold text-zinc-400 line-through decoration-red-500">{formattedEstimatedRetail}</span>
+                          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Est. Market Value:</span>
+                          <span className="text-[11px] font-bold text-zinc-500 line-through decoration-red-500">{formattedEstimatedRetail}</span>
                         </div>
                         <span className="text-[10px] font-bold text-zinc-900 uppercase tracking-widest mt-2">Auvra Concierge Price</span>
-                        <span className={`text-2xl font-black tracking-tighter ${isMember ? 'text-zinc-400 line-through decoration-zinc-900/20' : 'text-zinc-900'}`}>
+                        <span className={`text-2xl font-black tracking-tighter ${isMember ? 'text-zinc-500 line-through decoration-zinc-900/20' : 'text-zinc-900'}`}>
                            {formattedListingPrice}
                         </span>
                      </div>
@@ -278,15 +278,15 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                 </div>
 
                 <div className="flex flex-col gap-3 py-4 border-y border-zinc-50">
-                   <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
+                   <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
                       <Truck size={14} strokeWidth={2} />
                       <span>Estimated Arrival: <span className="text-zinc-900">{deliveryString}</span></span>
                    </div>
-                   <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
+                   <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
                       <Globe size={14} strokeWidth={2} />
                       <span>Logistics Scope: <span className="text-zinc-900">{item.shipping_zone === 'GLOBAL' ? 'Global Dispatch' : 'European Union Only'}</span></span>
                    </div>
-                   <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
+                   <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
                       <Clock size={14} strokeWidth={2} />
                       <span>Last Archive Sync: <span className="text-zinc-900">{new Date(item.last_pulse_check || item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></span>
                    </div>
@@ -302,7 +302,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                         </div>
                       ))}
                    </div>
-                   <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                   <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
                       <span className="text-zinc-900">{viewingCount} other node{viewingCount !== 1 ? 's' : ''}</span> currently inspecting this asset
                    </p>
                 </div>
@@ -320,7 +320,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                          Secure at Source <ExternalLink size={16} />
                        </a>
                     </div>
-                    <p className="text-[10px] text-center text-zinc-400 font-bold uppercase tracking-widest">
+                    <p className="text-[10px] text-center text-zinc-500 font-bold uppercase tracking-widest">
                       Note: Direct purchases are managed by the source marketplace.
                     </p>
                   </div>
@@ -339,7 +339,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                   <p className="mb-6 leading-relaxed">{item.description || "This specific piece was captured by our algorithm due to its exceptional condition and brand provenance. A rare find within the current European archive cluster."}</p>
                   
                   <div className="mb-8 p-6 bg-zinc-50 rounded-2xl border border-zinc-100">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3">Fit Recommendation</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3">Fit Recommendation</h4>
                     <p className="text-sm font-bold text-zinc-900 leading-relaxed">
                       This item is tagged as <span className="underline">{item.size}</span>. 
                       {['Louis Vuitton', 'Chanel', 'Prada'].includes(item.brand) 

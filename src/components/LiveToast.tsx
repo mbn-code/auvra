@@ -63,7 +63,7 @@ export default function LiveToast() {
           <PackageCheck size={16} className="text-green-400" />
         </div>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-0.5 flex items-center gap-1.5">
+          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-0.5 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
             Recently Secured
           </p>

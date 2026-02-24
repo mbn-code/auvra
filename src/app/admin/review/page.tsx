@@ -108,23 +108,23 @@ export default function AdminReviewPage() {
         <header className="mb-12 flex justify-between items-end">
           <div className="flex items-end gap-12">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-2">Arbitrage Terminal</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-2">Arbitrage Terminal</p>
               <h1 className="text-4xl font-black tracking-tighter text-zinc-900">Profit Review Board</h1>
             </div>
             <nav className="flex gap-6 pb-1">
                <button 
                   onClick={() => setViewMode('pending_review')} 
-                  className={`text-[10px] font-black uppercase tracking-widest ${viewMode === 'pending_review' ? 'text-zinc-900 border-b-2 border-black' : 'text-zinc-400 hover:text-black transition-colors'} pb-1`}
+                  className={`text-[10px] font-black uppercase tracking-widest ${viewMode === 'pending_review' ? 'text-zinc-900 border-b-2 border-black' : 'text-zinc-500 hover:text-black transition-colors'} pb-1`}
                >
                  Pending Review
                </button>
                <button 
                   onClick={() => setViewMode('available')} 
-                  className={`text-[10px] font-black uppercase tracking-widest ${viewMode === 'available' ? 'text-zinc-900 border-b-2 border-black' : 'text-zinc-400 hover:text-black transition-colors'} pb-1`}
+                  className={`text-[10px] font-black uppercase tracking-widest ${viewMode === 'available' ? 'text-zinc-900 border-b-2 border-black' : 'text-zinc-500 hover:text-black transition-colors'} pb-1`}
                >
                  Approved (Live)
                </button>
-               <Link href="/admin/orders" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors pb-1 ml-4">Orders</Link>
+               <Link href="/admin/orders" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-black transition-colors pb-1 ml-4">Orders</Link>
             </nav>
           </div>
           <div className="flex items-center gap-8">
@@ -146,7 +146,7 @@ export default function AdminReviewPage() {
                 </button>
                 <p className="text-2xl font-black tracking-tighter text-zinc-900">{items.length - actionedIds.size}</p>
               </div>
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Awaiting Command</p>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Awaiting Command</p>
             </div>
             <button 
               onClick={handleLogout}
@@ -161,7 +161,7 @@ export default function AdminReviewPage() {
         {items.length === 0 ? (
           <div className="bg-white rounded-[3rem] p-32 text-center border border-zinc-100 shadow-sm">
              <ShieldCheck size={48} className="mx-auto text-zinc-200 mb-6" />
-             <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs">Inventory Synchronized.</p>
+             <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Inventory Synchronized.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -205,12 +205,12 @@ export default function AdminReviewPage() {
                     <div className="mb-8 flex-1">
                       <h3 className="text-2xl font-black mb-4 tracking-tighter leading-tight">{item.title}</h3>
                       <div className="flex flex-col gap-2">
-                        <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Source: <span className="text-zinc-900">€{item.source_price.toFixed(2)}</span></p>
+                        <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Source: <span className="text-zinc-900">€{item.source_price.toFixed(2)}</span></p>
                         
                       {editingId === item.id ? (
                         <div className="flex flex-col gap-3">
                           <div className="flex gap-2 items-center">
-                            <span className="text-[9px] font-black text-zinc-400 uppercase w-12">Public:</span>
+                            <span className="text-[9px] font-black text-zinc-500 uppercase w-12">Public:</span>
                             <input 
                               type="number" 
                               value={editValue} 
@@ -230,13 +230,13 @@ export default function AdminReviewPage() {
                           </div>
                           <div className="flex gap-4">
                             <button onClick={() => savePrice(item.id)} className="text-[10px] font-black uppercase text-green-600">Save Changes</button>
-                            <button onClick={() => setEditingId(null)} className="text-[10px] font-black uppercase text-zinc-400">Cancel</button>
+                            <button onClick={() => setEditingId(null)} className="text-[10px] font-black uppercase text-zinc-500">Cancel</button>
                           </div>
                         </div>
                       ) : (
                         <div className="space-y-1">
                           <div className="flex items-center gap-3">
-                            <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Listing: <span className="text-zinc-900">€{item.listing_price}</span></p>
+                            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Listing: <span className="text-zinc-900">€{item.listing_price}</span></p>
                             <button 
                               onClick={() => { setEditingId(item.id); setEditValue(item.listing_price.toString()); setEditMemberValue(item.member_price?.toString() || ""); }}
                               className="text-zinc-300 hover:text-black transition-colors"

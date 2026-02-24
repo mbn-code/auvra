@@ -54,7 +54,7 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="flex justify-between items-end mb-12">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-4 flex items-center gap-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-4 flex items-center gap-2">
                 <Zap size={12} className="fill-zinc-900 text-zinc-900" />
                 Live Archive Pulse • Last Sync: {lastSyncTime}
               </p>
@@ -151,7 +151,7 @@ export default async function Home() {
                     <div className="flex justify-between items-end px-2">
                       <h3 className={`text-xl font-black text-zinc-900 tracking-tighter leading-tight pb-1 ${isSold ? 'opacity-40' : ''}`}>{item.title}</h3>
                       <div className={`flex flex-col items-end shrink-0 ${isSold ? 'opacity-20' : ''}`}>
-                        <span className="text-[10px] font-bold text-zinc-400 line-through decoration-red-500 mb-1">€{Math.ceil((item.listing_price * 1.5) / 10) * 10}</span>
+                        <span className="text-[10px] font-bold text-zinc-500 line-through decoration-red-500 mb-1">€{Math.ceil((item.listing_price * 1.5) / 10) * 10}</span>
                         <div className="bg-zinc-900 text-white px-4 py-2 rounded-full text-lg font-black shadow-lg">
                           €{Math.round(item.listing_price)}
                         </div>
@@ -162,7 +162,7 @@ export default async function Home() {
               })
             ) : (
               <div className="w-full py-24 text-center bg-zinc-50 rounded-[3rem] border border-dashed border-zinc-200">
-                <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs">Awaiting Pulse Sync...</p>
+                <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Awaiting Pulse Sync...</p>
               </div>
             )}
           </div>
@@ -182,7 +182,7 @@ export default async function Home() {
               <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-6 leading-[0.95]">
                 Unlock the Inner Archive <br /> <span className="text-zinc-500">So You Can</span> Secure Grails At Cost.
               </h2>
-              <p className="text-zinc-400 text-lg font-medium max-w-lg leading-relaxed">
+              <p className="text-zinc-500 text-lg font-medium max-w-lg leading-relaxed">
                 Stop paying retail markups. Members gain exclusive access to direct source links for steals, priority acquisition on high-heat drops, and up to 15% off concierge pricing.
               </p>
            </div>
@@ -272,7 +272,7 @@ export default async function Home() {
       <section className="max-w-7xl mx-auto px-6 py-32">
          <div className="flex flex-col md:flex-row items-center gap-20">
             <div className="flex-1 space-y-8">
-               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">The Acquisition Engine</p>
+               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">The Acquisition Engine</p>
                <h2 className="text-5xl font-black tracking-tighter text-zinc-900 leading-[0.95]">Discover. <br />Authenticate. <br />Acquire.</h2>
                <p className="text-zinc-500 font-medium text-lg max-w-sm">When you secure a piece, our concierge network immediately initiates the acquisition and verification process from its current global location.</p>
                <Link href="/archive" className="inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] border-b-2 border-black pb-1 hover:opacity-50 transition-opacity">
@@ -288,7 +288,7 @@ export default async function Home() {
       {/* 5. COMMUNITY / SOCIAL PROOF */}
       <section className="max-w-7xl mx-auto px-6 pb-32">
         <div className="text-center mb-16">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-4">
             Community Intel
           </p>
           <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-zinc-900">

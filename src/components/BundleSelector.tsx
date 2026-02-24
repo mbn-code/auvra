@@ -66,7 +66,7 @@ export default function BundleSelector({ basePrice, onSelect }: BundleSelectorPr
                   </div>
                   <div>
                     <p className="text-sm font-bold text-zinc-900">{option.label}</p>
-                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
+                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
                       {option.quantity} {option.quantity === 1 ? 'Unit' : 'Units'}
                     </p>
                   </div>

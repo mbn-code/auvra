@@ -80,19 +80,19 @@ export default function AdminOrdersPage() {
     navigator.clipboard.writeText(text);
   };
 
-  if (loading) return <div className="p-24 text-center text-zinc-400 font-bold uppercase tracking-widest text-xs">Accessing Order Ledger...</div>;
+  if (loading) return <div className="p-24 text-center text-zinc-500 font-bold uppercase tracking-widest text-xs">Accessing Order Ledger...</div>;
 
   return (
     <div className="min-h-screen bg-zinc-50 pt-32 pb-24 px-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-12 flex justify-between items-end">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-2">Logistics Control</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-2">Logistics Control</p>
             <h1 className="text-4xl font-black tracking-tighter text-zinc-900">Fulfillment Command</h1>
           </div>
           <div className="text-right">
             <p className="text-2xl font-black tracking-tighter text-zinc-900">{orders.filter(o => o.status === 'pending_secure').length}</p>
-            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Secures</p>
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Active Secures</p>
           </div>
         </header>
 
@@ -102,12 +102,12 @@ export default function AdminOrdersPage() {
               
               {/* 1. Item Info */}
               <div className="lg:col-span-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4">Secured Item</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-4">Secured Item</p>
                 <h3 className="text-xl font-black tracking-tighter mb-2">{order.pulse_inventory?.title || 'Static Product'}</h3>
                 <p className="text-sm font-bold text-zinc-900 mb-6">{order.pulse_inventory?.brand}</p>
                 <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
-                      <span className="text-zinc-400">Profit</span>
+                      <span className="text-zinc-500">Profit</span>
                       <span className="text-green-600">+€{order.pulse_inventory?.listing_price - (order.pulse_inventory?.source_price || 0) - 20}</span>
                    </div>
                    <a 
@@ -122,7 +122,7 @@ export default function AdminOrdersPage() {
 
               {/* 2. Customer Info */}
               <div className="lg:col-span-5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4">Logistics Destination</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-4">Logistics Destination</p>
                 <div className="space-y-4">
                    <div className="flex justify-between items-center group">
                       <p className="text-sm font-bold">{order.customer_name}</p>
@@ -142,13 +142,13 @@ export default function AdminOrdersPage() {
                         <Copy size={14}/>
                       </button>
                    </div>
-                   <p className="text-xs font-bold text-zinc-400 italic">"{order.customer_email}"</p>
+                   <p className="text-xs font-bold text-zinc-500 italic">"{order.customer_email}"</p>
                 </div>
               </div>
 
               {/* 3. Status Control */}
               <div className="lg:col-span-4 space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4">Command Actions</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-4">Command Actions</p>
                 
                 {order.status === 'pending_secure' && (
                   <button 
@@ -199,7 +199,7 @@ export default function AdminOrdersPage() {
                 {order.status !== 'refunded' && (
                   <button 
                     onClick={() => handleRefund(order.id)}
-                    className="w-full bg-zinc-100 text-zinc-400 py-3 rounded-2xl font-bold text-[9px] uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all mt-4"
+                    className="w-full bg-zinc-100 text-zinc-500 py-3 rounded-2xl font-bold text-[9px] uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all mt-4"
                   >
                     Issue Full Refund
                   </button>
@@ -212,7 +212,7 @@ export default function AdminOrdersPage() {
           {orders.length === 0 && (
             <div className="py-32 text-center bg-white rounded-[3rem] border border-zinc-100 shadow-sm">
                <AlertCircle size={48} className="mx-auto text-zinc-100 mb-6" />
-               <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs">No orders requiring attention.</p>
+               <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">No orders requiring attention.</p>
             </div>
           )}
         </div>

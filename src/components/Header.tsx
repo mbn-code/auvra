@@ -10,10 +10,10 @@ export default function Header() {
       <header className="glass border-b border-zinc-100/50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex lg:hidden">
-            <Menu size={20} strokeWidth={1.5} className="text-zinc-400" />
+            <Menu size={20} strokeWidth={1.5} className="text-zinc-500" />
           </div>
           
-          <nav className="hidden lg:flex items-center gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">
+          <nav className="hidden lg:flex items-center gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">
             <Link href="/archive" className="hover:text-black transition-colors text-zinc-900">Archive Pulse</Link>
             <Link href="/pricing" className="text-yellow-600 hover:text-yellow-700 transition-colors">Join Society</Link>
             <Link href="/shipping" className="hover:text-black transition-colors">Logistics</Link>

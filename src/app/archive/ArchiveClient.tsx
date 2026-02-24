@@ -72,7 +72,7 @@ export default function ArchivePage() {
         </div>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end gap-12 relative z-10">
           <div className="max-w-2xl">
-            <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-6 flex items-center gap-3">
+            <p className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.4em] mb-6 flex items-center gap-3">
               <Zap size={14} className="text-zinc-900" />
               Archive Categories
             </p>
@@ -83,7 +83,7 @@ export default function ArchivePage() {
               Browse by heritage and house. Each brand represents a unique pillar of our curated pulse archive.
             </p>
             <div className="relative max-w-md">
-              <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-400" />
+              <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input 
                 type="text" 
                 placeholder="Search High Houses..." 
@@ -97,7 +97,7 @@ export default function ArchivePage() {
                 <div className="bg-zinc-900 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                   Category: {initialCategory}
                 </div>
-                <Link href="/archive" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 underline underline-offset-4 hover:text-black">
+                <Link href="/archive" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 underline underline-offset-4 hover:text-black">
                   Clear Filter
                 </Link>
               </div>
@@ -108,7 +108,7 @@ export default function ArchivePage() {
 
       <section className="max-w-7xl mx-auto px-6 py-24">
         {loading ? (
-          <div className="py-32 text-center text-zinc-400 font-bold uppercase tracking-[0.3em] text-[10px]">
+          <div className="py-32 text-center text-zinc-500 font-bold uppercase tracking-[0.3em] text-[10px]">
             Syncing Archive Pulse...
           </div>
         ) : filteredBrands.length === 0 ? (

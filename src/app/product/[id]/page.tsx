@@ -127,7 +127,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                           <Star key={i} size={11} className="fill-zinc-900 text-zinc-900" />
                         ))}
                      </div>
-                     <span className="text-[10px] font-black text-zinc-400 ml-2 tracking-widest uppercase">Verified Quality</span>
+                     <span className="text-[10px] font-black text-zinc-500 ml-2 tracking-widest uppercase">Verified Quality</span>
                    </div>
                    <button className="text-zinc-200 hover:text-zinc-900 transition-colors">
                       <Heart size={20} strokeWidth={1.5} />
@@ -143,7 +143,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                      {formattedPrice}
                    </p>
                    {product.isLimited && (
-                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-3 py-1 bg-zinc-50 rounded-full border border-zinc-100">
+                      <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-3 py-1 bg-zinc-50 rounded-full border border-zinc-100">
                          Inventory Low
                       </span>
                    )}
@@ -153,7 +153,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   {product.tagline}
                 </p>
 
-                <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-400 uppercase tracking-widest py-4 border-y border-zinc-50">
+                <div className="flex items-center gap-3 text-[11px] font-bold text-zinc-500 uppercase tracking-widest py-4 border-y border-zinc-50">
                    <Truck size={14} strokeWidth={2} />
                    <span>Estimated Delivery: <span className="text-zinc-900">{deliveryString}</span></span>
                 </div>
@@ -178,7 +178,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                    <dl className="space-y-4">
                      {product.features.map((f: { label: string; value: string }, i: number) => (
                        <div key={i} className="flex justify-between items-center text-[13px] py-1 border-b border-zinc-50 last:border-0">
-                         <dt className="text-zinc-400 font-medium uppercase tracking-widest">{f.label}</dt>
+                         <dt className="text-zinc-500 font-medium uppercase tracking-widest">{f.label}</dt>
                          <dd className="font-bold text-zinc-900">{f.value}</dd>
                        </div>
                      ))}
@@ -200,7 +200,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <div className="max-w-7xl mx-auto">
           <header className="mb-24 flex flex-col md:flex-row justify-between items-end gap-8">
             <div className="max-w-xl">
-               <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4">The Community</p>
+               <p className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.4em] mb-4">The Community</p>
                <h2 className="text-4xl font-black tracking-tighter">Verified Experiences.</h2>
             </div>
             <div className="flex items-center gap-4">

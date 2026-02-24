@@ -26,7 +26,7 @@ export default function MobileNav() {
               key={link.name} 
               href={link.href}
               className={`flex flex-col items-center gap-1.5 transition-all ${
-                isActive ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600"
+                isActive ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-600"
               }`}
             >
               <div className={`p-2 rounded-2xl transition-all ${isActive ? "bg-zinc-100" : "bg-transparent"}`}>

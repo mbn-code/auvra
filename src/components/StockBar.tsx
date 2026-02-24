@@ -18,7 +18,7 @@ export default function StockBar() {
     <div className="space-y-2 py-4">
       <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-widest">
         <span className="text-zinc-900 animate-pulse">Archive Status: Single Unit Available</span>
-        <span className="text-zinc-400">Demand: High</span>
+        <span className="text-zinc-500">Demand: High</span>
       </div>
       <div className="h-1.5 w-full bg-zinc-50 rounded-full overflow-hidden">
         <div 

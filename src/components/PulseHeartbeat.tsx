@@ -42,7 +42,7 @@ export default function PulseHeartbeat() {
     <div className="bg-zinc-50 border-y border-zinc-100 py-3 flex flex-col md:flex-row items-center justify-center gap-3 md:gap-12">
       <div className="flex items-center gap-3">
         <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-2">
+        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2">
           <Zap size={10} className="fill-zinc-400" />
           {event}
         </span>
@@ -51,7 +51,7 @@ export default function PulseHeartbeat() {
       <div className="hidden md:block h-4 w-[1px] bg-zinc-200" />
 
       <div className="flex items-center gap-3">
-        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400">Next Archive Injection:</span>
+        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500">Next Archive Injection:</span>
         <span className="text-[10px] font-mono font-black text-zinc-900 tracking-tighter bg-white px-2 py-0.5 rounded border border-zinc-100 shadow-sm">
           {timeLeft || "00:00"}
         </span>

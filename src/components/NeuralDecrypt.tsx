@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Lock, Cpu, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function NeuralDecrypt({ 
   imageUrl, 
@@ -24,14 +25,16 @@ export default function NeuralDecrypt({
     }
   }, [isLocked]);
 
-  if (!isLocked) return <img src={imageUrl} className="w-full h-full object-cover" alt="" />;
+  if (!isLocked) return <Image src={imageUrl} fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover" alt="" />;
 
   return (
     <div className="relative w-full h-full bg-zinc-950 overflow-hidden group">
       {/* Blurred Base */}
-      <img 
+      <Image 
         src={imageUrl} 
-        className="w-full h-full object-cover blur-md opacity-90 scale-105" 
+        fill
+        sizes="(max-width: 768px) 100vw, 400px"
+        className="object-cover blur-md opacity-90 scale-105" 
         alt="" 
       />
       
