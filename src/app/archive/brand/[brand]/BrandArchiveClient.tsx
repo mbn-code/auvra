@@ -349,15 +349,18 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                       </div>
                     </div>
                   </div>
-                  <div className="px-2 flex justify-between items-center">
-                    <div className={isSold ? 'opacity-40' : ''}>
+                  <div className="px-2 flex justify-between items-end">
+                    <div className={`pb-1 ${isSold ? 'opacity-40' : ''}`}>
                       <h3 className="text-lg font-black text-zinc-900 tracking-tighter leading-tight mb-1 group-hover:underline decoration-1 underline-offset-4">
                         {item.title}
                       </h3>
                       <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{item.condition}</p>
                     </div>
-                    <div className={`bg-zinc-900 text-white px-3 py-1.5 rounded-full text-base font-black shadow-md shrink-0 ${isSold ? 'opacity-20' : ''}`}>
-                      €{Math.round(item.listing_price)}
+                    <div className={`flex flex-col items-end shrink-0 ${isSold ? 'opacity-20' : ''}`}>
+                      <span className="text-[10px] font-bold text-zinc-400 line-through decoration-red-500 mb-1">€{Math.ceil((item.listing_price * 1.5) / 10) * 10}</span>
+                      <div className="bg-zinc-900 text-white px-3 py-1.5 rounded-full text-base font-black shadow-md">
+                        €{Math.round(item.listing_price)}
+                      </div>
                     </div>
                   </div>
                 </Link>

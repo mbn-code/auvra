@@ -143,10 +143,13 @@ export default async function Home() {
                         </div>
                       )}
                     </div>
-                    <div className="flex justify-between items-center px-2">
-                      <h3 className={`text-xl font-black text-zinc-900 tracking-tighter leading-tight ${isSold ? 'opacity-40' : ''}`}>{item.title}</h3>
-                      <div className={`bg-zinc-900 text-white px-4 py-2 rounded-full text-lg font-black shadow-lg ${isSold ? 'opacity-20' : ''}`}>
-                        €{Math.round(item.listing_price)}
+                    <div className="flex justify-between items-end px-2">
+                      <h3 className={`text-xl font-black text-zinc-900 tracking-tighter leading-tight pb-1 ${isSold ? 'opacity-40' : ''}`}>{item.title}</h3>
+                      <div className={`flex flex-col items-end shrink-0 ${isSold ? 'opacity-20' : ''}`}>
+                        <span className="text-[10px] font-bold text-zinc-400 line-through decoration-red-500 mb-1">€{Math.ceil((item.listing_price * 1.5) / 10) * 10}</span>
+                        <div className="bg-zinc-900 text-white px-4 py-2 rounded-full text-lg font-black shadow-lg">
+                          €{Math.round(item.listing_price)}
+                        </div>
                       </div>
                     </div>
                   </Link>
