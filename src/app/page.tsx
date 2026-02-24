@@ -26,12 +26,19 @@ export default async function Home() {
     if (profile?.membership_tier === 'society') isMember = true;
   }
   
+  const allowedBrands = [
+    "Lacoste", "Adidas", "Supreme", "New Balance", "Dickies", "Louis Vuitton", 
+    "Chanel", "Levis", "Hermès", "Ralph Lauren", "Chrome Hearts", "Nike", 
+    "CP Company", "Moncler", "A Bathing Ape", "Prada"
+  ];
+
   // Fetch high-margin available + recently sold clothing for the homepage (Only premium items)
   const { data: archiveItems } = await supabase
     .from('pulse_inventory')
     .select('*')
     .in('status', ['available', 'sold'])
-    .gte('listing_price', 100) // Ensure only premium items > €100 show on homepage
+    .in('brand', allowedBrands)
+    .gte('listing_price', 200) // Ensure only premium items >= 200 euro show on homepage
     .order('created_at', { ascending: false })
     .limit(12);
 
