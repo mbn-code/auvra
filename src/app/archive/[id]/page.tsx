@@ -79,6 +79,9 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
   const formattedListingPrice = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(listingPrice);
   const formattedMemberPrice = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(memberPrice);
 
+  const estimatedRetail = Math.ceil((listingPrice * 1.5) / 10) * 10;
+  const formattedEstimatedRetail = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(estimatedRetail);
+
   const deliveryDate = new Date();
   deliveryDate.setDate(deliveryDate.getDate() + 7);
   const deliveryString = deliveryDate.toLocaleDateString("en-US", { month: "long", day: "numeric" });
@@ -221,14 +224,18 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 rounded-3xl border border-zinc-100 bg-zinc-50/50">
                      <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Public Price</span>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Est. Market Value:</span>
+                          <span className="text-[11px] font-bold text-zinc-400 line-through decoration-red-500">{formattedEstimatedRetail}</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-zinc-900 uppercase tracking-widest mt-2">Auvra Concierge Price</span>
                         <span className={`text-2xl font-black tracking-tighter ${isMember ? 'text-zinc-400 line-through decoration-zinc-900/20' : 'text-zinc-900'}`}>
                            {formattedListingPrice}
                         </span>
                      </div>
                      {!isMember && (
                        <Link href="/login" className="px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:opacity-80 transition-opacity flex items-center gap-2">
-                          <Lock size={10} /> Unlock Member Price
+                          <Lock size={10} /> Unlock Society Link
                        </Link>
                      )}
                   </div>
@@ -236,7 +243,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                   <div className={`flex items-center justify-between p-4 rounded-3xl border-2 ${isMember ? 'border-yellow-400 bg-yellow-50/10' : 'border-zinc-100 bg-white opacity-60'}`}>
                      <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-yellow-600 uppercase tracking-widest flex items-center gap-2">
-                           <Zap size={10} className="fill-yellow-600" /> Society Member Price
+                           <Zap size={10} className="fill-yellow-600" /> Society Direct Source Link
                         </span>
                         <span className="text-3xl font-black tracking-tighter text-zinc-900">
                            {formattedMemberPrice}
@@ -351,6 +358,27 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                         Region: Northern Europe ({item.locale?.toUpperCase()})
                      </li>
                   </ul>
+                </Accordion>
+                
+                <Accordion title="Concierge Value Inclusion" defaultOpen={true}>
+                   <ul className="space-y-3">
+                      <li className="flex items-center gap-3 text-sm font-medium text-zinc-700">
+                         <CheckCircle size={16} className="text-zinc-900" />
+                         100% Authenticity Verification
+                      </li>
+                      <li className="flex items-center gap-3 text-sm font-medium text-zinc-700">
+                         <CheckCircle size={16} className="text-zinc-900" />
+                         Global Private Sourcing & Negotiation
+                      </li>
+                      <li className="flex items-center gap-3 text-sm font-medium text-zinc-700">
+                         <CheckCircle size={16} className="text-zinc-900" />
+                         Priority Insured Shipping
+                      </li>
+                      <li className="flex items-center gap-3 text-sm font-medium text-zinc-700">
+                         <CheckCircle size={16} className="text-zinc-900" />
+                         48-Hour Integrity Guarantee
+                      </li>
+                   </ul>
                 </Accordion>
                 
                 <Accordion title="Logistics & Guarantee">

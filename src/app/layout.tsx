@@ -4,6 +4,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CookieConsent from "@/components/CookieConsent";
 import MobileNav from "@/components/MobileNav";
+import LiveToast from "@/components/LiveToast";
+import WelcomeModal from "@/components/WelcomeModal";
 
 export const metadata: Metadata = {
   title: {
@@ -101,6 +103,8 @@ export default function RootLayout({
         <Footer />
         <CookieConsent />
         <MobileNav />
+        <LiveToast />
+        <WelcomeModal />
       </body>
     </html>
   );
