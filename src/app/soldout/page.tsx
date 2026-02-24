@@ -13,30 +13,53 @@ export default async function SoldOutPage() {
     notFound();
   }
 
-  // Fetch a few premium items to act as the "last remaining" items
-  const { data: remainingItems } = await supabase
+  const allowedBrands = [
+    "Lacoste", "Adidas", "Supreme", "New Balance", "Dickies", "Louis Vuitton", 
+    "Chanel", "Levis", "Hermès", "Ralph Lauren", "Chrome Hearts", "Nike", 
+    "CP Company", "Moncler", "A Bathing Ape", "Prada"
+  ];
+
+  // Fetch all available premium items
+  const { data: allItems } = await supabase
     .from('pulse_inventory')
     .select('*')
     .eq('status', 'available')
-    .in('brand', ['Chrome Hearts', 'Louis Vuitton', 'Prada', 'Arc\'teryx', 'Chanel'])
-    .gte('listing_price', 250)
-    .order('created_at', { ascending: false })
-    .limit(6);
+    .in('brand', allowedBrands)
+    .order('listing_price', { ascending: false });
+
+  // Get up to 2 items per brand for variety
+  const itemsByBrand: Record<string, any[]> = {};
+  if (allItems) {
+    allItems.forEach(item => {
+      if (!itemsByBrand[item.brand]) itemsByBrand[item.brand] = [];
+      if (itemsByBrand[item.brand].length < 2) {
+        itemsByBrand[item.brand].push(item);
+      }
+    });
+  }
+  
+  let remainingItems: any[] = [];
+  Object.values(itemsByBrand).forEach(items => {
+    remainingItems = [...remainingItems, ...items];
+  });
+  
+  // Sort by price high to low
+  remainingItems.sort((a, b) => b.listing_price - a.listing_price);
 
   const categories = [
-    { name: "Outerwear", count: 0 },
+    { name: "Outerwear", count: "1 Left" },
     { name: "Knitwear", count: 0 },
     { name: "Pants & Denim", count: 0 },
-    { name: "Footwear", count: 0 },
+    { name: "Footwear", count: "2 Left" },
     { name: "Headwear", count: 0 },
     { name: "Bags & Leather", count: "3 Left" },
-    { name: "Jewelry", count: "1 Left" },
+    { name: "Jewelry", count: 0 },
     { name: "Accessories", count: 0 },
   ];
 
-  const brands = [
-    "Balenciaga", "Bottega Veneta", "Burberry", "CP Company", "Corteiz", "Dickies",
-    "Hermès", "Nike", "Patagonia", "Ralph Lauren", "Salomon", "Stone Island", "Stüssy", "Supreme"
+  const soldOutBrands = [
+    "Arc'teryx", "Balenciaga", "Bottega Veneta", "Burberry", "Corteiz",
+    "Gallery Dept", "Hellstar", "Patagonia", "Salomon", "Stone Island", "Stüssy"
   ];
 
   return (
@@ -81,7 +104,7 @@ export default async function SoldOutPage() {
                Brand Network Status
              </h3>
              <div className="flex flex-wrap gap-3">
-                {brands.map(b => (
+                {soldOutBrands.map(b => (
                   <div key={b} className="bg-zinc-900 border border-zinc-800 text-zinc-600 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest line-through">
                     {b} - SOLD OUT
                   </div>
