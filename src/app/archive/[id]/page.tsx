@@ -66,8 +66,12 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
     notFound();
   }
 
-  const isVault = item.potential_profit > 200 || ['Hermès', 'Chanel', 'Louis Vuitton'].includes(item.brand);
+  const isVault = item.potential_profit > 200;
   const showLockedVisual = isVault && !isMember;
+
+  // Deterministic pseudo-random viewing count between 1 and 17 based on ID
+  const charSum = item.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+  const viewingCount = (charSum % 17) + 1;
 
   const listingPrice = item.listing_price;
   const memberPrice = item.member_price || Math.round(listingPrice * 0.9);
@@ -283,16 +287,16 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
               </div>
 
               <div className="space-y-8">
-                <div className="flex items-center gap-3 px-6 py-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+                 <div className="flex items-center gap-3 px-6 py-4 bg-zinc-50 rounded-2xl border border-zinc-100">
                    <div className="flex -space-x-2">
-                      {[...Array(3)].map((_, i) => (
+                      {[...Array(Math.min(3, viewingCount))].map((_, i) => (
                         <div key={i} className="w-6 h-6 rounded-full bg-zinc-200 border-2 border-white flex items-center justify-center">
                            <span className="text-[8px] font-bold text-zinc-500">N{i+1}</span>
                         </div>
                       ))}
                    </div>
                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                      <span className="text-zinc-900">3 other nodes</span> currently inspecting this asset
+                      <span className="text-zinc-900">{viewingCount} other node{viewingCount !== 1 ? 's' : ''}</span> currently inspecting this asset
                    </p>
                 </div>
 

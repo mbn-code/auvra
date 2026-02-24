@@ -13,24 +13,25 @@ export default function AdminReviewPage() {
   const [editValue, setEditValue] = useState<string>("");
   const [editMemberValue, setEditMemberValue] = useState<string>("");
   const [actionedIds, setActionedIds] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = useState<'pending_review' | 'available'>('pending_review');
   const router = useRouter();
 
   useEffect(() => {
-    fetchPendingItems();
-  }, []);
+    fetchItems();
+  }, [viewMode]);
 
   async function handleLogout() {
     await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin/login");
   }
 
-  async function fetchPendingItems() {
+  async function fetchItems() {
     setLoading(true);
     setActionedIds(new Set());
     const { data, error } = await supabase
       .from('pulse_inventory')
       .select('*')
-      .eq('status', 'pending_review')
+      .eq('status', viewMode)
       .order('potential_profit', { ascending: false });
 
     if (!error) setItems(data || []);
@@ -111,8 +112,19 @@ export default function AdminReviewPage() {
               <h1 className="text-4xl font-black tracking-tighter text-zinc-900">Profit Review Board</h1>
             </div>
             <nav className="flex gap-6 pb-1">
-               <Link href="/admin/review" className="text-[10px] font-black uppercase tracking-widest text-zinc-900 border-b-2 border-black pb-1">Review</Link>
-               <Link href="/admin/orders" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors">Orders</Link>
+               <button 
+                  onClick={() => setViewMode('pending_review')} 
+                  className={`text-[10px] font-black uppercase tracking-widest ${viewMode === 'pending_review' ? 'text-zinc-900 border-b-2 border-black' : 'text-zinc-400 hover:text-black transition-colors'} pb-1`}
+               >
+                 Pending Review
+               </button>
+               <button 
+                  onClick={() => setViewMode('available')} 
+                  className={`text-[10px] font-black uppercase tracking-widest ${viewMode === 'available' ? 'text-zinc-900 border-b-2 border-black' : 'text-zinc-400 hover:text-black transition-colors'} pb-1`}
+               >
+                 Approved (Live)
+               </button>
+               <Link href="/admin/orders" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors pb-1 ml-4">Orders</Link>
             </nav>
           </div>
           <div className="flex items-center gap-8">
@@ -120,7 +132,7 @@ export default function AdminReviewPage() {
               <div className="flex items-center gap-4">
                 {actionedIds.size > 0 && (
                   <button 
-                    onClick={fetchPendingItems}
+                    onClick={fetchItems}
                     className="bg-green-600 text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg animate-in fade-in zoom-in"
                   >
                     Clear {actionedIds.size} Completed
@@ -245,14 +257,23 @@ export default function AdminReviewPage() {
                         target="_blank" 
                         className="bg-zinc-100 text-zinc-900 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-200 transition-colors"
                       >
-                        <ExternalLink size={14} /> Open Vinted
+                        <ExternalLink size={14} /> Open Source
                       </a>
-                      <button 
-                        onClick={() => updateStatus(item.id, 'available')}
-                        className="bg-black text-white py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-800 transition-all shadow-lg shadow-zinc-200"
-                      >
-                        <Check size={14} /> Approve
-                      </button>
+                      {viewMode === 'pending_review' ? (
+                        <button 
+                          onClick={() => updateStatus(item.id, 'available')}
+                          className="bg-black text-white py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-800 transition-all shadow-lg shadow-zinc-200"
+                        >
+                          <Check size={14} /> Approve
+                        </button>
+                      ) : (
+                        <button 
+                          disabled
+                          className="bg-zinc-200 text-zinc-500 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 cursor-not-allowed"
+                        >
+                          <Check size={14} /> Approved
+                        </button>
+                      )}
                       <button 
                         onClick={() => updateStatus(item.id, 'archived')}
                         className="col-span-2 py-3 bg-red-50 text-red-600 rounded-2xl font-bold text-[9px] uppercase tracking-[0.2em] hover:bg-red-100 transition-colors"

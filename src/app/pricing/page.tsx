@@ -58,7 +58,10 @@ export default function PricingPage() {
               <h3 className="text-2xl font-black tracking-tighter mb-2">Auvra Society</h3>
               <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">Full Access</p>
             </div>
-            <div className="text-4xl font-black mb-12 relative z-10">€19<span className="text-lg font-bold text-zinc-600">/mo</span></div>
+            <div className="text-4xl font-black mb-8 relative z-10">
+              €19<span className="text-lg font-bold text-zinc-600">/mo</span>
+              <div className="text-sm font-medium text-zinc-500 mt-2 line-through">Value: €145/mo</div>
+            </div>
             <ul className="space-y-4 mb-12 flex-1 relative z-10">
               <li className="flex items-center gap-3 text-sm font-bold">
                 <Check size={16} className="text-yellow-400" /> 10% Off All Archive Pieces
@@ -67,10 +70,14 @@ export default function PricingPage() {
                 <Check size={16} className="text-yellow-400" /> Direct Source Links (Steals)
               </li>
               <li className="flex items-center gap-3 text-sm font-bold">
-                <Check size={16} className="text-yellow-400" /> Priority Acquisition Queue
+                <Check size={16} className="text-yellow-400" /> 
+                <span>Priority Acquisition Queue <span className="text-[10px] bg-white text-black px-2 py-0.5 rounded-full ml-2">FAST PASS</span></span>
               </li>
-              <li className="flex items-center gap-3 text-sm font-bold">
-                <Check size={16} className="text-yellow-400" /> 24/7 Concierge Support
+              <li className="flex items-center gap-3 text-sm font-bold opacity-60">
+                <div className="w-4 h-4 rounded-full border border-zinc-700 flex items-center justify-center text-[10px] text-zinc-500">
+                   +
+                </div>
+                <span>24/7 Concierge Support <span className="text-yellow-400 ml-1">INCLUDED FREE</span></span>
               </li>
             </ul>
             <Link 

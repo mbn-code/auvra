@@ -10,6 +10,11 @@ export default function TermsOfService() {
         </section>
 
         <section>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Concierge Sourcing Agreement</h2>
+          <p>When you purchase an item through Auvra, you are commissioning us to act as your agent. We use our proprietary technology to secure the item from an international private seller within our global sourcing network and facilitate its transfer to you. We are responsible for managing the logistics and authentication, but the initial transfer relies on our private partners fulfilling their dispatches.</p>
+        </section>
+
+        <section>
           <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Non-Affiliation</h2>
           <p>Auvra is an independent curation platform. We are not an authorized dealer, nor are we affiliated, associated, or officially connected with any of the brands featured in our archive. All trademarks, logos, and brand names are the property of their respective owners.</p>
         </section>

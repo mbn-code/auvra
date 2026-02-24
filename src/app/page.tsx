@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import Script from "next/script";
 import { products } from "@/config/products";
 import { supabase } from "@/lib/supabase";
 import { ArrowRight, Sparkles, Flame, Zap, Lock } from "lucide-react";
@@ -23,11 +24,12 @@ export default async function Home() {
     if (profile?.membership_tier === 'society') isMember = true;
   }
   
-  // Fetch high-margin available + recently sold clothing
+  // Fetch high-margin available + recently sold clothing for the homepage (Only premium items)
   const { data: archiveItems } = await supabase
     .from('pulse_inventory')
     .select('*')
     .in('status', ['available', 'sold'])
+    .gte('listing_price', 100) // Ensure only premium items > €100 show on homepage
     .order('created_at', { ascending: false })
     .limit(12);
 
@@ -68,8 +70,12 @@ export default async function Home() {
             {archiveItems && archiveItems.length > 0 ? (
               archiveItems.map((item) => {
                 const isSold = item.status === 'sold';
-                const isVault = item.potential_profit > 200 || ['Hermès', 'Chanel', 'Louis Vuitton'].includes(item.brand);
+                const isVault = item.potential_profit > 200;
                 const isLocked = isVault && !isMember && !isSold;
+                
+                // Deterministic pseudo-random viewing count between 1 and 17 based on ID
+                const charSum = item.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+                const viewingCount = (charSum % 17) + 1;
 
                 return (
                   <Link 
@@ -125,10 +131,15 @@ export default async function Home() {
                          )}
                       </div>
                       {!isSold && item.potential_profit > 60 && (
-                        <div className="absolute bottom-6 left-6">
-                          <div className="bg-yellow-400 text-black px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
-                            Rare Find
-                          </div>
+                        <div className="absolute bottom-6 left-6 flex flex-col gap-2 items-start">
+                           {item.potential_profit > 150 && (
+                             <div className="bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg animate-pulse flex items-center gap-2">
+                               <Flame size={10} className="fill-white" /> {viewingCount} other nodes currently inspecting this asset
+                             </div>
+                           )}
+                           <div className="bg-yellow-400 text-black px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
+                             Rare Find
+                           </div>
                         </div>
                       )}
                     </div>
@@ -161,10 +172,10 @@ export default async function Home() {
                 Auvra Society
               </div>
               <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-6 leading-[0.95]">
-                Unlock the <br /> Inner Archive.
+                Unlock the Inner Archive <br /> <span className="text-zinc-500">So You Can</span> Secure Grails At Cost.
               </h2>
               <p className="text-zinc-400 text-lg font-medium max-w-lg leading-relaxed">
-                Members gain exclusive access to direct source links for steals, priority acquisition on high-heat drops, and up to 15% off concierge pricing.
+                Stop paying retail markups. Members gain exclusive access to direct source links for steals, priority acquisition on high-heat drops, and up to 15% off concierge pricing.
               </p>
            </div>
 
@@ -264,6 +275,36 @@ export default async function Home() {
                <NeuralFeed />
             </div>
          </div>
+      </section>
+
+      {/* 5. COMMUNITY / SOCIAL PROOF */}
+      <section className="max-w-7xl mx-auto px-6 pb-32">
+        <div className="text-center mb-16">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-4">
+            Community Intel
+          </p>
+          <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-zinc-900">
+            Connected to the Culture.
+          </h2>
+        </div>
+        <div className="flex flex-col md:flex-row flex-wrap justify-center items-center gap-6">
+          <blockquote className="tiktok-embed rounded-[2rem] overflow-hidden border border-zinc-100 shadow-sm" cite="https://www.tiktok.com/@.auvra/video/7610089089915718934" data-video-id="7610089089915718934" style={{ width: "100%", maxWidth: "325px" }} >
+            <section> 
+              <a target="_blank" title="@.auvra" href="https://www.tiktok.com/@.auvra?refer=embed" rel="noreferrer">@.auvra</a> always best on Auvra <a title="fashion" target="_blank" href="https://www.tiktok.com/tag/fashion?refer=embed" rel="noreferrer">#fashion</a> <a title="fyp" target="_blank" href="https://www.tiktok.com/tag/fyp?refer=embed" rel="noreferrer">#fyp</a> <a title="ootd" target="_blank" href="https://www.tiktok.com/tag/ootd?refer=embed" rel="noreferrer">#ootd</a> <a title="fashiontiktok" target="_blank" href="https://www.tiktok.com/tag/fashiontiktok?refer=embed" rel="noreferrer">#fashiontiktok</a> <a title="streetwear" target="_blank" href="https://www.tiktok.com/tag/streetwear?refer=embed" rel="noreferrer">#streetwear</a> <a target="_blank" title="♬ original sound - Auvra" href="https://www.tiktok.com/music/original-sound-7610089075831950102?refer=embed" rel="noreferrer">♬ original sound - Auvra</a> 
+            </section> 
+          </blockquote>
+          <blockquote className="tiktok-embed rounded-[2rem] overflow-hidden border border-zinc-100 shadow-sm" cite="https://www.tiktok.com/@.auvra/video/7610173889662029078" data-video-id="7610173889662029078" style={{ width: "100%", maxWidth: "325px" }} > 
+            <section> 
+              <a target="_blank" title="@.auvra" href="https://www.tiktok.com/@.auvra?refer=embed" rel="noreferrer">@.auvra</a> LINK IN BIO new drops every hour <a title="fashion" target="_blank" href="https://www.tiktok.com/tag/fashion?refer=embed" rel="noreferrer">#fashion</a> <a title="fyp" target="_blank" href="https://www.tiktok.com/tag/fyp?refer=embed" rel="noreferrer">#fyp</a> <a title="ootd" target="_blank" href="https://www.tiktok.com/tag/ootd?refer=embed" rel="noreferrer">#ootd</a> <a title="fashiontiktok" target="_blank" href="https://www.tiktok.com/tag/fashiontiktok?refer=embed" rel="noreferrer">#fashiontiktok</a> <a title="streetwear" target="_blank" href="https://www.tiktok.com/tag/streetwear?refer=embed" rel="noreferrer">#streetwear</a> <a target="_blank" title="♬ original sound - Auvra" href="https://www.tiktok.com/music/original-sound-7610173899687938838?refer=embed" rel="noreferrer">♬ original sound - Auvra</a> 
+            </section> 
+          </blockquote>
+          <blockquote className="tiktok-embed rounded-[2rem] overflow-hidden border border-zinc-100 shadow-sm" cite="https://www.tiktok.com/@.auvra/video/7609838351478181142" data-video-id="7609838351478181142" style={{ width: "100%", maxWidth: "325px" }} > 
+            <section> 
+              <a target="_blank" title="@.auvra" href="https://www.tiktok.com/@.auvra?refer=embed" rel="noreferrer">@.auvra</a> save 💵 when shopping CLICK LINK IN BIO <a title="fashion" target="_blank" href="https://www.tiktok.com/tag/fashion?refer=embed" rel="noreferrer">#fashion</a> <a title="fyp" target="_blank" href="https://www.tiktok.com/tag/fyp?refer=embed" rel="noreferrer">#fyp</a> <a title="ootd" target="_blank" href="https://www.tiktok.com/tag/ootd?refer=embed" rel="noreferrer">#ootd</a> <a title="fashiontiktok" target="_blank" href="https://www.tiktok.com/tag/fashiontiktok?refer=embed" rel="noreferrer">#fashiontiktok</a> <a title="streetwear" target="_blank" href="https://www.tiktok.com/tag/streetwear?refer=embed" rel="noreferrer">#streetwear</a> <a target="_blank" title="♬ original sound - Auvra" href="https://www.tiktok.com/music/original-sound-7609838383141112598?refer=embed" rel="noreferrer">♬ original sound - Auvra</a> 
+            </section> 
+          </blockquote>
+        </div>
+        <Script src="https://www.tiktok.com/embed.js" strategy="lazyOnload" />
       </section>
 
     </div>

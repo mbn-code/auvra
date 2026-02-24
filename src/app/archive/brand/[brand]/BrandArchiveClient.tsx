@@ -302,7 +302,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8">
             {filteredItems.map((item) => {
               const isSold = item.status === 'sold';
-              const isVault = item.potential_profit > 200 || ['Hermès', 'Chanel', 'Louis Vuitton'].includes(item.brand);
+              const isVault = item.potential_profit > 200;
               const isLocked = isVault && !isMember && !isSold;
 
               return (

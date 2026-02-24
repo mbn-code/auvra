@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Lock, Cpu, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 
 export default function NeuralDecrypt({ 
   imageUrl, 
@@ -30,7 +31,7 @@ export default function NeuralDecrypt({
       {/* Blurred Base */}
       <img 
         src={imageUrl} 
-        className="w-full h-full object-cover blur-3xl opacity-30 scale-110" 
+        className="w-full h-full object-cover blur-xl opacity-60 scale-110" 
         alt="" 
       />
       
@@ -57,12 +58,12 @@ export default function NeuralDecrypt({
           Status: {progress.toFixed(1)}% Decrypted...
         </p>
 
-        <button 
-          onClick={onUnlock}
+        <Link 
+          href="/pricing"
           className="bg-white text-black px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-yellow-400 transition-all"
         >
           Bypass Security Node
-        </button>
+        </Link>
       </div>
 
       {/* Grid scanning effect */}

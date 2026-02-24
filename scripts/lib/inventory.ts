@@ -160,21 +160,34 @@ export function sanitizeTitle(rawTitle: string): string {
 }
 
 export function calculateListingPrice(sourcePriceEUR: number, brand: string) {
-  const logisticsBuffer = 20;
-  let margin = 1.6;
-  if (sourcePriceEUR > 50) margin = 1.5;
-  if (sourcePriceEUR > 150) margin = 1.4;
-  if (sourcePriceEUR > 300) margin = 1.35;
-  if (sourcePriceEUR > 600) margin = 1.25;
-  if (sourcePriceEUR > 1200) margin = 1.2;
+  let logisticsBuffer = 20;
+  let margin = 1.3; // Much lower base margin for cheap items
+
+  if (sourcePriceEUR < 50) {
+    margin = 1.3;
+    logisticsBuffer = 10;
+  } else if (sourcePriceEUR < 150) {
+    margin = 1.4;
+    logisticsBuffer = 15;
+  } else if (sourcePriceEUR < 400) {
+    margin = 1.35;
+    logisticsBuffer = 20;
+  } else {
+    margin = 1.25;
+    logisticsBuffer = 20;
+  }
 
   const highDemand = ["Chrome Hearts", "Corteiz", "Arc'teryx", "Louis Vuitton", "Prada"];
-  if (highDemand.includes(brand)) margin += 0.1;
+  if (highDemand.includes(brand)) margin += 0.05; // Reduced high-demand bump from 10% to 5%
 
   let price = Math.round(sourcePriceEUR * margin + logisticsBuffer);
+  
+  // Make prices end in 9 (e.g. 129, 49)
   const remainder = price % 10;
-  if (remainder < 5) price = price - remainder - 1;
-  else price = price + (9 - remainder);
+  if (remainder !== 9) {
+     if (remainder < 5) price = price - remainder - 1;
+     else price = price + (9 - remainder);
+  }
 
   return price;
 }
@@ -237,8 +250,8 @@ export async function saveToSupabase(item: ScrapedItem) {
   let displayImage = item.image;
   const subCategory = detectSubCategory(item.title);
 
-  // Relaxed Auto-approve logic: Confidence > 85, Profit > 25
-  if (confidence > 85 && profit > 25 && autoApproveBrands.includes(item.brand)) {
+  // Relaxed Auto-approve logic: Confidence > 85, Profit > 25, Minimum Listing Price > 80
+  if (confidence > 85 && profit > 25 && listingPrice > 80 && autoApproveBrands.includes(item.brand)) {
     status = 'available';
     // Use processed image for available items
     const processed = await processImage(item.image, item.brand);
