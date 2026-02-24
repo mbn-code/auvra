@@ -168,65 +168,10 @@ export function getBrandTier(brand: string): number {
   return 5;
 }
 
-export function calculateListingPrice(sourcePriceEUR: number, brand: string, condition: string = "") {
-  const tier = getBrandTier(brand);
-  
-  // Calculate Base Market Value from Source Price 
-  // (We assume we source items at massive wholesale/steals)
-  let marketValueMultiplier = 1.8;
-  if (tier === 1) marketValueMultiplier = 3.0; // Ultra Luxury items are usually huge steals
-  else if (tier === 2) marketValueMultiplier = 2.5;
-  else if (tier === 3) marketValueMultiplier = 2.2;
-  else if (tier === 4) marketValueMultiplier = 2.5; // Hype streetwear often resells high
-  
-  if (condition.toLowerCase().includes('new')) marketValueMultiplier += 0.2;
-
-  const estimatedMarketValue = sourcePriceEUR * marketValueMultiplier;
-
-  // Apply target discount based on tier
-  let discount = 0;
-  if (tier === 1) discount = 0.10 + (Math.random() * 0.15); // 10-25%
-  else if (tier === 2) discount = 0.15 + (Math.random() * 0.20); // 15-35%
-  else if (tier === 3) discount = 0.20 + (Math.random() * 0.25); // 20-45%
-  else if (tier === 4) discount = 0.10 + (Math.random() * 0.15); // 10-25%
-  else discount = 0.25 + (Math.random() * 0.30); // 25-55%
-
-  // Demand Adjustment
-  let demandScore = 1.0;
-  if (condition.toLowerCase().includes('new')) demandScore += 0.1;
-  if (tier === 1 || tier === 4) demandScore += 0.15;
-  
-  // Higher demand = lower discount applied
-  discount = discount / demandScore;
-
-  let price = Math.round(estimatedMarketValue * (1 - discount));
-
-  // Margin Safeguards
-  const logisticsBuffer = tier === 1 ? 50 : 20; 
-  const minPrice = sourcePriceEUR + logisticsBuffer + (sourcePriceEUR * 0.2); // Guarantee logistics + 20% margin
-  
-  if (price < minPrice) price = minPrice;
-
-  // Luxury secondary market floor anomaly detection
-  if (brand === "Chanel" && price < 400) price = Math.max(price, 400); 
-  if (brand === "Hermès" && price < 300) price = Math.max(price, 300);
-  if (brand === "Louis Vuitton" && price < 250) price = Math.max(price, 250);
-
-  // Aesthetic pricing logic based on Tier to break the generic algorithm feel
-  if (tier === 1) {
-     price = Math.round(price / 50) * 50; // Ends in 00 or 50 (e.g. 1200, 1250)
-  } else if (tier === 2 || tier === 3) {
-     price = Math.round(price / 10) * 10; // Ends in 0 (e.g. 320, 410)
-  } else {
-     // Ends in 9 for mass/streetwear
-     const remainder = price % 10;
-     if (remainder !== 9) {
-       if (remainder < 5) price = price - remainder - 1;
-       else price = price + (9 - remainder);
-     }
-  }
-
-  return price;
+export function calculateListingPrice(sourcePriceEUR: number, brand: string, condition: string = "", title: string = "") {
+  // Delegate entirely to the new Market Anchor Simulation Engine
+  const { calculateListingPriceEngine } = require('../../src/lib/pricing');
+  return calculateListingPriceEngine(sourcePriceEUR, brand, condition, title);
 }
 
 export function calculateMemberPrice(listingPrice: number) {

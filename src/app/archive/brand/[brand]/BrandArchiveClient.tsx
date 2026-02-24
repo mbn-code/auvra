@@ -363,9 +363,9 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                       <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{item.condition}</p>
                     </div>
                     <div className={`flex flex-col items-end shrink-0 ${isSold ? 'opacity-20' : ''}`}>
-                      {getEstimatedMarketValue(item.listing_price, item.brand) && (
+                      {getEstimatedMarketValue(item.listing_price, item.brand, item.category) && (
                         <span className="text-[10px] font-bold text-zinc-500 line-through decoration-red-500 mb-1">
-                          €{getEstimatedMarketValue(item.listing_price, item.brand)}
+                          €{getEstimatedMarketValue(item.listing_price, item.brand, item.category)}
                         </span>
                       )}
                       <div className="bg-zinc-900 text-white px-3 py-1.5 rounded-full text-base font-black shadow-md">

@@ -80,7 +80,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
   const formattedListingPrice = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(listingPrice);
   const formattedMemberPrice = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(memberPrice);
 
-  const estimatedRetail = getEstimatedMarketValue(listingPrice, item.brand);
+  const estimatedRetail = getEstimatedMarketValue(listingPrice, item.brand, item.category);
   const formattedEstimatedRetail = estimatedRetail 
     ? new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(estimatedRetail)
     : null;
