@@ -73,6 +73,7 @@ export default function WelcomeModal() {
         
         <button 
           onClick={handleClose}
+          aria-label="Close modal"
           className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors"
         >
           <X size={20} />

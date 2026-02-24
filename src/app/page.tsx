@@ -5,6 +5,7 @@ import { products } from "@/config/products";
 import { supabase } from "@/lib/supabase";
 import { ArrowRight, Sparkles, Flame, Zap, Lock } from "lucide-react";
 import NeuralFeed from "@/components/NeuralFeed";
+import TikTokEmbeds from "@/components/TikTokEmbeds";
 import { createClient } from "@/lib/supabase-server";
 import LimitedIntakes from "@/components/LimitedIntakes";
 
@@ -48,7 +49,7 @@ export default async function Home() {
       {/* 1. ARCHIVE CAROUSEL HERO */}
       <section className="relative pt-24 pb-12 overflow-hidden">
         <div className="absolute top-0 right-0 w-1/3 h-full z-0 opacity-[0.05] pointer-events-none">
-           <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover" alt="" />
+           <Image src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000" fill sizes="33vw" priority className="object-cover" alt="" />
         </div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="flex justify-between items-end mb-12">
@@ -84,9 +85,11 @@ export default async function Home() {
                     className={`min-w-[300px] md:min-w-[400px] group ${isSold ? 'cursor-not-allowed' : ''}`}
                   >
                     <div className={`aspect-[4/5] rounded-[3rem] overflow-hidden bg-zinc-50 border border-zinc-100 mb-6 relative transition-all duration-700 ${isSold ? 'grayscale' : ''} ${isLocked ? 'bg-zinc-950' : ''}`}>
-                      <img 
+                      <Image 
                         src={item.images[0]} 
-                        className={`w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 ${isLocked ? 'blur-md opacity-90 scale-105' : ''} ${isSold ? 'opacity-40' : ''} ${!isSold && !isLocked && item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
+                        fill
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        className={`object-cover transition-transform duration-1000 group-hover:scale-105 ${isLocked ? 'blur-md opacity-90 scale-105' : ''} ${isSold ? 'opacity-40' : ''} ${!isSold && !isLocked && item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
                         alt={`${item.brand} ${item.title} - Auvra Archive Selection`} 
                       />
                       
@@ -100,9 +103,11 @@ export default async function Home() {
                       )}
 
                       {!isSold && !isLocked && item.images.length > 1 && (
-                        <img 
+                        <Image 
                           src={item.images[1]} 
-                          className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-110 group-hover:scale-100" 
+                          fill
+                          sizes="(max-width: 768px) 100vw, 400px"
+                          className="object-cover opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-110 group-hover:scale-100" 
                           alt={`${item.brand} ${item.title} - View 2`} 
                         />
                       )}
@@ -203,7 +208,7 @@ export default async function Home() {
       <section className="max-w-7xl mx-auto px-6 py-24">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[600px]">
            <div className="md:col-span-4 rounded-[3rem] overflow-hidden relative group border border-zinc-100">
-              <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" alt="" />
+              <Image src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=1000" fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" alt="" />
               <div className="absolute inset-0 bg-black/20" />
               <div className="absolute bottom-8 left-8 text-white">
                  <p className="text-[9px] font-black uppercase tracking-[0.3em]">Curation 01</p>
@@ -212,14 +217,14 @@ export default async function Home() {
            </div>
            <div className="md:col-span-8 grid grid-cols-2 gap-6">
               <div className="rounded-[3rem] overflow-hidden relative group border border-zinc-100">
-                 <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" alt="" />
+                 <Image src="https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=1000" fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" alt="" />
                  <div className="absolute inset-0 bg-black/40" />
                  <div className="absolute inset-0 flex items-center justify-center">
                     <p className="text-white text-[10px] font-black uppercase tracking-[0.5em] opacity-0 group-hover:opacity-100 transition-opacity">Archive Pulse</p>
                  </div>
               </div>
               <div className="rounded-[3rem] overflow-hidden relative group border border-zinc-100">
-                 <img src="https://images.unsplash.com/photo-1511405946472-a37e3b5ccd47?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" alt="" />
+                 <Image src="https://images.unsplash.com/photo-1511405946472-a37e3b5ccd47?auto=format&fit=crop&q=80&w=1000" fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" alt="" />
                  <div className="absolute inset-0 bg-black/30" />
               </div>
            </div>
@@ -229,7 +234,7 @@ export default async function Home() {
       {/* 3. THE PHILOSOPHY (Atmospheric) */}
       <section className="relative py-40 mx-6 overflow-hidden rounded-[5rem]">
         <div className="absolute inset-0 z-0">
-           <img src="https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&q=80&w=2000" className="w-full h-full object-cover brightness-[0.3]" alt="" />
+           <Image src="https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&q=80&w=2000" fill sizes="100vw" className="object-cover brightness-[0.3]" alt="" />
         </div>
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10 text-white">
            <Sparkles size={32} className="mx-auto text-yellow-400 mb-8" />
@@ -290,24 +295,7 @@ export default async function Home() {
             Connected to the Culture.
           </h2>
         </div>
-        <div className="flex flex-col md:flex-row flex-wrap justify-center items-center gap-6">
-          <blockquote className="tiktok-embed rounded-[2rem] overflow-hidden border border-zinc-100 shadow-sm" cite="https://www.tiktok.com/@.auvra/video/7610089089915718934" data-video-id="7610089089915718934" style={{ width: "100%", maxWidth: "325px" }} >
-            <section> 
-              <a target="_blank" title="@.auvra" href="https://www.tiktok.com/@.auvra?refer=embed" rel="noreferrer">@.auvra</a> always best on Auvra <a title="fashion" target="_blank" href="https://www.tiktok.com/tag/fashion?refer=embed" rel="noreferrer">#fashion</a> <a title="fyp" target="_blank" href="https://www.tiktok.com/tag/fyp?refer=embed" rel="noreferrer">#fyp</a> <a title="ootd" target="_blank" href="https://www.tiktok.com/tag/ootd?refer=embed" rel="noreferrer">#ootd</a> <a title="fashiontiktok" target="_blank" href="https://www.tiktok.com/tag/fashiontiktok?refer=embed" rel="noreferrer">#fashiontiktok</a> <a title="streetwear" target="_blank" href="https://www.tiktok.com/tag/streetwear?refer=embed" rel="noreferrer">#streetwear</a> <a target="_blank" title="♬ original sound - Auvra" href="https://www.tiktok.com/music/original-sound-7610089075831950102?refer=embed" rel="noreferrer">♬ original sound - Auvra</a> 
-            </section> 
-          </blockquote>
-          <blockquote className="tiktok-embed rounded-[2rem] overflow-hidden border border-zinc-100 shadow-sm" cite="https://www.tiktok.com/@.auvra/video/7610173889662029078" data-video-id="7610173889662029078" style={{ width: "100%", maxWidth: "325px" }} > 
-            <section> 
-              <a target="_blank" title="@.auvra" href="https://www.tiktok.com/@.auvra?refer=embed" rel="noreferrer">@.auvra</a> LINK IN BIO new drops every hour <a title="fashion" target="_blank" href="https://www.tiktok.com/tag/fashion?refer=embed" rel="noreferrer">#fashion</a> <a title="fyp" target="_blank" href="https://www.tiktok.com/tag/fyp?refer=embed" rel="noreferrer">#fyp</a> <a title="ootd" target="_blank" href="https://www.tiktok.com/tag/ootd?refer=embed" rel="noreferrer">#ootd</a> <a title="fashiontiktok" target="_blank" href="https://www.tiktok.com/tag/fashiontiktok?refer=embed" rel="noreferrer">#fashiontiktok</a> <a title="streetwear" target="_blank" href="https://www.tiktok.com/tag/streetwear?refer=embed" rel="noreferrer">#streetwear</a> <a target="_blank" title="♬ original sound - Auvra" href="https://www.tiktok.com/music/original-sound-7610173899687938838?refer=embed" rel="noreferrer">♬ original sound - Auvra</a> 
-            </section> 
-          </blockquote>
-          <blockquote className="tiktok-embed rounded-[2rem] overflow-hidden border border-zinc-100 shadow-sm" cite="https://www.tiktok.com/@.auvra/video/7609838351478181142" data-video-id="7609838351478181142" style={{ width: "100%", maxWidth: "325px" }} > 
-            <section> 
-              <a target="_blank" title="@.auvra" href="https://www.tiktok.com/@.auvra?refer=embed" rel="noreferrer">@.auvra</a> save 💵 when shopping CLICK LINK IN BIO <a title="fashion" target="_blank" href="https://www.tiktok.com/tag/fashion?refer=embed" rel="noreferrer">#fashion</a> <a title="fyp" target="_blank" href="https://www.tiktok.com/tag/fyp?refer=embed" rel="noreferrer">#fyp</a> <a title="ootd" target="_blank" href="https://www.tiktok.com/tag/ootd?refer=embed" rel="noreferrer">#ootd</a> <a title="fashiontiktok" target="_blank" href="https://www.tiktok.com/tag/fashiontiktok?refer=embed" rel="noreferrer">#fashiontiktok</a> <a title="streetwear" target="_blank" href="https://www.tiktok.com/tag/streetwear?refer=embed" rel="noreferrer">#streetwear</a> <a target="_blank" title="♬ original sound - Auvra" href="https://www.tiktok.com/music/original-sound-7609838383141112598?refer=embed" rel="noreferrer">♬ original sound - Auvra</a> 
-            </section> 
-          </blockquote>
-        </div>
-        <Script src="https://www.tiktok.com/embed.js" strategy="lazyOnload" />
+        <TikTokEmbeds />
       </section>
 
     </div>
