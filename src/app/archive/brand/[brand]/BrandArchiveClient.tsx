@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { Zap, ArrowLeft, Filter, ChevronDown, SortAsc, SortDesc, Clock, Search, Lock } from "lucide-react";
 import PulseHeartbeat from "@/components/PulseHeartbeat";
 import { createClient } from "@/lib/supabase-client";
+import { getEstimatedMarketValue } from "@/lib/pricing";
 
 export default function BrandArchivePage({ params }: { params: Promise<{ brand: string }> }) {
   const { brand: brandName } = use(params);
@@ -362,7 +363,11 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                       <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{item.condition}</p>
                     </div>
                     <div className={`flex flex-col items-end shrink-0 ${isSold ? 'opacity-20' : ''}`}>
-                      <span className="text-[10px] font-bold text-zinc-500 line-through decoration-red-500 mb-1">€{Math.ceil((item.listing_price * 1.5) / 10) * 10}</span>
+                      {getEstimatedMarketValue(item.listing_price, item.brand) && (
+                        <span className="text-[10px] font-bold text-zinc-500 line-through decoration-red-500 mb-1">
+                          €{getEstimatedMarketValue(item.listing_price, item.brand)}
+                        </span>
+                      )}
                       <div className="bg-zinc-900 text-white px-3 py-1.5 rounded-full text-base font-black shadow-md">
                         €{Math.round(item.listing_price)}
                       </div>

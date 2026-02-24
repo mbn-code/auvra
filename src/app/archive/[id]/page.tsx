@@ -9,6 +9,7 @@ import NeuralDecrypt from "@/components/NeuralDecrypt";
 import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle, Clock, Lock, ExternalLink, Cpu } from "lucide-react";
 import { createClient } from "@/lib/supabase-server";
 import { Metadata } from "next";
+import { getEstimatedMarketValue } from "@/lib/pricing";
 
 interface ArchiveProductPageProps {
   params: Promise<{ id: string }>;
@@ -79,8 +80,10 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
   const formattedListingPrice = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(listingPrice);
   const formattedMemberPrice = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(memberPrice);
 
-  const estimatedRetail = Math.ceil((listingPrice * 1.5) / 10) * 10;
-  const formattedEstimatedRetail = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(estimatedRetail);
+  const estimatedRetail = getEstimatedMarketValue(listingPrice, item.brand);
+  const formattedEstimatedRetail = estimatedRetail 
+    ? new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(estimatedRetail)
+    : null;
 
   const deliveryDate = new Date();
   deliveryDate.setDate(deliveryDate.getDate() + 7);
@@ -224,10 +227,12 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 rounded-3xl border border-zinc-100 bg-zinc-50/50">
                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Est. Market Value:</span>
-                          <span className="text-[11px] font-bold text-zinc-500 line-through decoration-red-500">{formattedEstimatedRetail}</span>
-                        </div>
+                        {formattedEstimatedRetail && (
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Est. Market Value:</span>
+                            <span className="text-[11px] font-bold text-zinc-500 line-through decoration-red-500">{formattedEstimatedRetail}</span>
+                          </div>
+                        )}
                         <span className="text-[10px] font-bold text-zinc-900 uppercase tracking-widest mt-2">Auvra Concierge Price</span>
                         <span className={`text-2xl font-black tracking-tighter ${isMember ? 'text-zinc-500 line-through decoration-zinc-900/20' : 'text-zinc-900'}`}>
                            {formattedListingPrice}
