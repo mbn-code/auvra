@@ -314,7 +314,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                   <div className={`aspect-[4/5] bg-zinc-50 rounded-[2.5rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 relative ${isSold ? 'grayscale' : 'group-hover:shadow-2xl group-hover:shadow-zinc-100'} ${isLocked ? 'bg-zinc-950' : ''}`}>
                     <img 
                       src={item.images[0]} 
-                      className={`w-full h-full object-cover transition-all duration-1000 ${isLocked ? 'blur-3xl opacity-30 scale-110' : ''} ${isSold ? 'opacity-40' : 'grayscale-[0.2] group-hover:grayscale-0'} ${!isSold && !isLocked && item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
+                      className={`w-full h-full object-cover transition-all duration-1000 ${isLocked ? 'blur-md opacity-90 scale-105' : ''} ${isSold ? 'opacity-40' : 'grayscale-[0.2] group-hover:grayscale-0'} ${!isSold && !isLocked && item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
                       alt={item.title} 
                     />
                     

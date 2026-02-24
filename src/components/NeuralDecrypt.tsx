@@ -31,7 +31,7 @@ export default function NeuralDecrypt({
       {/* Blurred Base */}
       <img 
         src={imageUrl} 
-        className="w-full h-full object-cover blur-xl opacity-60 scale-110" 
+        className="w-full h-full object-cover blur-md opacity-90 scale-105" 
         alt="" 
       />
       
