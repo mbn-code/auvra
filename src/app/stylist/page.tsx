@@ -205,7 +205,7 @@ export default function StylistPage() {
         <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-20">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-zinc-900 to-zinc-700 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-6 shadow-lg shadow-zinc-200">
-              <Cpu size={10} className="text-yellow-400" /> Neural Curation v3.0
+              <Cpu size={10} className="text-yellow-400" /> Neural Curation v3.3 [ALPHA]
             </div>
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8">
               Archetype <br />Personal Stylist.
@@ -378,10 +378,19 @@ export default function StylistPage() {
                     return (
                       <div key={i} className="group relative">
                         <Link href={item.url} className={`block bg-zinc-50 rounded-[2.5rem] p-6 border transition-all hover:shadow-2xl ${isLocked ? 'border-zinc-900' : 'border-zinc-100'}`}>
-                          <div className="aspect-[4/5] bg-white rounded-2xl mb-6 overflow-hidden relative border border-zinc-100 shadow-inner">
-                             <img src={item.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
+                          <div className="aspect-[4/5] bg-white rounded-2xl mb-6 overflow-hidden relative border border-zinc-100 shadow-inner group">
+                             <img src={item.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700 contrast-[1.1] brightness-[1.05]" />
+                             {/* Neural Artifact Overlay */}
+                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] mix-blend-overlay" />
+                             
                              <div className="absolute top-4 left-4">
                                 <div className="bg-black/90 backdrop-blur-md text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border border-white/10">{item.brand}</div>
+                             </div>
+                             <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="bg-white/90 backdrop-blur-md text-black text-[6px] font-black uppercase tracking-[0.2em] px-2 py-1 rounded-md border border-black/5 flex items-center gap-1">
+                                   <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" /> SCAN_COMPLETE
+                                </div>
                              </div>
                           </div>
                           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">{item.brand}</p>

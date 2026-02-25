@@ -1,5 +1,5 @@
 /**
- * AUVRA STYLIST ENGINE v3.2 (AESTHETIC INTEGRITY UPGRADE)
+ * AUVRA STYLIST ENGINE v3.3 (AESTHETIC INTEGRITY UPGRADE)
  * Constraint-Satisfaction & Layering Logic
  */
 
@@ -16,7 +16,6 @@ export interface BrandMeta {
 }
 
 export const BRAND_REGISTRY: Record<string, BrandMeta> = {
-  // Tier 1: Ultra Luxury
   "Louis Vuitton": { cluster: 'luxury', formalityBias: 8, silhouetteBias: 'structured' },
   "Hermès": { cluster: 'luxury', formalityBias: 9, silhouetteBias: 'structured' },
   "Chanel": { cluster: 'luxury', formalityBias: 9, silhouetteBias: 'structured' },
@@ -71,6 +70,7 @@ export interface SlotConstraints {
 export interface Archetype {
   id: string;
   name: string;
+  visualRef: string;
   slots: {
     OUTERWEAR: SlotConstraints;
     TOPS: SlotConstraints;
@@ -79,35 +79,44 @@ export interface Archetype {
   };
 }
 
+const ARCHETYPE_FORMULAS: Record<string, string[]> = {
+  'gorpcore-specialist': ["Arc'teryx", "Salomon", "Oakley", "The North Face", "Patagonia", "Stone Island"],
+  'archive-hero': ["Supreme", "A Bathing Ape", "Stüssy", "Corteiz", "Nike", "Adidas", "Dickies", "Carhartt"],
+  'quiet-luxury': ["Louis Vuitton", "Prada", "Chanel", "Hermès", "Burberry", "Ralph Lauren", "Gucci", "Moncler"]
+};
+
 export const ARCHETYPES: Archetype[] = [
   {
     id: 'gorpcore-specialist',
     name: 'The Gorpcore Specialist',
+    visualRef: '/vibes/6f85c4b2f69fdb8f0f54a5cffd985ba5.jpg',
     slots: {
       OUTERWEAR: { clusters: ['technical'], silhouettes: ['technical'], maxFormalityDelta: 2, forbiddenBrands: ['Nike', 'Adidas', 'MLB'] },
-      TOPS: { clusters: ['technical', 'minimal', 'heritage'], silhouettes: ['relaxed', 'technical'], maxFormalityDelta: 2 }, 
-      BOTTOMS: { clusters: ['technical', 'workwear'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 2 },
-      FOOTWEAR: { clusters: ['technical', 'minimal'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 2 },
+      TOPS: { clusters: ['technical', 'minimal'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 2 }, 
+      BOTTOMS: { clusters: ['technical'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 2 },
+      FOOTWEAR: { clusters: ['technical'], silhouettes: ['technical'], maxFormalityDelta: 2 },
     }
   },
   {
     id: 'archive-hero',
     name: 'The 90s Archive Hero',
+    visualRef: '/vibes/191a6aaa3f480f2ca33d814d52ff3b62.jpg',
     slots: {
-      OUTERWEAR: { clusters: ['street', 'workwear', 'heritage'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
+      OUTERWEAR: { clusters: ['street', 'workwear'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
       TOPS: { clusters: ['street', 'heritage', 'minimal'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
-      BOTTOMS: { clusters: ['workwear', 'street', 'heritage'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
+      BOTTOMS: { clusters: ['workwear', 'street'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
       FOOTWEAR: { clusters: ['street', 'minimal'], silhouettes: ['relaxed'], maxFormalityDelta: 3 },
     }
   },
   {
     id: 'quiet-luxury',
     name: 'The Quiet Luxury Node',
+    visualRef: '/vibes/cfd79f46ca1eb048b72ecf2cb5f2de2f.jpg',
     slots: {
       OUTERWEAR: { clusters: ['luxury', 'heritage'], silhouettes: ['structured'], maxFormalityDelta: 2 },
-      TOPS: { clusters: ['luxury', 'minimal', 'heritage'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
-      BOTTOMS: { clusters: ['luxury', 'heritage', 'minimal'], silhouettes: ['structured'], maxFormalityDelta: 2 },
-      FOOTWEAR: { clusters: ['luxury', 'minimal', 'heritage'], silhouettes: ['structured'], maxFormalityDelta: 2 },
+      TOPS: { clusters: ['luxury', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
+      BOTTOMS: { clusters: ['luxury', 'heritage'], silhouettes: ['structured'], maxFormalityDelta: 2 },
+      FOOTWEAR: { clusters: ['luxury', 'minimal'], silhouettes: ['structured'], maxFormalityDelta: 2 },
     }
   }
 ];
@@ -125,7 +134,7 @@ export interface EnrichedItem {
   silhouette: Silhouette;
   colorFamily: string;
   isPolluted: boolean;
-  layerWeight: number; // 3: Heavy Outerwear, 2: Mid (Hoodie/Sweater), 1: Light (Tee/Shirt)
+  layerWeight: number; 
 }
 
 export interface UserIntent {
@@ -153,7 +162,6 @@ export class StylistEngine {
       const brand = item.brand;
       const meta = BRAND_REGISTRY[brand] || { cluster: 'minimal', formalityBias: 3, silhouetteBias: 'relaxed' };
       
-      // Data Pollution Check
       const otherBrands = Object.keys(BRAND_REGISTRY).filter(b => b !== brand && b.length > 3);
       const isPolluted = otherBrands.some(ob => title.includes(ob.toLowerCase()));
 
@@ -169,7 +177,6 @@ export class StylistEngine {
         }
       }
 
-      // Determine Layer Weight
       let layerWeight = 1;
       const cat = item.category.toLowerCase();
       if (cat.includes('jacket') || cat.includes('outerwear')) layerWeight = 3;
@@ -214,7 +221,6 @@ export class StylistEngine {
     const anchorItem = intent.anchorItemId ? inventory.find(i => i.id === intent.anchorItemId) : null;
     const lockedItems = intent.lockedItemIds ? inventory.filter(i => intent.lockedItemIds?.includes(i.id)) : [];
 
-    // Filter inventory by gender and PRICE FLOOR (>= 100 euro for stylist)
     const filteredPool = inventory.filter(i => {
       if (i.listing_price < 100) return false;
       if (intent.gender === 'unisex' || intent.gender === 'couple') return true;
@@ -255,6 +261,12 @@ export class StylistEngine {
 
           let pool = pools[slotKey].filter(item => this.isItemValidForSlot(item, constraints));
           
+          const formulaBrands = ARCHETYPE_FORMULAS[archetype.id] || [];
+          const archetypeMatchPool = pool.filter(item => formulaBrands.includes(item.brand));
+          if (archetypeMatchPool.length > 0) {
+            pool = archetypeMatchPool;
+          }
+
           if (intent.brands && intent.brands.length > 0) {
             const brandPool = pool.filter(item => intent.brands?.includes(item.brand));
             if (brandPool.length > 0) {
@@ -273,24 +285,23 @@ export class StylistEngine {
           items.push(pool[itemIndex]);
         }
 
-        // Integrity Checks
         if (items.length >= 3) {
           const formalities = items.map(it => it.formality);
           const delta = Math.max(...formalities) - Math.min(...formalities);
           
-          // Layering Logic: Outerwear >= Top Weight
           const outerwear = items.find(it => this.getCategoryKey(it.category) === 'OUTERWEAR');
           const top = items.find(it => this.getCategoryKey(it.category) === 'TOPS');
-          if (outerwear && top && outerwear.layerWeight < top.layerWeight) continue;
+          
+          let integrityCheck = true;
+          if (outerwear && top && outerwear.layerWeight < top.layerWeight) integrityCheck = false;
 
-          // Color family consistency if intent colors provided
           if (intent.colors && intent.colors.length > 0) {
              const matchesColor = items.some(it => intent.colors?.some(c => it.title.toLowerCase().includes(c.toLowerCase())));
-             if (!matchesColor) continue;
+             if (!matchesColor) integrityCheck = false;
              score += 30;
           }
 
-          if (delta <= 5) {
+          if (integrityCheck && delta <= 5) {
             outfits.push({
               archetypeId: archetype.id,
               outfitName: archetype.name,

@@ -10,12 +10,15 @@ import { StylistEngine, UserIntent, OutfitSet } from '@/lib/stylist-engine';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { anchorItemId, lockedItemIds, gender } = body;
+    const { anchorItemId, lockedItemIds, gender, colors, brands, occasion } = body;
 
     const intent: UserIntent = {
       anchorItemId,
       lockedItemIds,
-      gender: gender === 'couple' ? 'couple' : (gender || 'unisex')
+      gender: gender === 'couple' ? 'couple' : (gender || 'unisex'),
+      colors,
+      brands,
+      occasion
     };
 
     // 1. INVENTORY ADAPTER (Fetch & Enrich)
