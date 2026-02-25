@@ -44,6 +44,8 @@ export default function StylistPage() {
   const [lockedItemIds, setLockedItemIds] = useState<string[]>([]);
   
   const [loading, setLoading] = useState(false);
+  const [anchorSearch, setAnchorSearch] = useState("");
+  const [anchorLoading, setAnchorLoading] = useState(false);
   const [outfits, setOutfits] = useState<any[] | null>(null);
   const [savedCurations, setSavedCurations] = useState<any[]>([]);
   const [recentItems, setRecentItems] = useState<any[]>([]);
@@ -65,9 +67,32 @@ export default function StylistPage() {
       setSavedCurations(JSON.parse(savedO));
     }
 
-    // Fetch potential anchor items
-    fetch("/api/ai/stylist/anchors").then(res => res.json()).then(data => setRecentItems(data)).catch(() => {});
+    // Initial fetch of recent items
+    fetchAnchors("");
   }, []);
+
+  // Handle anchor search with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (anchorSearch !== undefined) {
+        fetchAnchors(anchorSearch);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [anchorSearch]);
+
+  const fetchAnchors = async (query: string) => {
+    setAnchorLoading(true);
+    try {
+      const res = await fetch(`/api/ai/stylist/anchors?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      setRecentItems(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAnchorLoading(false);
+    }
+  };
 
   // Automatic Persistence
   useEffect(() => {
@@ -192,13 +217,27 @@ export default function StylistPage() {
               </section>
 
               {/* ANCHOR PIECE (Optional) */}
-              {recentItems.length > 0 && (
-                <section>
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">
+              <section>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 border-b border-zinc-100 pb-4 gap-4">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">
                     03. Optional Anchor Piece
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {recentItems.map((item) => (
+                  <div className="relative w-full md:w-64 group">
+                    <input 
+                      type="text" 
+                      value={anchorSearch}
+                      onChange={(e) => setAnchorSearch(e.target.value)}
+                      placeholder="Search archive..."
+                      className="w-full bg-zinc-50 border border-zinc-100 px-4 py-2 rounded-xl text-[10px] font-bold placeholder:text-zinc-300 focus:outline-none focus:border-zinc-900 focus:bg-white transition-all"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-zinc-900 transition-colors">
+                      {anchorLoading ? <RefreshCw size={12} className="animate-spin" /> : <Search size={12} />}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[200px]">
+                  {recentItems.length > 0 ? (
+                    recentItems.map((item) => (
                       <button 
                         key={item.id}
                         onClick={() => setAnchorItemId(anchorItemId === item.id ? null : item.id)}
@@ -215,10 +254,15 @@ export default function StylistPage() {
                         <p className={`text-[8px] font-black uppercase tracking-widest truncate ${anchorItemId === item.id ? 'text-zinc-400' : 'text-zinc-500'}`}>{item.brand}</p>
                         <p className={`text-[9px] font-bold truncate ${anchorItemId === item.id ? 'text-white' : 'text-zinc-900'}`}>{item.title}</p>
                       </button>
-                    ))}
-                  </div>
-                </section>
-              )}
+                    ))
+                  ) : (
+                    <div className="col-span-full flex flex-col items-center justify-center py-12 text-zinc-300">
+                       <Search size={32} className="mb-4 opacity-20" />
+                       <p className="text-[10px] font-black uppercase tracking-widest">No assets found</p>
+                    </div>
+                  )}
+                </div>
+              </section>
 
               {/* BRANDS */}
               <section>
