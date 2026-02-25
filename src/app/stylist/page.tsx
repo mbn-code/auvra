@@ -1,10 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sparkles, ArrowRight, Check, Zap, Cpu, Search } from "lucide-react";
 import Link from "next/link";
 
-const COLORS = ["Black", "White", "Grey", "Olive", "Navy", "Beige", "Brown"];
+const COLORS = [
+  { name: "Black", hex: "#000000" },
+  { name: "White", hex: "#ffffff" },
+  { name: "Grey", hex: "#808080" },
+  { name: "Olive", hex: "#556b2f" },
+  { name: "Navy", hex: "#000080" },
+  { name: "Beige", hex: "#f5f5dc" },
+  { name: "Brown", hex: "#8b4513" },
+  { name: "Red", hex: "#dc2626" },
+  { name: "Yellow", hex: "#facc15" },
+  { name: "Electric Blue", hex: "#2563eb" }
+];
+
 const BRANDS = ["Louis Vuitton", "Stone Island", "Chrome Hearts", "Arc'teryx", "Chanel", "Burberry", "Oakley", "Essentials", "Syna World", "Corteiz", "Moncler", "Patagonia", "Hermès", "Ralph Lauren", "Amiri", "Canada Goose", "Broken Planet", "CP Company", "Stüssy", "Prada", "Hellstar", "Supreme", "Lacoste", "Gallery Dept", "Eric Emanuel", "Adidas", "ASICS", "Sp5der", "Salomon", "Diesel", "Nike", "A Bathing Ape"];
 
 export default function StylistPage() {
@@ -13,6 +25,17 @@ export default function StylistPage() {
   const [occasion, setOccasion] = useState("");
   const [loading, setLoading] = useState(false);
   const [outfits, setOutfits] = useState<any[] | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("auvra_stylist_prefs");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.colors) setSelectedColors(parsed.colors);
+      if (parsed.brands) setSelectedBrands(parsed.brands);
+      if (parsed.occasion) setOccasion(parsed.occasion);
+    }
+  }, []);
 
   const toggleColor = (color: string) => {
     setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
@@ -22,8 +45,25 @@ export default function StylistPage() {
     setSelectedBrands(prev => prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]);
   };
 
+  const savePreferences = () => {
+    localStorage.setItem("auvra_stylist_prefs", JSON.stringify({
+      colors: selectedColors,
+      brands: selectedBrands,
+      occasion
+    }));
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
+  };
+
   const generateOutfits = async () => {
     setLoading(true);
+    // Auto-save on generate
+    localStorage.setItem("auvra_stylist_prefs", JSON.stringify({
+      colors: selectedColors,
+      brands: selectedBrands,
+      occasion
+    }));
+    
     try {
       const response = await fetch("/api/ai/stylist", {
         method: "POST",
@@ -44,7 +84,7 @@ export default function StylistPage() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-20">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-zinc-900 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-6">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-zinc-900 to-zinc-700 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-6 shadow-lg shadow-zinc-200">
               <Cpu size={10} className="text-yellow-400" /> Neural Curation Beta
             </div>
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8">
@@ -54,27 +94,46 @@ export default function StylistPage() {
               Our neural engine analyzes global archive inventory to curate visually coherent outfits tailored to your specific aesthetic DNA.
             </p>
           </div>
+          
+          {!outfits && (
+            <button 
+              onClick={savePreferences}
+              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest bg-zinc-50 hover:bg-zinc-100 px-6 py-3 rounded-2xl border border-zinc-100 transition-all"
+            >
+              {isSaved ? <Check size={14} className="text-green-500" /> : <Zap size={14} className="text-yellow-500" />}
+              {isSaved ? "Preferences Saved" : "Save Aesthetic DNA"}
+            </button>
+          )}
         </div>
 
         {!outfits ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
             <div className="lg:col-span-8 space-y-12">
               <section>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">
-                  01. Select Color Palette
-                </h3>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex justify-between items-end mb-8 border-b border-zinc-100 pb-4">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">
+                    01. Select Color Palette
+                  </h3>
+                  <p className="text-[9px] font-bold text-zinc-300 uppercase">Dopamine mapping active</p>
+                </div>
+                <div className="flex flex-wrap gap-4">
                   {COLORS.map(color => (
                     <button
-                      key={color}
-                      onClick={() => toggleColor(color)}
-                      className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border ${
-                        selectedColors.includes(color) 
-                        ? 'bg-zinc-900 text-white border-zinc-900' 
-                        : 'bg-zinc-50 text-zinc-500 border-zinc-100 hover:border-zinc-300'
+                      key={color.name}
+                      onClick={() => toggleColor(color.name)}
+                      className={`group relative p-1 rounded-full transition-all duration-500 ${
+                        selectedColors.includes(color.name) 
+                        ? 'ring-2 ring-zinc-900 ring-offset-4 scale-110' 
+                        : 'ring-1 ring-zinc-100 ring-offset-0 hover:ring-zinc-300'
                       }`}
                     >
-                      {color}
+                      <div 
+                        className="w-12 h-12 rounded-full shadow-inner border border-black/5" 
+                        style={{ backgroundColor: color.hex }}
+                      />
+                      <span className={`absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black px-2 py-1 rounded uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10`}>
+                        {color.name}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -91,12 +150,12 @@ export default function StylistPage() {
                       onClick={() => toggleBrand(brand)}
                       className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border text-left flex justify-between items-center ${
                         selectedBrands.includes(brand) 
-                        ? 'bg-zinc-900 text-white border-zinc-900' 
+                        ? 'bg-zinc-900 text-white border-zinc-900 shadow-xl shadow-zinc-200' 
                         : 'bg-zinc-50 text-zinc-500 border-zinc-100 hover:border-zinc-300'
                       }`}
                     >
                       {brand}
-                      {selectedBrands.includes(brand) && <Check size={12} />}
+                      {selectedBrands.includes(brand) && <Check size={12} className="text-yellow-400" />}
                     </button>
                   ))}
                 </div>
@@ -106,22 +165,30 @@ export default function StylistPage() {
                 <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">
                   03. Desired Occasion
                 </h3>
-                <input 
-                  type="text" 
-                  value={occasion}
-                  onChange={(e) => setOccasion(e.target.value)}
-                  placeholder="e.g. Fashion Week, Casual Evening, Technical Hiking"
-                  className="w-full bg-zinc-50 border border-zinc-100 px-8 py-6 rounded-3xl text-zinc-900 font-bold placeholder:text-zinc-300 focus:outline-none focus:border-zinc-900 transition-colors"
-                />
+                <div className="relative group">
+                  <input 
+                    type="text" 
+                    value={occasion}
+                    onChange={(e) => setOccasion(e.target.value)}
+                    placeholder="e.g. Fashion Week, Casual Evening, Technical Hiking"
+                    className="w-full bg-zinc-50 border border-zinc-100 px-8 py-6 rounded-3xl text-zinc-900 font-bold placeholder:text-zinc-300 focus:outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-sm focus:shadow-2xl"
+                  />
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-zinc-900 transition-colors">
+                    <Search size={20} />
+                  </div>
+                </div>
               </section>
 
               <button
                 onClick={generateOutfits}
                 disabled={loading}
-                className="w-full bg-zinc-900 text-white py-8 rounded-[2.5rem] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-4 hover:bg-zinc-800 transition-all disabled:opacity-50"
+                className="w-full bg-zinc-900 text-white py-8 rounded-[2.5rem] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-4 hover:bg-black transition-all disabled:opacity-50 shadow-2xl shadow-zinc-300 hover:scale-[1.01] active:scale-95"
               >
                 {loading ? (
-                  <>Initializing Neural Engine...</>
+                  <>
+                    <Cpu size={20} className="animate-spin text-yellow-400" />
+                    Initializing Neural Engine...
+                  </>
                 ) : (
                   <>Initialize Curation <Sparkles size={20} className="text-yellow-400" /></>
                 )}
@@ -165,18 +232,23 @@ export default function StylistPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                   {outfit.items.map((item: any, i: number) => (
-                    <Link key={i} href={item.url} className="group block bg-zinc-50 rounded-[2.5rem] p-6 border border-zinc-100 hover:shadow-2xl transition-all">
-                      <div className="aspect-[4/5] bg-white rounded-2xl mb-6 overflow-hidden relative border border-zinc-100">
-                         <div className="absolute inset-0 flex items-center justify-center bg-zinc-50">
-                            <Search className="text-zinc-200" size={40} />
+                    <Link key={i} href={item.url} className="group block bg-zinc-50 rounded-[2.5rem] p-6 border border-zinc-100 hover:shadow-2xl hover:shadow-zinc-200 transition-all hover:-translate-y-1">
+                      <div className="aspect-[4/5] bg-white rounded-2xl mb-6 overflow-hidden relative border border-zinc-100 shadow-inner">
+                         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-zinc-50 to-white">
+                            <Search className="text-zinc-200 group-hover:scale-110 group-hover:text-zinc-400 transition-all" size={40} />
+                         </div>
+                         <div className="absolute top-4 left-4">
+                            <div className="bg-black/90 backdrop-blur-md text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-lg">
+                               {item.brand}
+                            </div>
                          </div>
                       </div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">{item.brand}</p>
-                      <h4 className="text-sm font-black tracking-tight mb-4 group-hover:underline">{item.name}</h4>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">{item.brand}</p>
+                      <h4 className="text-sm font-black tracking-tight mb-4 group-hover:text-black transition-colors">{item.name}</h4>
                       <div className="flex justify-between items-center">
-                        <span className="text-lg font-black">{item.price}</span>
-                        <div className="w-8 h-8 rounded-full border border-zinc-200 flex items-center justify-center group-hover:bg-zinc-900 group-hover:text-white transition-colors">
-                          <ArrowRight size={14} />
+                        <span className="text-lg font-black bg-gradient-to-r from-zinc-900 to-zinc-600 bg-clip-text text-transparent">{item.price}</span>
+                        <div className="w-10 h-10 rounded-full border border-zinc-200 flex items-center justify-center group-hover:bg-zinc-900 group-hover:text-white group-hover:border-zinc-900 transition-all">
+                          <ArrowRight size={16} />
                         </div>
                       </div>
                     </Link>
@@ -185,12 +257,28 @@ export default function StylistPage() {
               </div>
             ))}
             
-            <button
-              onClick={() => setOutfits(null)}
-              className="text-xs font-black uppercase tracking-widest border-b-2 border-zinc-900 pb-1"
-            >
-              Reset Styling Protocol
-            </button>
+            <div className="bg-zinc-900 rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-64 bg-yellow-400 blur-[150px] opacity-10 rounded-full pointer-events-none"></div>
+               <div className="relative z-10 max-w-xl mx-auto">
+                  <h3 className="text-3xl md:text-4xl font-black text-white tracking-tighter mb-6">
+                    Save these curations <br /> to your Archive.
+                  </h3>
+                  <p className="text-zinc-500 font-medium mb-10 leading-relaxed">
+                    Create a free Auvra Node account to store your aesthetic DNA and receive personalized drop alerts matched to your style.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Link href="/login" className="bg-white text-black px-10 py-5 rounded-full font-black text-xs uppercase tracking-widest hover:bg-yellow-400 transition-all">
+                      Create Free Account
+                    </Link>
+                    <button
+                      onClick={() => setOutfits(null)}
+                      className="bg-zinc-800 text-white px-10 py-5 rounded-full font-black text-xs uppercase tracking-widest hover:bg-zinc-700 transition-all"
+                    >
+                      Reset Protocol
+                    </button>
+                  </div>
+               </div>
+            </div>
           </div>
         )}
       </div>
