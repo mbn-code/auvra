@@ -4,17 +4,33 @@ import { useState, useEffect } from "react";
 import { Sparkles, ArrowRight, Check, Zap, Cpu, Search } from "lucide-react";
 import Link from "next/link";
 
-const COLORS = [
+const EARTH_TONES = [
   { name: "Black", hex: "#000000" },
   { name: "White", hex: "#ffffff" },
   { name: "Grey", hex: "#808080" },
-  { name: "Olive", hex: "#556b2f" },
-  { name: "Navy", hex: "#000080" },
+  { name: "Charcoal", hex: "#36454f" },
+  { name: "Slate", hex: "#708090" },
+  { name: "Stone", hex: "#877f7d" },
+  { name: "Cream", hex: "#fffdd0" },
+  { name: "Sand", hex: "#c2b280" },
+  { name: "Khaki", hex: "#c3b091" },
   { name: "Beige", hex: "#f5f5dc" },
-  { name: "Brown", hex: "#8b4513" },
+  { name: "Olive", hex: "#556b2f" },
+  { name: "Forest", hex: "#228b22" },
+  { name: "Clay", hex: "#b66a50" },
+  { name: "Rust", hex: "#b7410e" },
+  { name: "Espresso", hex: "#3d2b1f" },
+  { name: "Brown", hex: "#8b4513" }
+];
+
+const COMMON_COLORS = [
   { name: "Red", hex: "#dc2626" },
+  { name: "Blue", hex: "#2563eb" },
   { name: "Yellow", hex: "#facc15" },
-  { name: "Electric Blue", hex: "#2563eb" }
+  { name: "Pink", hex: "#db2777" },
+  { name: "Purple", hex: "#7c3aed" },
+  { name: "Orange", hex: "#ea580c" },
+  { name: "Navy", hex: "#000080" }
 ];
 
 const BRANDS = ["Louis Vuitton", "Stone Island", "Chrome Hearts", "Arc'teryx", "Chanel", "Burberry", "Oakley", "Essentials", "Syna World", "Corteiz", "Moncler", "Patagonia", "Hermès", "Ralph Lauren", "Amiri", "Canada Goose", "Broken Planet", "CP Company", "Stüssy", "Prada", "Hellstar", "Supreme", "Lacoste", "Gallery Dept", "Eric Emanuel", "Adidas", "ASICS", "Sp5der", "Salomon", "Diesel", "Nike", "A Bathing Ape"];
@@ -25,7 +41,6 @@ export default function StylistPage() {
   const [occasion, setOccasion] = useState("");
   const [loading, setLoading] = useState(false);
   const [outfits, setOutfits] = useState<any[] | null>(null);
-  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("auvra_stylist_prefs");
@@ -37,6 +52,17 @@ export default function StylistPage() {
     }
   }, []);
 
+  // Automatic Persistence Effect
+  useEffect(() => {
+    if (selectedColors.length > 0 || selectedBrands.length > 0 || occasion) {
+      localStorage.setItem("auvra_stylist_prefs", JSON.stringify({
+        colors: selectedColors,
+        brands: selectedBrands,
+        occasion
+      }));
+    }
+  }, [selectedColors, selectedBrands, occasion]);
+
   const toggleColor = (color: string) => {
     setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
   };
@@ -45,24 +71,8 @@ export default function StylistPage() {
     setSelectedBrands(prev => prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]);
   };
 
-  const savePreferences = () => {
-    localStorage.setItem("auvra_stylist_prefs", JSON.stringify({
-      colors: selectedColors,
-      brands: selectedBrands,
-      occasion
-    }));
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
-  };
-
   const generateOutfits = async () => {
     setLoading(true);
-    // Auto-save on generate
-    localStorage.setItem("auvra_stylist_prefs", JSON.stringify({
-      colors: selectedColors,
-      brands: selectedBrands,
-      occasion
-    }));
     
     try {
       const response = await fetch("/api/ai/stylist", {
@@ -96,28 +106,53 @@ export default function StylistPage() {
           </div>
           
           {!outfits && (
-            <button 
-              onClick={savePreferences}
-              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest bg-zinc-50 hover:bg-zinc-100 px-6 py-3 rounded-2xl border border-zinc-100 transition-all"
-            >
-              {isSaved ? <Check size={14} className="text-green-500" /> : <Zap size={14} className="text-yellow-500" />}
-              {isSaved ? "Preferences Saved" : "Save Aesthetic DNA"}
-            </button>
+            <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 bg-zinc-50/50 px-4 py-2 rounded-full border border-zinc-100">
+               <Zap size={10} className="text-yellow-500 fill-yellow-500" /> Auto-Syncing DNA
+            </div>
           )}
         </div>
 
         {!outfits ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-            <div className="lg:col-span-8 space-y-12">
+            <div className="lg:col-span-8 space-y-16">
               <section>
                 <div className="flex justify-between items-end mb-8 border-b border-zinc-100 pb-4">
                   <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">
-                    01. Select Color Palette
+                    01. Foundation & Earth Tones
                   </h3>
-                  <p className="text-[9px] font-bold text-zinc-300 uppercase">Dopamine mapping active</p>
+                  <p className="text-[9px] font-bold text-zinc-300 uppercase italic">Aesthetic Baseline</p>
                 </div>
                 <div className="flex flex-wrap gap-4">
-                  {COLORS.map(color => (
+                  {EARTH_TONES.map(color => (
+                    <button
+                      key={color.name}
+                      onClick={() => toggleColor(color.name)}
+                      className={`group relative p-1 rounded-full transition-all duration-500 ${
+                        selectedColors.includes(color.name) 
+                        ? 'ring-2 ring-zinc-900 ring-offset-4 scale-110' 
+                        : 'ring-1 ring-zinc-100 ring-offset-0 hover:ring-zinc-300'
+                      }`}
+                    >
+                      <div 
+                        className="w-12 h-12 rounded-full shadow-inner border border-black/5" 
+                        style={{ backgroundColor: color.hex }}
+                      />
+                      <span className={`absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black px-2 py-1 rounded uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10`}>
+                        {color.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <section>
+                <div className="flex justify-between items-end mb-8 border-b border-zinc-100 pb-4">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">
+                    02. Accent & Statement Colors
+                  </h3>
+                </div>
+                <div className="flex flex-wrap gap-4">
+                  {COMMON_COLORS.map(color => (
                     <button
                       key={color.name}
                       onClick={() => toggleColor(color.name)}
@@ -141,7 +176,7 @@ export default function StylistPage() {
 
               <section>
                 <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">
-                  02. Preferred Brand Network
+                  03. Preferred Brand Network
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {BRANDS.slice(0, 16).map(brand => (
