@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles, ArrowRight, Check, Zap, Cpu, Search, X, Lock, Unlock, RefreshCw } from "lucide-react";
+import { Sparkles, ArrowRight, Check, Zap, Cpu, Search, X, Lock, Unlock, RefreshCw, Layers } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-client";
 
@@ -24,33 +24,21 @@ const EARTH_TONES = [
   { name: "Brown", hex: "#8b4513" }
 ];
 
-const COMMON_COLORS = [
-  { name: "Red", hex: "#dc2626" },
-  { name: "Blue", hex: "#2563eb" },
-  { name: "Yellow", hex: "#facc15" },
-  { name: "Pink", hex: "#db2777" },
-  { name: "Purple", hex: "#7c3aed" },
-  { name: "Orange", hex: "#ea580c" },
-  { name: "Navy", hex: "#000080" }
-];
-
 const BRANDS = ["Louis Vuitton", "Stone Island", "Chrome Hearts", "Arc'teryx", "Chanel", "Burberry", "Oakley", "Essentials", "Syna World", "Corteiz", "Moncler", "Patagonia", "Hermès", "Ralph Lauren", "Amiri", "Canada Goose", "Broken Planet", "CP Company", "Stüssy", "Prada", "Hellstar", "Supreme", "Lacoste", "Gallery Dept", "Eric Emanuel", "Adidas", "ASICS", "Sp5der", "Salomon", "Diesel", "Nike", "A Bathing Ape"];
-
-const ARCHETYPES_UI = [
-  { id: 'gorpcore-specialist', label: 'Gorpcore Specialist', vibe: '/vibes/6f85c4b2f69fdb8f0f54a5cffd985ba5.jpg' },
-  { id: 'archive-hero', label: '90s Archive Hero', vibe: '/vibes/191a6aaa3f480f2ca33d814d52ff3b62.jpg' },
-  { id: 'quiet-luxury', label: 'Quiet Luxury Node', vibe: '/vibes/cfd79f46ca1eb048b72ecf2cb5f2de2f.jpg' }
-];
 
 export default function StylistPage() {
   const supabase = createClient();
+  const [step, setStep] = useState(1);
+  const [vibeQuery, setVibeQuery] = useState("");
+  const [vibeResults, setVibeResults] = useState<any[]>([]);
+  const [seedImages, setSeedImages] = useState<string[]>([]);
+  
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [gender, setGender] = useState<string>("male");
   const [occasion, setOccasion] = useState("");
   const [anchorItemId, setAnchorItemId] = useState<string | null>(null);
   const [lockedItemIds, setLockedItemIds] = useState<string[]>([]);
-  const [selectedArchetype, setSelectedArchetype] = useState<string | null>(null);
   
   const [loading, setLoading] = useState(false);
   const [hunting, setHunting] = useState(false);
@@ -61,13 +49,6 @@ export default function StylistPage() {
   const [recentItems, setRecentItems] = useState<any[]>([]);
 
   useEffect(() => {
-    // Show Beta notice
-    const hasSeenNotice = localStorage.getItem("auvra_stylist_notice");
-    if (!hasSeenNotice) {
-      alert("Auvra Stylist is currently in ALPHA. Our neural engine is learning to coordinate high-fidelity archive sets. Results may vary during this phase.");
-      localStorage.setItem("auvra_stylist_notice", "true");
-    }
-
     // Load preferences
     const savedPrefs = localStorage.getItem("auvra_stylist_prefs");
     if (savedPrefs) {
@@ -76,7 +57,6 @@ export default function StylistPage() {
       if (parsed.brands) setSelectedBrands(parsed.brands);
       if (parsed.occasion) setOccasion(parsed.occasion);
       if (parsed.gender) setGender(parsed.gender);
-      if (parsed.selectedArchetype) setSelectedArchetype(parsed.selectedArchetype);
     }
 
     const savedO = localStorage.getItem("auvra_saved_curations");
@@ -84,36 +64,33 @@ export default function StylistPage() {
       setSavedCurations(JSON.parse(savedO));
     }
 
-    // Initial fetch of recent items
     fetchAnchors("");
   }, []);
 
-  // Handle Realtime Updates
-  useEffect(() => {
-    const channel = supabase
-      .channel('inventory-hunt')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pulse_inventory' }, (payload) => {
-        const newItem = payload.new;
-        if (selectedBrands.includes(newItem.brand) && hunting) {
-          generateOutfits(false);
-        }
-      })
-      .subscribe();
+  const searchVibes = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/ai/stylist/vibes?q=${encodeURIComponent(vibeQuery)}`);
+      const data = await res.json();
+      setVibeResults(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [selectedBrands, hunting]);
-
-  // Handle anchor search with debounce
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (anchorSearch !== undefined) {
-        fetchAnchors(anchorSearch);
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [anchorSearch]);
+  const selectSeed = (url: string) => {
+    const newSeeds = [...seedImages, url];
+    setSeedImages(newSeeds);
+    if (newSeeds.length >= 2) {
+      setStep(3); // Move to final steps
+    } else {
+      setVibeQuery("");
+      setVibeResults([]);
+      setStep(2); // Repeat search once
+    }
+  };
 
   const fetchAnchors = async (query: string) => {
     setAnchorLoading(true);
@@ -127,17 +104,6 @@ export default function StylistPage() {
       setAnchorLoading(false);
     }
   };
-
-  // Automatic Persistence
-  useEffect(() => {
-    localStorage.setItem("auvra_stylist_prefs", JSON.stringify({
-      colors: selectedColors,
-      brands: selectedBrands,
-      occasion,
-      gender,
-      selectedArchetype
-    }));
-  }, [selectedColors, selectedBrands, occasion, gender, selectedArchetype]);
 
   const toggleColor = (color: string) => {
     setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
@@ -166,7 +132,7 @@ export default function StylistPage() {
           gender,
           anchorItemId: isReroll ? null : anchorItemId,
           lockedItemIds: isReroll ? lockedItemIds : [],
-          archetypeId: selectedArchetype
+          seedImageIds: seedImages
         })
       });
       const data = await response.json();
@@ -187,9 +153,6 @@ export default function StylistPage() {
 
       if (data && data.length > 0) {
         setOutfits(data);
-        if (!isReroll) {
-          setLockedItemIds([]);
-        }
       }
     } catch (err) {
       console.error(err);
@@ -198,158 +161,162 @@ export default function StylistPage() {
     }
   };
 
-  const saveCuration = (outfit: any) => {
-    const newSaved = [outfit, ...savedCurations].slice(0, 10);
-    setSavedCurations(newSaved);
-    localStorage.setItem("auvra_saved_curations", JSON.stringify(newSaved));
-  };
-
-  const removeCuration = (idx: number) => {
-    const newSaved = savedCurations.filter((_, i) => i !== idx);
-    setSavedCurations(newSaved);
-    localStorage.setItem("auvra_saved_curations", JSON.stringify(newSaved));
-  };
-
   return (
     <div className="min-h-screen bg-white text-zinc-900 pt-32 pb-20">
       <div className="max-w-7xl mx-auto px-6">
+        
+        {/* HEADER SECTION */}
         <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-20">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-zinc-900 to-zinc-700 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-6 shadow-lg shadow-zinc-200">
-              <Cpu size={10} className="text-yellow-400" /> Neural Vibe Search [ALPHA]
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-zinc-900 to-zinc-700 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-6 shadow-lg">
+              <Cpu size={10} className="text-yellow-400" /> Neural Aesthetic Curation
             </div>
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8">
-              Pinterest <br />for Archive.
+              Pinterest <br />for Fashion.
             </h1>
             <p className="text-zinc-500 text-lg font-medium leading-relaxed">
-              Click an aesthetic node to initialize a neural search. Our engine maps visual DNA to the global archive network.
+              Define your vibe visually. Our engine maps your seed images to the global archive network.
             </p>
           </div>
           <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 bg-zinc-50/50 px-4 py-2 rounded-full border border-zinc-100">
-             <Zap size={10} className="text-yellow-500 fill-yellow-500" /> Auto-Syncing DNA
+             <Layers size={10} className="text-yellow-500" /> Vibe Mapping Active
           </div>
         </div>
 
         {!outfits ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-            <div className="lg:col-span-12 space-y-20">
-              
-              <section>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-12 border-b border-zinc-100 pb-4">
-                  01. Select Aesthetic Node (Vibe)
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {ARCHETYPES_UI.map((v) => (
-                    <button
-                      key={v.id}
-                      onClick={() => setSelectedArchetype(selectedArchetype === v.id ? null : v.id)}
-                      className={`relative group rounded-[3rem] overflow-hidden aspect-[4/5] border-4 transition-all duration-500 ${
-                        selectedArchetype === v.id ? 'border-yellow-400 scale-[1.02] shadow-2xl' : 'border-transparent grayscale hover:grayscale-0 hover:border-zinc-200'
-                      }`}
-                    >
-                      <img src={v.vibe} alt={v.label} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity" />
-                      <div className="absolute bottom-10 left-10 text-white text-left">
-                         <p className="text-[10px] font-black uppercase tracking-widest mb-2 opacity-60">Aesthetic Seed</p>
-                         <h4 className="text-3xl font-black tracking-tighter">{v.label}</h4>
-                      </div>
-                      {selectedArchetype === v.id && (
-                        <div className="absolute top-10 right-10 bg-yellow-400 text-black p-3 rounded-full shadow-xl">
-                           <Check size={20} />
+          <div className="space-y-24">
+            
+            {/* STEP 1 & 2: VIBE SEARCH */}
+            {(step === 1 || step === 2) && (
+              <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="flex justify-between items-end mb-12 border-b border-zinc-100 pb-6">
+                   <h3 className="text-xl font-black uppercase tracking-tighter">
+                     Step 0{step}. Search for your visual inspiration
+                   </h3>
+                   <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest">
+                     {seedImages.length}/2 Seeds Collected
+                   </span>
+                </div>
+
+                <div className="relative mb-12 max-w-2xl">
+                   <input 
+                     type="text" 
+                     value={vibeQuery}
+                     onChange={(e) => setVibeQuery(e.target.value)}
+                     onKeyDown={(e) => e.key === 'Enter' && searchVibes()}
+                     placeholder="e.g. vintage gorpcore, minimal luxury archive, 90s streetwear"
+                     className="w-full bg-zinc-50 border-2 border-zinc-100 px-8 py-6 rounded-[2rem] text-lg font-bold placeholder:text-zinc-300 focus:outline-none focus:border-black transition-all shadow-sm"
+                   />
+                   <button 
+                     onClick={searchVibes}
+                     className="absolute right-4 top-1/2 -translate-y-1/2 bg-black text-white p-4 rounded-2xl hover:bg-zinc-800 transition-all"
+                   >
+                     {loading ? <RefreshCw size={24} className="animate-spin" /> : <ArrowRight size={24} />}
+                   </button>
+                </div>
+
+                {vibeResults.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-in zoom-in-95 duration-500">
+                    {vibeResults.map((v) => (
+                      <button 
+                        key={v.id} 
+                        onClick={() => selectSeed(v.url)}
+                        className="group relative aspect-[4/5] rounded-[2.5rem] overflow-hidden border-4 border-transparent hover:border-black transition-all"
+                      >
+                        <img src={v.url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="" />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                           <div className="bg-white text-black px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl">Select Node</div>
                         </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </section>
+            )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-                <section>
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">
-                    02. Silhouette Protocol
-                  </h3>
-                  <div className="flex gap-4">
-                    {[{ id: "male", label: "Masculine" }, { id: "female", label: "Feminine" }, { id: "couple", label: "Couple Match" }].map((g) => (
-                      <button
-                        key={g.id}
-                        onClick={() => setGender(g.id)}
-                        className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${
-                          gender === g.id ? 'bg-zinc-900 text-white border-zinc-900 shadow-xl' : 'bg-zinc-50 text-zinc-500 border-zinc-100 hover:border-zinc-300'
-                        }`}
-                      >
-                        {g.label}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-
-                <section>
-                  <div className="flex justify-between items-end mb-8 border-b border-zinc-100 pb-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">03. Foundation Tones</h3>
-                  </div>
-                  <div className="flex flex-wrap gap-4">
-                    {EARTH_TONES.slice(0, 10).map(color => (
-                      <button
-                        key={color.name}
-                        onClick={() => toggleColor(color.name)}
-                        className={`group relative p-1 rounded-full transition-all duration-500 ${selectedColors.includes(color.name) ? 'ring-2 ring-zinc-900 ring-offset-4 scale-110' : 'ring-1 ring-zinc-100 ring-offset-0 hover:ring-zinc-300'}`}
-                      >
-                        <div className="w-8 h-8 rounded-full shadow-inner border border-black/5" style={{ backgroundColor: color.hex }} />
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              </div>
-
-              <section>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 border-b border-zinc-100 pb-4 gap-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">04. Search Specific Anchor (Optional)</h3>
-                  <div className="relative w-full md:w-64 group">
-                    <input type="text" value={anchorSearch} onChange={(e) => setAnchorSearch(e.target.value)} placeholder="Search archive..." className="w-full bg-zinc-50 border border-zinc-100 px-4 py-2 rounded-xl text-[10px] font-bold placeholder:text-zinc-300 focus:outline-none focus:border-zinc-900 transition-all" />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-zinc-900">
-                      {anchorLoading ? <RefreshCw size={12} className="animate-spin" /> : <Search size={12} />}
+            {/* STEP 3: FINAL STEPS */}
+            {step === 3 && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                <div className="lg:col-span-8 space-y-20">
+                  
+                  {/* SEED PREVIEW */}
+                  <section>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">
+                      03. Visual DNA Foundation
+                    </h3>
+                    <div className="flex gap-6">
+                       {seedImages.map((img, i) => (
+                         <div key={i} className="w-32 aspect-[4/5] rounded-3xl overflow-hidden border border-zinc-200 shadow-xl relative">
+                            <img src={img} className="w-full h-full object-cover" alt="" />
+                            <button onClick={() => setStep(1)} className="absolute top-2 right-2 bg-black/50 backdrop-blur-md text-white p-1 rounded-full"><X size={10}/></button>
+                         </div>
+                       ))}
+                       <div className="flex-1 bg-zinc-50 rounded-3xl border border-dashed border-zinc-200 flex flex-col items-center justify-center p-6">
+                          <Check className="text-green-500 mb-2" />
+                          <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Seeds Optimized</p>
+                       </div>
                     </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                  {recentItems.map((item) => (
-                    <button key={item.id} onClick={() => setAnchorItemId(anchorItemId === item.id ? null : item.id)} className={`p-2 rounded-2xl border transition-all text-left group ${anchorItemId === item.id ? 'bg-zinc-900 border-zinc-900 shadow-xl' : 'bg-zinc-50 border-zinc-100 hover:border-zinc-200'}`}>
-                      <div className="aspect-square rounded-xl overflow-hidden mb-2 relative">
-                         <img src={item.images[0]} alt="" className="w-full h-full object-cover" />
-                         {anchorItemId === item.id && <div className="absolute inset-0 bg-yellow-400/20 flex items-center justify-center"><Check className="text-zinc-900" size={20} /></div>}
-                      </div>
-                      <p className={`text-[7px] font-black uppercase tracking-widest truncate ${anchorItemId === item.id ? 'text-zinc-400' : 'text-zinc-500'}`}>{item.brand}</p>
-                    </button>
-                  ))}
-                </div>
-              </section>
+                  </section>
 
-              <section>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">05. Preferred Brand Network</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {BRANDS.slice(0, 16).map(brand => (
-                    <button key={brand} onClick={() => toggleBrand(brand)} className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border text-left flex justify-between items-center ${selectedBrands.includes(brand) ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-zinc-50 text-zinc-500 border-zinc-100 hover:border-zinc-300'}`}>
-                      {brand}
-                      {selectedBrands.includes(brand) && <Check size={12} className="text-yellow-400" />}
-                    </button>
-                  ))}
+                  <section>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">
+                      04. Silhouette & Intent
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                       <div className="space-y-4">
+                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Target Protocol</p>
+                          <div className="flex gap-2">
+                            {[{id:'male', label:'M'}, {id:'female', label:'F'}, {id:'couple', label:'CP'}].map(g => (
+                              <button key={g.id} onClick={() => setGender(g.id)} className={`flex-1 py-4 rounded-2xl text-xs font-black border transition-all ${gender === g.id ? 'bg-black text-white' : 'bg-zinc-50'}`}>{g.label}</button>
+                            ))}
+                          </div>
+                       </div>
+                       <div className="space-y-4">
+                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Occasion Node</p>
+                          <input type="text" value={occasion} onChange={(e) => setOccasion(e.target.value)} placeholder="e.g. Fashion Week" className="w-full bg-zinc-50 border border-zinc-100 px-6 py-4 rounded-2xl font-bold" />
+                       </div>
+                    </div>
+                  </section>
+
+                  <section>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">
+                      05. Brand Filter (Optional)
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                       {BRANDS.slice(0, 15).map(b => (
+                         <button key={b} onClick={() => toggleBrand(b)} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase border transition-all ${selectedBrands.includes(b) ? 'bg-black text-white' : 'bg-zinc-50'}`}>{b}</button>
+                       ))}
+                    </div>
+                  </section>
+
+                  <button
+                    onClick={() => generateOutfits(false)}
+                    disabled={loading}
+                    className="w-full bg-zinc-900 text-white py-8 rounded-[2.5rem] font-black uppercase tracking-[0.3em] flex flex-col items-center justify-center gap-4 hover:bg-black transition-all"
+                  >
+                    {loading ? <RefreshCw className="animate-spin" /> : <><Sparkles size={20} className="text-yellow-400" /> Generate Archive Set</>}
+                  </button>
                 </div>
-              </section>
 
-              <section>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">06. Desired Occasion</h3>
-                <input type="text" value={occasion} onChange={(e) => setOccasion(e.target.value)} placeholder="e.g. Fashion Week, Technical Hiking" className="w-full bg-zinc-50 border border-zinc-100 px-8 py-6 rounded-3xl text-zinc-900 font-bold placeholder:text-zinc-300 focus:outline-none focus:border-zinc-900" />
-              </section>
+                <div className="lg:col-span-4">
+                   <div className="bg-zinc-900 text-white p-10 rounded-[3rem] sticky top-32">
+                      <h4 className="text-xs font-black uppercase tracking-widest mb-8 border-b border-white/10 pb-4">Curation Logic v3.5</h4>
+                      <p className="text-sm text-zinc-400 leading-relaxed mb-8">Our neural engine uses your seed images as high-fidelity aesthetic anchors, overriding generic filters.</p>
+                      <ul className="space-y-6">
+                         <li className="flex gap-4 items-start">
+                            <div className="w-6 h-6 bg-yellow-400 text-black rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">1</div>
+                            <p className="text-xs font-bold uppercase tracking-wider">Visual DNA Prioritized</p>
+                         </li>
+                         <li className="flex gap-4 items-start">
+                            <div className="w-6 h-6 bg-yellow-400 text-black rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">2</div>
+                            <p className="text-xs font-bold uppercase tracking-wider">Occasion weighting x2.5</p>
+                         </li>
+                      </ul>
+                   </div>
+                </div>
+              </div>
+            )}
 
-              <button
-                onClick={() => generateOutfits(false)}
-                disabled={loading || !selectedArchetype}
-                className="w-full bg-zinc-900 text-white py-8 rounded-[2.5rem] font-black uppercase tracking-[0.3em] flex flex-col items-center justify-center gap-4 hover:bg-black transition-all disabled:opacity-50 shadow-2xl shadow-zinc-300"
-              >
-                {!selectedArchetype ? "Please select a Vibe first" : loading ? <><Cpu size={20} className="animate-spin text-yellow-400" /> Initializing...</> : hunting ? <><Search size={20} className="animate-pulse text-yellow-400" /> Initializing Live Hunt...</> : <><Sparkles size={20} className="text-yellow-400" /> Initialize Neural Search</>}
-              </button>
-              {hunting && <p className="text-center text-[10px] font-bold text-zinc-400 uppercase animate-pulse">Scanning live networks... Auto-updating shortly.</p>}
-            </div>
           </div>
         ) : (
           <div className="space-y-32">
@@ -360,15 +327,10 @@ export default function StylistPage() {
                   </div>
                   <div>
                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Neural Sync Active</p>
-                     <p className="text-sm font-bold">{lockedItemIds.length} Slots Locked</p>
+                     <p className="text-sm font-bold">Coordination Secured</p>
                   </div>
                </div>
-               <div className="flex gap-4">
-                 <button onClick={() => setOutfits(null)} className="bg-white text-black px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest border border-zinc-200">New Search</button>
-                 <button onClick={() => generateOutfits(true)} disabled={loading} className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest flex items-center gap-3 hover:bg-zinc-800 transition-all">
-                   <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Reroll Open Slots
-                 </button>
-               </div>
+               <button onClick={() => { setOutfits(null); setStep(1); setSeedImages([]); }} className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest">New Search</button>
             </div>
 
             {outfits.map((outfit, idx) => (
@@ -376,43 +338,28 @@ export default function StylistPage() {
                 <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-12 border-b border-zinc-100 pb-12">
                   <div className="max-w-2xl">
                     <p className="text-[10px] font-black uppercase tracking-[0.4em] text-yellow-600 mb-4">Neural Coordination {idx + 1}</p>
-                    <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6">{outfit.outfitName}</h2>
+                    <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 uppercase">{outfit.outfitName}</h2>
                     <p className="text-zinc-500 text-xl font-medium leading-relaxed italic">"{outfit.styleReason}"</p>
                   </div>
-                  <button onClick={() => saveCuration(outfit)} className="bg-zinc-100 text-zinc-900 px-8 py-4 rounded-full font-black uppercase tracking-widest text-[10px] flex items-center gap-3 hover:bg-zinc-200 transition-all">
-                    <Zap size={14} className="fill-yellow-400 text-yellow-400" /> Save Curation
-                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {outfit.items.map((item: any, i: number) => {
-                    const isLocked = lockedItemIds.includes(item.id);
-                    return (
-                      <div key={i} className="group relative">
-                        <Link href={item.url} className={`block bg-zinc-50 rounded-[2.5rem] p-6 border transition-all hover:shadow-2xl ${isLocked ? 'border-zinc-900' : 'border-zinc-100'}`}>
-                          <div className="aspect-[4/5] bg-white rounded-2xl mb-6 overflow-hidden relative border border-zinc-100 shadow-inner group">
-                             <img src={item.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700 contrast-[1.1] brightness-[1.05]" />
-                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] mix-blend-overlay" />
-                             <div className="absolute top-4 left-4">
-                                <div className="bg-black/90 backdrop-blur-md text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border border-white/10">{item.brand}</div>
-                             </div>
-                          </div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">{item.brand}</p>
-                          <h4 className="text-sm font-black tracking-tight mb-4 group-hover:text-black transition-colors">{item.name}</h4>
-                          <span className="text-lg font-black bg-gradient-to-r from-zinc-900 to-zinc-600 bg-clip-text text-transparent">{item.price}</span>
-                        </Link>
-                        <button onClick={(e) => { e.preventDefault(); toggleLock(item.id); }} className={`absolute -top-3 -right-2 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all z-10 ${isLocked ? 'bg-zinc-900 text-white scale-110' : 'bg-white text-zinc-400 hover:scale-105'}`}>
-                          {isLocked ? <Lock size={16} /> : <Unlock size={16} />}
-                        </button>
+                  {outfit.items.map((item: any, i: number) => (
+                    <Link key={i} href={item.url} className="group block bg-zinc-50 rounded-[2.5rem] p-6 border border-zinc-100 hover:shadow-2xl transition-all">
+                      <div className="aspect-[4/5] bg-white rounded-2xl mb-6 overflow-hidden relative border border-zinc-100 shadow-inner group">
+                         <img src={item.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
+                         <div className="absolute top-4 left-4">
+                            <div className="bg-black/90 backdrop-blur-md text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border border-white/10">{item.brand}</div>
+                         </div>
                       </div>
-                    );
-                  })}
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">{item.brand}</p>
+                      <h4 className="text-sm font-black tracking-tight mb-4 group-hover:text-black transition-colors">{item.name}</h4>
+                      <span className="text-lg font-black text-black">{item.price}</span>
+                    </Link>
+                  ))}
                 </div>
               </div>
             ))}
-
-            <button onClick={() => { setOutfits(null); setLockedItemIds([]); }} className="text-xs font-black uppercase tracking-widest border-b-2 border-zinc-900 pb-1">Reset Search Protocol</button>
           </div>
         )}
       </div>

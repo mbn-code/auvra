@@ -6,6 +6,7 @@ import CookieConsent from "@/components/CookieConsent";
 import MobileNav from "@/components/MobileNav";
 import LiveToast from "@/components/LiveToast";
 import WelcomeModal from "@/components/WelcomeModal";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: {
@@ -103,6 +104,7 @@ export default function RootLayout({
         <MobileNav />
         <LiveToast />
         <WelcomeModal />
+        <Analytics />
       </body>
     </html>
   );

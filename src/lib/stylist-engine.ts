@@ -16,6 +16,7 @@ export interface BrandMeta {
 }
 
 export const BRAND_REGISTRY: Record<string, BrandMeta> = {
+  // Tier 1: Ultra Luxury
   "Louis Vuitton": { cluster: 'luxury', formalityBias: 8, silhouetteBias: 'structured' },
   "Hermès": { cluster: 'luxury', formalityBias: 9, silhouetteBias: 'structured' },
   "Chanel": { cluster: 'luxury', formalityBias: 9, silhouetteBias: 'structured' },
@@ -23,23 +24,43 @@ export const BRAND_REGISTRY: Record<string, BrandMeta> = {
   "Chrome Hearts": { cluster: 'luxury', formalityBias: 5, silhouetteBias: 'relaxed' },
   "Moncler": { cluster: 'luxury', formalityBias: 6, silhouetteBias: 'technical' },
   "Gucci": { cluster: 'luxury', formalityBias: 8, silhouetteBias: 'relaxed' },
+  "Bottega Veneta": { cluster: 'luxury', formalityBias: 8, silhouetteBias: 'relaxed' },
+  "Amiri": { cluster: 'luxury', formalityBias: 4, silhouetteBias: 'relaxed' },
+
+  // Tier 2: Premium Heritage
   "Stone Island": { cluster: 'heritage', formalityBias: 4, silhouetteBias: 'technical' },
   "Burberry": { cluster: 'heritage', formalityBias: 7, silhouetteBias: 'structured' },
   "CP Company": { cluster: 'heritage', formalityBias: 4, silhouetteBias: 'technical' },
   "Ralph Lauren": { cluster: 'heritage', formalityBias: 6, silhouetteBias: 'structured' },
+  "Barbour": { cluster: 'heritage', formalityBias: 5, silhouetteBias: 'structured' },
+
+  // Tier 3: Performance / Technical
   "Arc'teryx": { cluster: 'technical', formalityBias: 3, silhouetteBias: 'technical' },
   "Salomon": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'technical' },
   "Patagonia": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Oakley": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'technical' },
   "The North Face": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'relaxed' },
+
+  // Tier 4: Streetwear Heat
   "Supreme": { cluster: 'street', formalityBias: 2, silhouetteBias: 'oversized' },
   "A Bathing Ape": { cluster: 'street', formalityBias: 2, silhouetteBias: 'oversized' },
   "Stüssy": { cluster: 'street', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Corteiz": { cluster: 'street', formalityBias: 1, silhouetteBias: 'oversized' },
   "Nike": { cluster: 'street', formalityBias: 1, silhouetteBias: 'relaxed' },
   "Adidas": { cluster: 'street', formalityBias: 1, silhouetteBias: 'relaxed' },
+  "Hellstar": { cluster: 'street', formalityBias: 1, silhouetteBias: 'oversized' },
+  "Sp5der": { cluster: 'street', formalityBias: 1, silhouetteBias: 'oversized' },
+  "Denim Tears": { cluster: 'street', formalityBias: 2, silhouetteBias: 'relaxed' },
+  "Gallery Dept": { cluster: 'street', formalityBias: 2, silhouetteBias: 'relaxed' },
+  "Broken Planet": { cluster: 'street', formalityBias: 1, silhouetteBias: 'oversized' },
+
+  // Tier 5: Mass / Contemporary
   "Dickies": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Carhartt": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
+  "Levi's": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
+  "Levis": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
+  "Diesel": { cluster: 'workwear', formalityBias: 3, silhouetteBias: 'relaxed' },
+  "Lacoste": { cluster: 'minimal', formalityBias: 4, silhouetteBias: 'relaxed' },
   "Essentials": { cluster: 'minimal', formalityBias: 2, silhouetteBias: 'oversized' },
   "New Balance": { cluster: 'minimal', formalityBias: 2, silhouetteBias: 'relaxed' },
   "ASICS": { cluster: 'minimal', formalityBias: 2, silhouetteBias: 'relaxed' },
@@ -144,6 +165,7 @@ export interface UserIntent {
   colors?: string[];
   brands?: string[];
   occasion?: string;
+  seedImageIds?: string[];
 }
 
 export interface OutfitSet {
@@ -216,6 +238,30 @@ export class StylistEngine {
     return constraints.clusters.includes(item.cluster) && constraints.silhouettes.includes(item.silhouette);
   }
 
+  static getDominantCluster(intent: UserIntent): AestheticCluster {
+    // 1. Occasion has highest priority
+    if (intent.occasion) {
+      const occ = intent.occasion.toLowerCase();
+      if (occ.includes('technical') || occ.includes('hiking') || occ.includes('mountain') || occ.includes('gorp')) return 'technical';
+      if (occ.includes('street') || occ.includes('skate') || occ.includes('urban')) return 'street';
+      if (occ.includes('luxury') || occ.includes('gala') || occ.includes('fashion week')) return 'luxury';
+      if (occ.includes('work') || occ.includes('office') || occ.includes('formal') || occ.includes('smart')) return 'heritage';
+    }
+
+    // 2. Then Brands
+    if (intent.brands && intent.brands.length > 0) {
+      const counts: Record<string, number> = {};
+      intent.brands.forEach(b => {
+        const cluster = BRAND_REGISTRY[b]?.cluster;
+        if (cluster) counts[cluster] = (counts[cluster] || 0) + 1;
+      });
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      if (sorted.length > 0) return sorted[0][0] as AestheticCluster;
+    }
+
+    return 'minimal';
+  }
+
   static generateArchetypeOutfits(inventory: EnrichedItem[], intent: UserIntent): OutfitSet[] {
     const outfits: OutfitSet[] = [];
     const anchorItem = intent.anchorItemId ? inventory.find(i => i.id === intent.anchorItemId) : null;
@@ -234,7 +280,14 @@ export class StylistEngine {
       FOOTWEAR: this.shuffle(filteredPool.filter(i => this.getCategoryKey(i.category) === 'FOOTWEAR')),
     };
 
+    const dominantCluster = this.getDominantCluster(intent);
+
     ARCHETYPES.forEach(archetype => {
+      // PRIORITY: If a dominant cluster is resolved, only look at archetypes that include that cluster in their main outerwear slot
+      if (dominantCluster !== 'minimal' && !archetype.slots.OUTERWEAR.clusters.includes(dominantCluster)) {
+         return;
+      }
+
       const checkItems = anchorItem ? [anchorItem, ...lockedItems] : lockedItems;
       for (const item of checkItems) {
         const slotKey = this.getCategoryKey(item.category);
@@ -244,7 +297,7 @@ export class StylistEngine {
         if (!isCompatible) return;
       }
 
-      for (let i = 0; i < 300; i++) {
+      for (let i = 0; i < 200; i++) {
         const items: EnrichedItem[] = [];
         let substitutedBrands: string[] = [];
         let score = 100;
@@ -265,6 +318,12 @@ export class StylistEngine {
           const archetypeMatchPool = pool.filter(item => formulaBrands.includes(item.brand));
           if (archetypeMatchPool.length > 0) {
             pool = archetypeMatchPool;
+          }
+
+          // OCCASION BOOST: Filter by occasion keywords if present
+          if (intent.occasion) {
+             const occPool = pool.filter(item => item.title.toLowerCase().includes(intent.occasion!.toLowerCase()));
+             if (occPool.length > 0) pool = occPool;
           }
 
           if (intent.brands && intent.brands.length > 0) {
