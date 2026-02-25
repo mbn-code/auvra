@@ -141,7 +141,7 @@ export default function StylistPage() {
       const hasSubstitutions = data?.some((o: any) => o.styleReason.includes("depleted"));
 
       if (hasFewResults || hasSubstitutions) {
-        if (selectedBrands.length > 0) {
+        if (selectedBrands.length > 0 || occasion) { // Trigger hunt on occasion too
           setHunting(true);
           fetch("/api/ai/stylist/hunt", {
             method: "POST",
@@ -153,6 +153,9 @@ export default function StylistPage() {
 
       if (data && data.length > 0) {
         setOutfits(data);
+        if (!isReroll) {
+          setLockedItemIds([]);
+        }
       }
     } catch (err) {
       console.error(err);

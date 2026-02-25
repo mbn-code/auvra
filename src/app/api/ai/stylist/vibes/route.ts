@@ -1,46 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const VIBE_DB: Record<string, string[]> = {
-  "gorpcore": [
-    "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?auto=format&fit=crop&q=80&w=500",
-    "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&q=80&w=500",
-    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=500",
-    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=500"
-  ],
-  "technical": [
-    "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?auto=format&fit=crop&q=80&w=500",
-    "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&q=80&w=500"
-  ],
-  "vintage": [
-    "https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&q=80&w=500",
-    "https://images.unsplash.com/photo-1523381235312-df592d0c242d?auto=format&fit=crop&q=80&w=500",
-    "https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&q=80&w=500"
-  ],
-  "streetwear": [
-    "https://images.unsplash.com/photo-1523398267024-81f5bc91c5a2?auto=format&fit=crop&q=80&w=500",
-    "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=500"
-  ],
-  "luxury": [
-    "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=500",
-    "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=500",
-    "https://images.unsplash.com/photo-1511405946472-a37e3b5ccd47?auto=format&fit=crop&q=80&w=500"
-  ]
-};
+/**
+ * AUVRA VIBE SEARCH API (Real Pinterest Integration)
+ */
 
 export async function GET(req: NextRequest) {
-  const q = req.nextUrl.searchParams.get('q')?.toLowerCase() || '';
+  const q = req.nextUrl.searchParams.get('q') || 'luxury archive fashion';
   
-  let results: string[] = [];
-  
-  if (!q) {
-    results = VIBE_DB['luxury'];
-  } else {
-    const matchKey = Object.keys(VIBE_DB).find(k => q.includes(k));
-    results = matchKey ? VIBE_DB[matchKey] : VIBE_DB['luxury'];
-  }
+  try {
+    console.log(`[VibeSearch] Querying Pinterest for: ${q}`);
+    
+    // Pinterest search URL
+    const searchUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(q)}&rs=typed`;
+    
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      }
+    });
 
-  return NextResponse.json(results.map(url => ({
-    id: Math.random().toString(36).substring(7),
-    url
-  })));
+    const html = await response.text();
+    
+    // Extract image URLs using regex
+    // Pinterest pins usually have images in 236x, 474x or 736x formats
+    // We look for the 736x (high res) versions
+    const imageRegex = /https:\/\/i\.pinimg\.com\/736x\/[a-z0-9\/]+\.jpg/g;
+    const matches = html.match(imageRegex) || [];
+    
+    // Deduplicate and limit to 12 results
+    const uniqueImages = [...new Set(matches)].slice(0, 12);
+
+    if (uniqueImages.length === 0) {
+      console.warn("[VibeSearch] No images found via regex, falling back to static seeds.");
+      // Fallback if scraping fails
+      return NextResponse.json([
+        { id: 'f1', url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=500' },
+        { id: 'f2', url: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=500' },
+        { id: 'f3', url: 'https://images.unsplash.com/photo-1511405946472-a37e3b5ccd47?auto=format&fit=crop&q=80&w=500' }
+      ]);
+    }
+
+    return NextResponse.json(uniqueImages.map((url, i) => ({
+      id: `pin-${i}-${Math.random().toString(36).substring(7)}`,
+      url
+    })));
+
+  } catch (error) {
+    console.error('[VibeSearch] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch vibes' }, { status: 500 });
+  }
 }
