@@ -171,9 +171,9 @@ export class StylistEngine {
   static getCategoryKey(category: string): keyof Archetype['slots'] | null {
     const c = category.toLowerCase();
     if (c.includes('jacket') || c.includes('outerwear')) return 'OUTERWEAR';
-    if (c.includes('shirt') || c.includes('top') || c.includes('sweater') || c.includes('knit')) return 'TOPS';
-    if (c.includes('pant') || c.includes('denim')) return 'BOTTOMS';
-    if (c.includes('footwear') || c.includes('shoe')) return 'FOOTWEAR';
+    if (c.includes('shirt') || c.includes('top') || c.includes('sweater') || c.includes('knit') || c.includes('hoodie')) return 'TOPS';
+    if (c.includes('pant') || c.includes('denim') || c.includes('jeans') || c.includes('cargo')) return 'BOTTOMS';
+    if (c.includes('footwear') || c.includes('shoe') || c.includes('sneaker')) return 'FOOTWEAR';
     return null;
   }
 
@@ -215,10 +215,9 @@ export class StylistEngine {
 
       // Generate combinations for this archetype
       // Deterministic permutation
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 20; i++) {
         const items: EnrichedItem[] = [];
-        let isValid = true;
-
+        
         for (const [slot, constraints] of Object.entries(archetype.slots)) {
           const slotKey = slot as keyof typeof pools;
           
@@ -232,25 +231,25 @@ export class StylistEngine {
           }
 
           const pool = pools[slotKey].filter(item => this.isItemValidForSlot(item, constraints));
-          if (pool.length === 0) {
-            isValid = false;
-            break;
-          }
+          
+          // IF POOL IS EMPTY, WE SKIP THIS SLOT INSTEAD OF FAILING THE OUTFIT
+          if (pool.length === 0) continue;
 
           // Deterministic selection
-          const itemIndex = (i * 7 + Object.keys(pools).indexOf(slotKey) * 13) % pool.length;
+          const itemIndex = (i * 11 + Object.keys(pools).indexOf(slotKey) * 17) % pool.length;
           items.push(pool[itemIndex]);
         }
 
-        if (isValid && items.length === 4) {
+        // VALIDATION: We need at least 3 categories for a "Partial Coordination"
+        if (items.length >= 3) {
           // Final check: Formality Delta
           const formalities = items.map(it => it.formality);
           const delta = Math.max(...formalities) - Math.min(...formalities);
           
-          // Use the smallest maxFormalityDelta from slots as the outfit constraint
+          // Archetype specific delta limit
           const maxAllowedDelta = Math.min(...Object.values(archetype.slots).map(s => s.maxFormalityDelta));
           
-          if (delta <= maxAllowedDelta + 2) { // Allow slight grace for overall set
+          if (delta <= maxAllowedDelta + 2) { 
             outfits.push({
               archetypeId: archetype.id,
               outfitName: archetype.name,
