@@ -71,6 +71,15 @@ export default function StylistPage() {
   }, [selectedBrands, hunting]);
 
   useEffect(() => {
+    // Show Beta notice
+    const hasSeenNotice = localStorage.getItem("auvra_stylist_notice");
+    if (!hasSeenNotice) {
+      alert("Auvra Stylist is currently in ALPHA. Our neural engine is learning to coordinate high-fidelity archive sets. Results may vary during this phase.");
+      localStorage.setItem("auvra_stylist_notice", "true");
+    }
+  }, []);
+
+  useEffect(() => {
     // Load preferences
     const savedPrefs = localStorage.getItem("auvra_stylist_prefs");
     if (savedPrefs) {
