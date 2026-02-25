@@ -87,6 +87,7 @@ export async function POST(req: Request) {
           items: outfitItems.map(item => ({
             name: item!.title,
             brand: item!.brand,
+            image: item!.images[0],
             color: preferredColor || "Archive Neutral",
             price: `€${Math.round(item!.listing_price)}`,
             url: `https://auvra.eu/archive/${item!.id}`

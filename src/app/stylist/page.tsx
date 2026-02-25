@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles, ArrowRight, Check, Zap, Cpu, Search } from "lucide-react";
+import { Sparkles, ArrowRight, Check, Zap, Cpu, Search, X } from "lucide-react";
 import Link from "next/link";
 
 const EARTH_TONES = [
@@ -41,14 +41,20 @@ export default function StylistPage() {
   const [occasion, setOccasion] = useState("");
   const [loading, setLoading] = useState(false);
   const [outfits, setOutfits] = useState<any[] | null>(null);
+  const [savedCurations, setSavedCurations] = useState<any[]>([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("auvra_stylist_prefs");
-    if (saved) {
-      const parsed = JSON.parse(saved);
+    const savedPrefs = localStorage.getItem("auvra_stylist_prefs");
+    if (savedPrefs) {
+      const parsed = JSON.parse(savedPrefs);
       if (parsed.colors) setSelectedColors(parsed.colors);
       if (parsed.brands) setSelectedBrands(parsed.brands);
       if (parsed.occasion) setOccasion(parsed.occasion);
+    }
+
+    const savedO = localStorage.getItem("auvra_saved_curations");
+    if (savedO) {
+      setSavedCurations(JSON.parse(savedO));
     }
   }, []);
 
@@ -69,6 +75,18 @@ export default function StylistPage() {
 
   const toggleBrand = (brand: string) => {
     setSelectedBrands(prev => prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]);
+  };
+
+  const saveCuration = (outfit: any) => {
+    const newSaved = [outfit, ...savedCurations].slice(0, 10); // Keep last 10
+    setSavedCurations(newSaved);
+    localStorage.setItem("auvra_saved_curations", JSON.stringify(newSaved));
+  };
+
+  const removeCuration = (idx: number) => {
+    const newSaved = savedCurations.filter((_, i) => i !== idx);
+    setSavedCurations(newSaved);
+    localStorage.setItem("auvra_saved_curations", JSON.stringify(newSaved));
   };
 
   const generateOutfits = async () => {
@@ -260,8 +278,16 @@ export default function StylistPage() {
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6">{outfit.outfitName}</h2>
                     <p className="text-zinc-500 text-xl font-medium leading-relaxed italic">"{outfit.styleReason}"</p>
                   </div>
-                  <div className="bg-zinc-900 text-white px-8 py-4 rounded-full font-black uppercase tracking-widest text-[10px] flex items-center gap-3">
-                    <Zap size={14} className="fill-yellow-400 text-yellow-400" /> Secure Entire Set
+                  <div className="flex gap-4">
+                    <button 
+                      onClick={() => saveCuration(outfit)}
+                      className="bg-zinc-100 text-zinc-900 px-8 py-4 rounded-full font-black uppercase tracking-widest text-[10px] flex items-center gap-3 hover:bg-zinc-200 transition-all"
+                    >
+                      <Zap size={14} className="fill-yellow-400 text-yellow-400" /> Save Curation
+                    </button>
+                    <div className="bg-zinc-900 text-white px-8 py-4 rounded-full font-black uppercase tracking-widest text-[10px] flex items-center gap-3 cursor-not-allowed opacity-50">
+                      Secure Entire Set
+                    </div>
                   </div>
                 </div>
 
@@ -270,7 +296,7 @@ export default function StylistPage() {
                     <Link key={i} href={item.url} className="group block bg-zinc-50 rounded-[2.5rem] p-6 border border-zinc-100 hover:shadow-2xl hover:shadow-zinc-200 transition-all hover:-translate-y-1">
                       <div className="aspect-[4/5] bg-white rounded-2xl mb-6 overflow-hidden relative border border-zinc-100 shadow-inner">
                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-zinc-50 to-white">
-                            <Search className="text-zinc-200 group-hover:scale-110 group-hover:text-zinc-400 transition-all" size={40} />
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
                          </div>
                          <div className="absolute top-4 left-4">
                             <div className="bg-black/90 backdrop-blur-md text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-lg">
@@ -291,6 +317,43 @@ export default function StylistPage() {
                 </div>
               </div>
             ))}
+
+            {savedCurations.length > 0 && (
+              <div className="pt-20 border-t border-zinc-100">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-12">
+                  Stored Archive Selections
+                </h3>
+                <div className="space-y-24">
+                  {savedCurations.map((outfit, idx) => (
+                    <div key={`saved-${idx}`} className="relative">
+                      <button 
+                        onClick={() => removeCuration(idx)}
+                        className="absolute -top-4 -right-4 bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-lg z-10 hover:bg-red-600 transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                      <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-12">
+                        <div>
+                          <h2 className="text-3xl font-black tracking-tighter mb-4">{outfit.outfitName}</h2>
+                          <p className="text-zinc-500 font-medium italic">"{outfit.styleReason}"</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 opacity-80 hover:opacity-100 transition-opacity">
+                        {outfit.items.map((item: any, i: number) => (
+                          <Link key={`saved-item-${i}`} href={item.url} className="group block bg-zinc-50 rounded-[2rem] p-4 border border-zinc-100 hover:shadow-xl transition-all">
+                            <div className="aspect-[4/5] bg-white rounded-xl mb-4 overflow-hidden relative border border-zinc-100 shadow-inner">
+                               <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-all" />
+                            </div>
+                            <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">{item.brand}</p>
+                            <h4 className="text-[10px] font-black tracking-tight truncate">{item.name}</h4>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="bg-zinc-900 rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden">
                <div className="absolute top-0 right-0 p-64 bg-yellow-400 blur-[150px] opacity-10 rounded-full pointer-events-none"></div>
