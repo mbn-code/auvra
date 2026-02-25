@@ -1,5 +1,5 @@
 /**
- * AUVRA STYLIST ENGINE v3.0 (ARCHETYPE-DRIVEN)
+ * AUVRA STYLIST ENGINE v3.1 (PRODUCTION READY)
  * Constraint-Satisfaction & Anchor-First Generation
  */
 
@@ -16,6 +16,7 @@ export interface BrandMeta {
 }
 
 export const BRAND_REGISTRY: Record<string, BrandMeta> = {
+  // Tier 1: Ultra Luxury
   "Louis Vuitton": { cluster: 'luxury', formalityBias: 8, silhouetteBias: 'structured' },
   "Hermès": { cluster: 'luxury', formalityBias: 9, silhouetteBias: 'structured' },
   "Chanel": { cluster: 'luxury', formalityBias: 9, silhouetteBias: 'structured' },
@@ -23,24 +24,55 @@ export const BRAND_REGISTRY: Record<string, BrandMeta> = {
   "Chrome Hearts": { cluster: 'luxury', formalityBias: 5, silhouetteBias: 'relaxed' },
   "Moncler": { cluster: 'luxury', formalityBias: 6, silhouetteBias: 'technical' },
   "Gucci": { cluster: 'luxury', formalityBias: 8, silhouetteBias: 'relaxed' },
+  "Bottega Veneta": { cluster: 'luxury', formalityBias: 8, silhouetteBias: 'relaxed' },
+  "Amiri": { cluster: 'luxury', formalityBias: 4, silhouetteBias: 'relaxed' },
+
+  // Tier 2: Premium Heritage
   "Stone Island": { cluster: 'heritage', formalityBias: 4, silhouetteBias: 'technical' },
   "Burberry": { cluster: 'heritage', formalityBias: 7, silhouetteBias: 'structured' },
   "CP Company": { cluster: 'heritage', formalityBias: 4, silhouetteBias: 'technical' },
   "Ralph Lauren": { cluster: 'heritage', formalityBias: 6, silhouetteBias: 'structured' },
+  "Barbour": { cluster: 'heritage', formalityBias: 5, silhouetteBias: 'structured' },
+
+  // Tier 3: Performance / Technical
   "Arc'teryx": { cluster: 'technical', formalityBias: 3, silhouetteBias: 'technical' },
   "Salomon": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'technical' },
   "Patagonia": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Oakley": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'technical' },
   "The North Face": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'relaxed' },
+
+  // Tier 4: Streetwear Heat
   "Supreme": { cluster: 'street', formalityBias: 2, silhouetteBias: 'oversized' },
   "A Bathing Ape": { cluster: 'street', formalityBias: 2, silhouetteBias: 'oversized' },
   "Stüssy": { cluster: 'street', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Corteiz": { cluster: 'street', formalityBias: 1, silhouetteBias: 'oversized' },
   "Nike": { cluster: 'street', formalityBias: 1, silhouetteBias: 'relaxed' },
   "Adidas": { cluster: 'street', formalityBias: 1, silhouetteBias: 'relaxed' },
+  "Hellstar": { cluster: 'street', formalityBias: 1, silhouetteBias: 'oversized' },
+  "Sp5der": { cluster: 'street', formalityBias: 1, silhouetteBias: 'oversized' },
+  "Denim Tears": { cluster: 'street', formalityBias: 2, silhouetteBias: 'relaxed' },
+  "Gallery Dept": { cluster: 'street', formalityBias: 2, silhouetteBias: 'relaxed' },
+  "Broken Planet": { cluster: 'street', formalityBias: 1, silhouetteBias: 'oversized' },
+
+  // Tier 5: Mass / Contemporary
   "Dickies": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Carhartt": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
+  "Levi's": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
+  "Levis": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
+  "Diesel": { cluster: 'workwear', formalityBias: 3, silhouetteBias: 'relaxed' },
+  "Lacoste": { cluster: 'minimal', formalityBias: 4, silhouetteBias: 'relaxed' },
   "Essentials": { cluster: 'minimal', formalityBias: 2, silhouetteBias: 'oversized' },
+  "New Balance": { cluster: 'minimal', formalityBias: 2, silhouetteBias: 'relaxed' },
+  "ASICS": { cluster: 'minimal', formalityBias: 2, silhouetteBias: 'relaxed' },
+};
+
+export const CLUSTER_COMPATIBILITY: Record<AestheticCluster, AestheticCluster[]> = {
+  luxury: ['luxury', 'minimal', 'heritage'],
+  street: ['street', 'workwear', 'minimal', 'technical'],
+  technical: ['technical', 'minimal', 'street', 'heritage'],
+  minimal: ['minimal', 'luxury', 'street', 'technical', 'heritage', 'workwear'],
+  heritage: ['heritage', 'luxury', 'minimal', 'technical'],
+  workwear: ['workwear', 'street', 'minimal']
 };
 
 export interface SlotConstraints {
@@ -127,7 +159,7 @@ export interface EnrichedItem {
 }
 
 export interface UserIntent {
-  anchorItemId?: string;
+  anchorItemId?: string | null;
   lockedItemIds?: string[];
   gender: Gender | 'couple';
 }
@@ -138,8 +170,6 @@ export interface OutfitSet {
   items: EnrichedItem[];
   styleReason: string;
 }
-
-// --- CORE ENGINE ---
 
 export class StylistEngine {
   
@@ -172,14 +202,14 @@ export class StylistEngine {
     const c = category.toLowerCase();
     if (c.includes('jacket') || c.includes('outerwear')) return 'OUTERWEAR';
     if (c.includes('shirt') || c.includes('top') || c.includes('sweater') || c.includes('knit') || c.includes('hoodie')) return 'TOPS';
-    if (c.includes('pant') || c.includes('denim') || c.includes('jeans') || c.includes('cargo')) return 'BOTTOMS';
+    if (c.includes('pant') || c.includes('denim') || c.includes('jeans') || c.includes('cargo') || c.includes('trousers')) return 'BOTTOMS';
     if (c.includes('footwear') || c.includes('shoe') || c.includes('sneaker')) return 'FOOTWEAR';
     return null;
   }
 
-  static isItemValidForSlot(item: EnrichedItem, constraints: SlotConstraints): boolean {
-    return constraints.clusters.includes(item.cluster) && 
-           constraints.silhouettes.includes(item.silhouette);
+  static isItemValidForSlot(item: EnrichedItem, constraints: SlotConstraints, relaxed = false): boolean {
+    if (relaxed) return constraints.clusters.includes(item.cluster);
+    return constraints.clusters.includes(item.cluster) && constraints.silhouettes.includes(item.silhouette);
   }
 
   static generateArchetypeOutfits(inventory: EnrichedItem[], intent: UserIntent): OutfitSet[] {
@@ -187,41 +217,37 @@ export class StylistEngine {
     const anchorItem = intent.anchorItemId ? inventory.find(i => i.id === intent.anchorItemId) : null;
     const lockedItems = intent.lockedItemIds ? inventory.filter(i => intent.lockedItemIds?.includes(i.id)) : [];
 
-    // Filter inventory by gender first
     const genderPool = inventory.filter(i => {
       if (intent.gender === 'unisex' || intent.gender === 'couple') return true;
       return i.gender === 'unisex' || i.gender === intent.gender;
     });
 
     const pools = {
-      OUTERWEAR: genderPool.filter(i => this.getCategoryKey(i.category) === 'OUTERWEAR'),
-      TOPS: genderPool.filter(i => this.getCategoryKey(i.category) === 'TOPS'),
-      BOTTOMS: genderPool.filter(i => this.getCategoryKey(i.category) === 'BOTTOMS'),
-      FOOTWEAR: genderPool.filter(i => this.getCategoryKey(i.category) === 'FOOTWEAR'),
+      OUTERWEAR: this.shuffle(genderPool.filter(i => this.getCategoryKey(i.category) === 'OUTERWEAR')),
+      TOPS: this.shuffle(genderPool.filter(i => this.getCategoryKey(i.category) === 'TOPS')),
+      BOTTOMS: this.shuffle(genderPool.filter(i => this.getCategoryKey(i.category) === 'BOTTOMS')),
+      FOOTWEAR: this.shuffle(genderPool.filter(i => this.getCategoryKey(i.category) === 'FOOTWEAR')),
     };
 
     ARCHETYPES.forEach(archetype => {
-      // If we have an anchor, check if it's compatible with this archetype's slot
-      if (anchorItem) {
-        const slotKey = this.getCategoryKey(anchorItem.category);
-        if (!slotKey || !this.isItemValidForSlot(anchorItem, archetype.slots[slotKey])) return;
+      // Anchor/Lock compatibility check - EVEN MORE RELAXED
+      const checkItems = anchorItem ? [anchorItem, ...lockedItems] : lockedItems;
+      for (const item of checkItems) {
+        const slotKey = this.getCategoryKey(item.category);
+        if (!slotKey) continue;
+        const constraints = archetype.slots[slotKey];
+        // We allow the item if it's in a compatible cluster for ANY of the archetype's slots
+        // This makes sure we don't skip an archetype just because one locked item is slightly "off"
+        const isBroadlyCompatible = Object.values(archetype.slots).some(s => 
+          s.clusters.some(c => CLUSTER_COMPATIBILITY[c].includes(item.cluster))
+        );
+        if (!isBroadlyCompatible) return;
       }
 
-      // If we have locked items, all must be compatible with their respective slots
-      for (const locked of lockedItems) {
-        const slotKey = this.getCategoryKey(locked.category);
-        if (!slotKey || !this.isItemValidForSlot(locked, archetype.slots[slotKey])) return;
-      }
-
-      // Generate combinations for this archetype
-      // Deterministic permutation
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 200; i++) {
         const items: EnrichedItem[] = [];
-        
         for (const [slot, constraints] of Object.entries(archetype.slots)) {
           const slotKey = slot as keyof typeof pools;
-          
-          // Use locked or anchor item if present for this slot
           const preselected = lockedItems.find(li => this.getCategoryKey(li.category) === slotKey) || 
                              (anchorItem && this.getCategoryKey(anchorItem.category) === slotKey ? anchorItem : null);
           
@@ -230,26 +256,27 @@ export class StylistEngine {
             continue;
           }
 
-          const pool = pools[slotKey].filter(item => this.isItemValidForSlot(item, constraints));
+          let pool = pools[slotKey].filter(item => this.isItemValidForSlot(item, constraints));
+          if (pool.length === 0) pool = pools[slotKey].filter(item => this.isItemValidForSlot(item, constraints, true));
           
-          // IF POOL IS EMPTY, WE SKIP THIS SLOT INSTEAD OF FAILING THE OUTFIT
+          // FINAL FALLBACK: If still empty, just take anything from the pool that isn't hard-clashing
+          if (pool.length === 0) {
+             pool = pools[slotKey].filter(item => {
+                return constraints.clusters.some(c => CLUSTER_COMPATIBILITY[c].includes(item.cluster));
+             });
+          }
+
           if (pool.length === 0) continue;
 
-          // Deterministic selection
-          const itemIndex = (i * 11 + Object.keys(pools).indexOf(slotKey) * 17) % pool.length;
+          const itemIndex = (i * 17 + Object.keys(pools).indexOf(slotKey) * 23) % pool.length;
           items.push(pool[itemIndex]);
         }
 
-        // VALIDATION: We need at least 3 categories for a "Partial Coordination"
-        if (items.length >= 3) {
-          // Final check: Formality Delta
+        if (items.length >= 2) { // Relaxed to 2 items for even more density
           const formalities = items.map(it => it.formality);
           const delta = Math.max(...formalities) - Math.min(...formalities);
           
-          // Archetype specific delta limit
-          const maxAllowedDelta = Math.min(...Object.values(archetype.slots).map(s => s.maxFormalityDelta));
-          
-          if (delta <= maxAllowedDelta + 2) { 
+          if (delta <= 6) { // Increased allowed delta to 6
             outfits.push({
               archetypeId: archetype.id,
               outfitName: archetype.name,
@@ -261,14 +288,17 @@ export class StylistEngine {
       }
     });
 
-    // Deduplicate and return
     const unique = new Map<string, OutfitSet>();
     outfits.forEach(o => {
       const key = o.items.map(it => it.id).sort().join('|');
       if (!unique.has(key)) unique.set(key, o);
     });
 
-    return Array.from(unique.values()).slice(0, 5);
+    return Array.from(unique.values()).sort((a, b) => b.items.length - a.items.length).slice(0, 5);
+  }
+
+  private static shuffle<T>(array: T[]): T[] {
+    return array.sort((a: any, b: any) => a.id.localeCompare(b.id));
   }
 
   private static generateReason(items: EnrichedItem[], archetype: Archetype): string {
@@ -277,7 +307,6 @@ export class StylistEngine {
   }
 
   static coordinationScore(m: OutfitSet, f: OutfitSet): number {
-    if (m.archetypeId === f.archetypeId) return 100;
-    return 0; // Strict archetype matching for couples
+    return m.archetypeId === f.archetypeId ? 100 : 0;
   }
 }

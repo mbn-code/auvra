@@ -127,16 +127,25 @@ export default function StylistPage() {
           brands: selectedBrands, 
           occasion, 
           gender,
-          anchorItemId: !isReroll ? anchorItemId : null,
+          anchorItemId: isReroll ? null : anchorItemId, // Keep anchor null on reroll unless specifically re-anchoring
           lockedItemIds: isReroll ? lockedItemIds : []
         })
       });
       const data = await response.json();
+      
+      if (!data || data.length === 0) {
+        alert("Archetype synchronization failed. Please relax your aesthetic DNA nodes.");
+        return;
+      }
+
       setOutfits(data);
-      // Reset locks if it's a fresh curation (not a reroll)
-      if (!isReroll) setLockedItemIds([]);
+      // Reset locks ONLY on fresh curation
+      if (!isReroll) {
+        setLockedItemIds([]);
+      }
     } catch (err) {
       console.error(err);
+      alert("Neural Engine offline. Please try again.");
     } finally {
       setLoading(false);
     }

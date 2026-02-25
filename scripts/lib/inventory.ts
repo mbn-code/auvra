@@ -20,24 +20,29 @@ export interface ScrapedItem {
   source_id: string;
   title: string;
   source_url: string;
-  source_price: number; // In source currency
-  currency: string; // 'EUR', 'USD', 'DKK', etc.
+  source_price: number;
+  currency: string;
   image: string;
   brand: string;
   condition: string;
-  size?: string; // NEW: Size field
+  size?: string;
   seller_rating?: number;
   seller_reviews?: number;
-  locale?: string; // Optional if currency provided
+  locale?: string;
   platform: 'vinted' | 'grailed' | 'aliexpress';
 }
 
-const luxuryBrands = ["Louis Vuitton", "Hermès", "Chanel", "Chrome Hearts", "Prada", "Burberry"];
+const luxuryBrands = ["Louis Vuitton", "Hermès", "Chanel", "Chrome Hearts", "Prada", "Burberry", "Gucci", "Bottega Veneta", "Amiri"];
 const gorpcoreBrands = ["Arc'teryx", "The North Face", "Patagonia", "Salomon", "Oakley"];
 const streetwearBrands = ["Corteiz", "Stüssy", "Essentials", "Hellstar", "Sp5der", "Supreme", "A Bathing Ape", "Broken Planet", "Denim Tears", "Gallery Dept"];
 
-const highRiskFakes = ["Essentials", "Corteiz", "Hellstar", "Sp5der", "Jordan", "Nike", "Yeezy"];
-const autoApproveBrands = ["Ralph Lauren", "Carhartt", "ASICS", "Lacoste", "Supreme", "The North Face", "Arc'teryx", "Patagonia", "New Balance", "Salomon", "Oakley", "Dickies", "Diesel", "Levis", "Adidas", "Nike"];
+const highRiskFakes = ["Essentials", "Corteiz", "Hellstar", "Sp5der", "Broken Planet"];
+const autoApproveBrands = [
+  "Ralph Lauren", "Carhartt", "ASICS", "Lacoste", "Supreme", "The North Face", 
+  "Arc'teryx", "Patagonia", "New Balance", "Salomon", "Oakley", "Dickies", 
+  "Diesel", "Levis", "Adidas", "Nike", "Louis Vuitton", "Prada", "Burberry", 
+  "Moncler", "Chrome Hearts", "Chanel", "Hermès", "Gucci", "Bottega Veneta", "Amiri"
+];
 
 const NON_CLOTHING_KEYWORDS = [
   "pioneer", "dj", "controller", "audio", "speaker", "sound", "headphone", 
@@ -83,27 +88,10 @@ const CONVERSION_RATES: Record<string, number> = {
 
 async function processImage(imageUrl: string, brand: string): Promise<{ url: string, hasFace: boolean }> {
   try {
-    let prompt = "minimalist white studio background"; 
-    
-    if (luxuryBrands.includes(brand)) {
-      prompt = "luxury travertine stone surface, minimalist, warm studio lighting";
-    } else if (gorpcoreBrands.includes(brand)) {
-      prompt = "brutalist raw concrete wall, industrial, cold natural light";
-    } else if (streetwearBrands.includes(brand)) {
-      prompt = "dark asphalt texture, urban mood, flash photography";
-    }
-
-    const uploadOptions: any = {
+    let uploadOptions: any = {
       folder: "auvra/archive",
-      // detection: "adv_face", // REMOVED: Requires paid subscription
-      // background_removal: "cloudinary_ai", // REMOVED: Requires paid subscription
     };
-
     const result = await cloudinary.uploader.upload(imageUrl, uploadOptions);
-
-    const hasFace = false; // Disabled face detection for now to avoid errors
-    
-    // Use a simple transformation for a consistent premium look
     const transformedUrl = cloudinary.url(result.public_id, {
       transformation: [
         { width: 1000, height: 1250, crop: "fill", gravity: "center" },
@@ -111,10 +99,8 @@ async function processImage(imageUrl: string, brand: string): Promise<{ url: str
         { fetch_format: "auto" }
       ]
     });
-
-    return { url: transformedUrl, hasFace };
+    return { url: transformedUrl, hasFace: false };
   } catch (err) {
-    console.error(`[Pulse] Image processing failed:`, err);
     return { url: imageUrl, hasFace: false };
   }
 }
@@ -170,7 +156,6 @@ export function getBrandTier(brand: string): number {
 }
 
 export function calculateListingPrice(sourcePriceEUR: number, brand: string, condition: string = "", title: string = "") {
-  // Delegate entirely to the new Market Anchor Simulation Engine
   const { calculateListingPriceEngine } = require('../../src/lib/pricing');
   return calculateListingPriceEngine(sourcePriceEUR, brand, condition, title);
 }
@@ -225,7 +210,7 @@ export function detectSubCategory(title: string): string {
 export async function saveToSupabase(item: ScrapedItem) {
   const priceEUR = convertToEUR(item.source_price, item.currency || item.locale || 'EUR');
   const confidence = calculateConfidence(item);
-  const listingPrice = calculateListingPrice(priceEUR, item.brand, item.condition);
+  const listingPrice = calculateListingPrice(priceEUR, item.brand, item.condition, item.title);
   const memberPrice = calculateMemberPrice(listingPrice);
   const profit = listingPrice - priceEUR - 20;
   
@@ -233,10 +218,12 @@ export async function saveToSupabase(item: ScrapedItem) {
   let displayImage = item.image;
   const subCategory = detectSubCategory(item.title);
 
-  // Relaxed Auto-approve logic: Confidence > 85, Profit > 25, Minimum Listing Price > 80
-  if (confidence > 85 && profit > 25 && listingPrice > 80 && autoApproveBrands.includes(item.brand)) {
+  // LESS STRICT AUTO-APPROVE:
+  const isHighValue = listingPrice > 1000;
+  const isAutoBrand = autoApproveBrands.includes(item.brand);
+  
+  if (confidence >= 90 || (confidence >= 70 && isHighValue) || (confidence >= 75 && isAutoBrand && profit > 20)) {
     status = 'available';
-    // Use processed image for available items
     const processed = await processImage(item.image, item.brand);
     displayImage = processed.url;
   }
@@ -252,7 +239,7 @@ export async function saveToSupabase(item: ScrapedItem) {
     potential_profit: profit,
     images: [displayImage],
     category: subCategory,
-    size: item.size || 'OS', // NEW: Store size
+    size: item.size || 'OS',
     confidence_score: confidence,
     seller_rating: item.seller_rating || 5.0,
     seller_reviews_count: item.seller_reviews || 50,
