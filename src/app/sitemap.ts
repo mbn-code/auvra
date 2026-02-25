@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { products } from '@/config/products';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://auvra-nine.vercel.app';
+  const baseUrl = 'https://auvra.eu';
 
   // 1. Static Routes
   const routes = [

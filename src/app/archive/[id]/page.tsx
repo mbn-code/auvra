@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: ArchiveProductPageProps): Pro
     title: `${item.title} | ${item.brand} Archive`,
     description: `Secure this unique ${item.brand} ${item.category} from the Auvra Archive. Sourced and verified quality archive piece in ${item.condition} condition.`,
     alternates: {
-      canonical: `https://auvra-nine.vercel.app/archive/${item.id}`,
+      canonical: `https://auvra.eu/archive/${item.id}`,
     },
     openGraph: {
       title: `${item.title} | Auvra Archive`,
@@ -101,7 +101,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
     },
     "offers": {
       "@type": "Offer",
-      "url": `https://auvra-nine.vercel.app/archive/${item.id}`,
+      "url": `https://auvra.eu/archive/${item.id}`,
       "priceCurrency": "EUR",
       "price": item.listing_price,
       "availability": "https://schema.org/InStock",
@@ -117,19 +117,19 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
         "@type": "ListItem",
         "position": 1,
         "name": "Archive",
-        "item": "https://auvra-nine.vercel.app/archive"
+        "item": "https://auvra.eu/archive"
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": item.brand,
-        "item": `https://auvra-nine.vercel.app/archive/brand/${encodeURIComponent(item.brand)}`
+        "item": `https://auvra.eu/archive/brand/${encodeURIComponent(item.brand)}`
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": item.title,
-        "item": `https://auvra-nine.vercel.app/archive/${item.id}`
+        "item": `https://auvra.eu/archive/${item.id}`
       }
     ]
   };

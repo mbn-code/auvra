@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "Curated Archives | Discover One-of-One Luxury Pieces",
   description: "Browse our live-sync collection of unique archive pieces. Sourced globally, verified by the Auvra Neural Engine. From Louis Vuitton to Arc'teryx.",
   alternates: {
-    canonical: "https://auvra-nine.vercel.app/archive",
+    canonical: "https://auvra.eu/archive",
   },
   openGraph: {
     title: "Curated Archives | Auvra",

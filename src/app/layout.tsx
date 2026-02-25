@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://auvra-nine.vercel.app",
+    url: "https://auvra.eu",
     siteName: "Auvra",
     title: "Auvra | Premium Archive Sourcing & Curation",
     description: "Expertly curated 1-of-1 luxury and streetwear archive pieces. Real-time sourcing from global collections.",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  metadataBase: new URL("https://auvra-nine.vercel.app"),
+  metadataBase: new URL("https://auvra.eu"),
   alternates: {
     canonical: "/",
   },
@@ -77,8 +77,8 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Auvra",
-    "url": "https://auvra-nine.vercel.app",
-    "logo": "https://auvra-nine.vercel.app/og-image.jpg",
+    "url": "https://auvra.eu",
+    "logo": "https://auvra.eu/og-image.jpg",
     "contactPoint": {
       "@type": "ContactPoint",
       "email": "malthe@mbn-code.dk",

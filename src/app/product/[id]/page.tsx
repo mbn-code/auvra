@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     title: `${product.name} | Auvra Utility`,
     description: product.description,
     alternates: {
-      canonical: `https://auvra-nine.vercel.app/product/${id}`,
+      canonical: `https://auvra.eu/product/${id}`,
     },
     openGraph: {
       title: `${product.name} | Auvra`,
@@ -64,7 +64,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     },
     "offers": {
       "@type": "Offer",
-      "url": `https://auvra-nine.vercel.app/product/${id}`,
+      "url": `https://auvra.eu/product/${id}`,
       "priceCurrency": "EUR",
       "price": product.price / 100,
       "availability": "https://schema.org/InStock",

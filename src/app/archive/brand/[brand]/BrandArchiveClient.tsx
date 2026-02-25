@@ -113,13 +113,13 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
         "@type": "ListItem",
         "position": 1,
         "name": "Archive",
-        "item": "https://auvra-nine.vercel.app/archive"
+        "item": "https://auvra.eu/archive"
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": decodedBrand,
-        "item": `https://auvra-nine.vercel.app/archive/brand/${brandName}`
+        "item": `https://auvra.eu/archive/brand/${brandName}`
       }
     ]
   };

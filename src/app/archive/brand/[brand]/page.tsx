@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${decodedBrand} Archive | Auvra Curation`,
     description: `Browse our expertly curated archive of ${decodedBrand} pieces. One-of-one finds, verified quality, and high-fidelity sourcing for the modern individual.`,
     alternates: {
-      canonical: `https://auvra-nine.vercel.app/archive/brand/${brand}`,
+      canonical: `https://auvra.eu/archive/brand/${brand}`,
     },
     openGraph: {
       title: `${decodedBrand} Archive | Auvra`,

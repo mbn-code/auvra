@@ -1,12 +1,12 @@
 # Auvra Deployment & Post-Launch Setup
 
-Your boutique is live at **https://auvra-nine.vercel.app**. Follow these steps to finalize the operational loop.
+Your boutique is live at **https://auvra.eu**. Follow these steps to finalize the operational loop.
 
 ## 1. Stripe Webhook (CRITICAL)
 For emails and native notifications to work, you must link Stripe to your backend:
 1. Go to **Stripe Dashboard > Developers > Webhooks**.
 2. Click **Add Endpoint**.
-3. URL: `https://auvra-nine.vercel.app/api/webhook`
+3. URL: `https://auvra.eu/api/webhook`
 4. Events to listen for: `checkout.session.completed`.
 5. Copy the **Signing Secret** (`whsec_...`).
 6. Add it to your Vercel Environment Variables as `STRIPE_WEBHOOK_SECRET`.

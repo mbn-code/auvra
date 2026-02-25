@@ -14,6 +14,6 @@ export default function robots(): MetadataRoute.Robots {
         '/demo/',
       ],
     },
-    sitemap: 'https://auvra-nine.vercel.app/sitemap.xml',
+    sitemap: 'https://auvra.eu/sitemap.xml',
   };
 }
