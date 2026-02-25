@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Sparkles, ArrowRight, Check, Zap, Cpu, Search, X, Lock, Unlock, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase-client";
 
 const EARTH_TONES = [
   { name: "Black", hex: "#000000" },
@@ -36,6 +37,7 @@ const COMMON_COLORS = [
 const BRANDS = ["Louis Vuitton", "Stone Island", "Chrome Hearts", "Arc'teryx", "Chanel", "Burberry", "Oakley", "Essentials", "Syna World", "Corteiz", "Moncler", "Patagonia", "Hermès", "Ralph Lauren", "Amiri", "Canada Goose", "Broken Planet", "CP Company", "Stüssy", "Prada", "Hellstar", "Supreme", "Lacoste", "Gallery Dept", "Eric Emanuel", "Adidas", "ASICS", "Sp5der", "Salomon", "Diesel", "Nike", "A Bathing Ape"];
 
 export default function StylistPage() {
+  const supabase = createClient();
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [gender, setGender] = useState<string>("male");
@@ -44,11 +46,29 @@ export default function StylistPage() {
   const [lockedItemIds, setLockedItemIds] = useState<string[]>([]);
   
   const [loading, setLoading] = useState(false);
+  const [hunting, setHunting] = useState(false);
   const [anchorSearch, setAnchorSearch] = useState("");
   const [anchorLoading, setAnchorLoading] = useState(false);
   const [outfits, setOutfits] = useState<any[] | null>(null);
   const [savedCurations, setSavedCurations] = useState<any[]>([]);
   const [recentItems, setRecentItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    // 1. Subscribe to Realtime Inventory Updates
+    const channel = supabase
+      .channel('inventory-hunt')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pulse_inventory' }, (payload) => {
+        const newItem = payload.new;
+        if (selectedBrands.includes(newItem.brand) && hunting) {
+          generateOutfits(false);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedBrands, hunting]);
 
   useEffect(() => {
     // Load preferences
@@ -61,7 +81,6 @@ export default function StylistPage() {
       if (parsed.gender) setGender(parsed.gender);
     }
 
-    // Load saved curations
     const savedO = localStorage.getItem("auvra_saved_curations");
     if (savedO) {
       setSavedCurations(JSON.parse(savedO));
@@ -118,6 +137,8 @@ export default function StylistPage() {
 
   const generateOutfits = async (isReroll = false) => {
     setLoading(true);
+    setHunting(false);
+    
     try {
       const response = await fetch("/api/ai/stylist", {
         method: "POST",
@@ -127,25 +148,29 @@ export default function StylistPage() {
           brands: selectedBrands, 
           occasion, 
           gender,
-          anchorItemId: isReroll ? null : anchorItemId, // Keep anchor null on reroll unless specifically re-anchoring
+          anchorItemId: isReroll ? null : anchorItemId,
           lockedItemIds: isReroll ? lockedItemIds : []
         })
       });
       const data = await response.json();
       
       if (!data || data.length === 0) {
-        alert("Archetype synchronization failed. Please relax your aesthetic DNA nodes.");
+        setHunting(true);
+        // Trigger live hunt in background
+        fetch("/api/ai/stylist/hunt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ brands: selectedBrands, occasion })
+        });
         return;
       }
 
       setOutfits(data);
-      // Reset locks ONLY on fresh curation
       if (!isReroll) {
         setLockedItemIds([]);
       }
     } catch (err) {
       console.error(err);
-      alert("Neural Engine offline. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -187,7 +212,6 @@ export default function StylistPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
             <div className="lg:col-span-8 space-y-16">
               
-              {/* GENDER */}
               <section>
                 <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">
                   01. Select Silhouette Protocol
@@ -207,7 +231,6 @@ export default function StylistPage() {
                 </div>
               </section>
 
-              {/* COLORS */}
               <section>
                 <div className="flex justify-between items-end mb-8 border-b border-zinc-100 pb-4">
                   <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">02. Foundation & Earth Tones</h3>
@@ -225,21 +248,29 @@ export default function StylistPage() {
                 </div>
               </section>
 
-              {/* ANCHOR PIECE (Optional) */}
+              <section>
+                <div className="flex justify-between items-end mb-8 border-b border-zinc-100 pb-4">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">03. Accent & Statement Colors</h3>
+                </div>
+                <div className="flex flex-wrap gap-4">
+                  {COMMON_COLORS.map(color => (
+                    <button
+                      key={color.name}
+                      onClick={() => toggleColor(color.name)}
+                      className={`group relative p-1 rounded-full transition-all duration-500 ${selectedColors.includes(color.name) ? 'ring-2 ring-zinc-900 ring-offset-4 scale-110' : 'ring-1 ring-zinc-100 ring-offset-0 hover:ring-zinc-300'}`}
+                    >
+                      <div className="w-12 h-12 rounded-full shadow-inner border border-black/5" style={{ backgroundColor: color.hex }} />
+                    </button>
+                  ))}
+                </div>
+              </section>
+
               <section>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 border-b border-zinc-100 pb-4 gap-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">
-                    03. Optional Anchor Piece
-                  </h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">04. Optional Anchor Piece</h3>
                   <div className="relative w-full md:w-64 group">
-                    <input 
-                      type="text" 
-                      value={anchorSearch}
-                      onChange={(e) => setAnchorSearch(e.target.value)}
-                      placeholder="Search archive..."
-                      className="w-full bg-zinc-50 border border-zinc-100 px-4 py-2 rounded-xl text-[10px] font-bold placeholder:text-zinc-300 focus:outline-none focus:border-zinc-900 focus:bg-white transition-all"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-zinc-900 transition-colors">
+                    <input type="text" value={anchorSearch} onChange={(e) => setAnchorSearch(e.target.value)} placeholder="Search archive..." className="w-full bg-zinc-50 border border-zinc-100 px-4 py-2 rounded-xl text-[10px] font-bold placeholder:text-zinc-300 focus:outline-none focus:border-zinc-900 transition-all" />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-zinc-900">
                       {anchorLoading ? <RefreshCw size={12} className="animate-spin" /> : <Search size={12} />}
                     </div>
                   </div>
@@ -247,44 +278,26 @@ export default function StylistPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[200px]">
                   {recentItems.length > 0 ? (
                     recentItems.map((item) => (
-                      <button 
-                        key={item.id}
-                        onClick={() => setAnchorItemId(anchorItemId === item.id ? null : item.id)}
-                        className={`p-2 rounded-2xl border transition-all text-left group ${anchorItemId === item.id ? 'bg-zinc-900 border-zinc-900 shadow-xl' : 'bg-zinc-50 border-zinc-100 hover:border-zinc-200'}`}
-                      >
+                      <button key={item.id} onClick={() => setAnchorItemId(anchorItemId === item.id ? null : item.id)} className={`p-2 rounded-2xl border transition-all text-left group ${anchorItemId === item.id ? 'bg-zinc-900 border-zinc-900 shadow-xl' : 'bg-zinc-50 border-zinc-100 hover:border-zinc-200'}`}>
                         <div className="aspect-square rounded-xl overflow-hidden mb-2 relative">
                            <img src={item.images[0]} alt="" className="w-full h-full object-cover" />
-                           {anchorItemId === item.id && (
-                             <div className="absolute inset-0 bg-yellow-400/20 flex items-center justify-center">
-                                <Check className="text-zinc-900" size={24} />
-                             </div>
-                           )}
+                           {anchorItemId === item.id && <div className="absolute inset-0 bg-yellow-400/20 flex items-center justify-center"><Check className="text-zinc-900" size={24} /></div>}
                         </div>
                         <p className={`text-[8px] font-black uppercase tracking-widest truncate ${anchorItemId === item.id ? 'text-zinc-400' : 'text-zinc-500'}`}>{item.brand}</p>
                         <p className={`text-[9px] font-bold truncate ${anchorItemId === item.id ? 'text-white' : 'text-zinc-900'}`}>{item.title}</p>
                       </button>
                     ))
                   ) : (
-                    <div className="col-span-full flex flex-col items-center justify-center py-12 text-zinc-300">
-                       <Search size={32} className="mb-4 opacity-20" />
-                       <p className="text-[10px] font-black uppercase tracking-widest">No assets found</p>
-                    </div>
+                    <div className="col-span-full py-12 text-center text-zinc-300 italic text-[10px]">No assets found</div>
                   )}
                 </div>
               </section>
 
-              {/* BRANDS */}
               <section>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">
-                  04. Preferred Brand Network
-                </h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">05. Preferred Brand Network</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {BRANDS.slice(0, 16).map(brand => (
-                    <button
-                      key={brand}
-                      onClick={() => toggleBrand(brand)}
-                      className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border text-left flex justify-between items-center ${selectedBrands.includes(brand) ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-zinc-50 text-zinc-500 border-zinc-100 hover:border-zinc-300'}`}
-                    >
+                    <button key={brand} onClick={() => toggleBrand(brand)} className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border text-left flex justify-between items-center ${selectedBrands.includes(brand) ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-zinc-50 text-zinc-500 border-zinc-100 hover:border-zinc-300'}`}>
                       {brand}
                       {selectedBrands.includes(brand) && <Check size={12} className="text-yellow-400" />}
                     </button>
@@ -292,31 +305,28 @@ export default function StylistPage() {
                 </div>
               </section>
 
+              <section>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 border-b border-zinc-100 pb-4">06. Desired Occasion</h3>
+                <input type="text" value={occasion} onChange={(e) => setOccasion(e.target.value)} placeholder="e.g. Fashion Week, Technical Hiking" className="w-full bg-zinc-50 border border-zinc-100 px-8 py-6 rounded-3xl text-zinc-900 font-bold placeholder:text-zinc-300 focus:outline-none focus:border-zinc-900" />
+              </section>
+
               <button
                 onClick={() => generateOutfits(false)}
                 disabled={loading}
-                className="w-full bg-zinc-900 text-white py-8 rounded-[2.5rem] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-4 hover:bg-black transition-all disabled:opacity-50 shadow-2xl shadow-zinc-300"
+                className="w-full bg-zinc-900 text-white py-8 rounded-[2.5rem] font-black uppercase tracking-[0.3em] flex flex-col items-center justify-center gap-4 hover:bg-black transition-all disabled:opacity-50"
               >
-                {loading ? <Cpu size={20} className="animate-spin text-yellow-400" /> : <><Sparkles size={20} className="text-yellow-400" /> Initialize Curation</>}
+                {loading ? <><Cpu size={20} className="animate-spin text-yellow-400" /> Initializing...</> : hunting ? <><Search size={20} className="animate-pulse text-yellow-400" /> Initializing Live Hunt...</> : <><Sparkles size={20} className="text-yellow-400" /> Initialize Curation</>}
               </button>
+              {hunting && <p className="text-center text-[10px] font-bold text-zinc-400 uppercase animate-pulse">Scanning live networks... Auto-updating shortly.</p>}
             </div>
 
             <div className="lg:col-span-4">
               <div className="bg-zinc-50 rounded-[3rem] p-10 sticky top-32 border border-zinc-100">
-                <h4 className="text-xs font-black uppercase tracking-widest mb-6">Stylist Protocol v3</h4>
+                <h4 className="text-xs font-black uppercase tracking-widest mb-6">Stylist Protocol v3.1</h4>
                 <ul className="space-y-6 text-sm text-zinc-500 font-medium">
-                  <li className="flex gap-4">
-                    <div className="w-6 h-6 bg-zinc-900 text-white rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">1</div>
-                    <p>Anchor-First Generation: Curations revolve around your selected piece.</p>
-                  </li>
-                  <li className="flex gap-4">
-                    <div className="w-6 h-6 bg-zinc-900 text-white rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">2</div>
-                    <p>Strict Archetype Blueprints: Every look is a perfect silhouette match.</p>
-                  </li>
-                  <li className="flex gap-4">
-                    <div className="w-6 h-6 bg-zinc-900 text-white rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">3</div>
-                    <p>Slot Modification: Lock items you love and reroll the rest.</p>
-                  </li>
+                  <li className="flex gap-4"><div className="w-6 h-6 bg-zinc-900 text-white rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">1</div><p>Anchor-First: Built around your key piece.</p></li>
+                  <li className="flex gap-4"><div className="w-6 h-6 bg-zinc-900 text-white rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">2</div><p>High Floor: Only premium assets (&ge; €100).</p></li>
+                  <li className="flex gap-4"><div className="w-6 h-6 bg-zinc-900 text-white rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">3</div><p>Live Hunt: Scans networks if vault is depleted.</p></li>
                 </ul>
               </div>
             </div>
@@ -326,18 +336,14 @@ export default function StylistPage() {
             <div className="flex justify-between items-center bg-zinc-50 p-6 rounded-3xl border border-zinc-100 mb-12">
                <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center text-white">
-                     <Cpu size={20} className="text-yellow-400" />
+                     <Cpu size={20} className={loading ? "animate-spin text-yellow-400" : "text-yellow-400"} />
                   </div>
                   <div>
                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Neural Sync Active</p>
                      <p className="text-sm font-bold">{lockedItemIds.length} Slots Locked</p>
                   </div>
                </div>
-               <button 
-                 onClick={() => generateOutfits(true)}
-                 disabled={loading}
-                 className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest flex items-center gap-3 hover:bg-zinc-800 transition-all disabled:opacity-50"
-               >
+               <button onClick={() => generateOutfits(true)} disabled={loading} className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest flex items-center gap-3 hover:bg-zinc-800 transition-all">
                  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Reroll Open Slots
                </button>
             </div>
@@ -371,10 +377,7 @@ export default function StylistPage() {
                           <h4 className="text-sm font-black tracking-tight mb-4 group-hover:text-black transition-colors">{item.name}</h4>
                           <span className="text-lg font-black bg-gradient-to-r from-zinc-900 to-zinc-600 bg-clip-text text-transparent">{item.price}</span>
                         </Link>
-                        <button 
-                          onClick={(e) => { e.preventDefault(); toggleLock(item.id); }}
-                          className={`absolute -top-3 -right-2 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all z-10 ${isLocked ? 'bg-zinc-900 text-white scale-110' : 'bg-white text-zinc-400 hover:scale-105'}`}
-                        >
+                        <button onClick={(e) => { e.preventDefault(); toggleLock(item.id); }} className={`absolute -top-3 -right-2 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all z-10 ${isLocked ? 'bg-zinc-900 text-white scale-110' : 'bg-white text-zinc-400 hover:scale-105'}`}>
                           {isLocked ? <Lock size={16} /> : <Unlock size={16} />}
                         </button>
                       </div>

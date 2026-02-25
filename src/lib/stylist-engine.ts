@@ -97,10 +97,10 @@ export const ARCHETYPES: Archetype[] = [
     id: 'gorpcore-specialist',
     name: 'The Gorpcore Specialist',
     slots: {
-      OUTERWEAR: { clusters: ['technical'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 3 },
-      TOPS: { clusters: ['technical', 'minimal', 'street'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 3 },
-      BOTTOMS: { clusters: ['technical', 'workwear'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 3 },
-      FOOTWEAR: { clusters: ['technical'], silhouettes: ['technical'], maxFormalityDelta: 3 },
+      OUTERWEAR: { clusters: ['technical'], silhouettes: ['technical'], maxFormalityDelta: 2 },
+      TOPS: { clusters: ['technical', 'minimal'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 2 },
+      BOTTOMS: { clusters: ['technical'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 2 },
+      FOOTWEAR: { clusters: ['technical'], silhouettes: ['technical'], maxFormalityDelta: 2 },
     }
   },
   {
@@ -108,39 +108,39 @@ export const ARCHETYPES: Archetype[] = [
     name: 'The 90s Archive Hero',
     slots: {
       OUTERWEAR: { clusters: ['street', 'workwear'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
-      TOPS: { clusters: ['street', 'heritage', 'minimal'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
+      TOPS: { clusters: ['street', 'heritage'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
       BOTTOMS: { clusters: ['workwear', 'street'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
-      FOOTWEAR: { clusters: ['street', 'minimal'], silhouettes: ['relaxed'], maxFormalityDelta: 3 },
+      FOOTWEAR: { clusters: ['street'], silhouettes: ['relaxed'], maxFormalityDelta: 3 },
     }
   },
   {
     id: 'quiet-luxury',
     name: 'The Quiet Luxury Node',
     slots: {
-      OUTERWEAR: { clusters: ['luxury', 'heritage', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
-      TOPS: { clusters: ['luxury', 'heritage', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
-      BOTTOMS: { clusters: ['luxury', 'heritage', 'minimal'], silhouettes: ['structured'], maxFormalityDelta: 2 },
-      FOOTWEAR: { clusters: ['luxury', 'heritage', 'minimal'], silhouettes: ['structured'], maxFormalityDelta: 2 },
+      OUTERWEAR: { clusters: ['luxury', 'heritage'], silhouettes: ['structured'], maxFormalityDelta: 2 },
+      TOPS: { clusters: ['luxury', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
+      BOTTOMS: { clusters: ['luxury', 'heritage'], silhouettes: ['structured'], maxFormalityDelta: 2 },
+      FOOTWEAR: { clusters: ['luxury', 'minimal'], silhouettes: ['structured'], maxFormalityDelta: 2 },
     }
   },
   {
     id: 'dark-wear',
     name: 'Dark Wear / Chrome',
     slots: {
-      OUTERWEAR: { clusters: ['luxury', 'street'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 4 },
-      TOPS: { clusters: ['luxury', 'minimal', 'street'], silhouettes: ['relaxed', 'oversized'], maxFormalityDelta: 4 },
-      BOTTOMS: { clusters: ['luxury', 'workwear', 'street'], silhouettes: ['relaxed', 'structured'], maxFormalityDelta: 4 },
-      FOOTWEAR: { clusters: ['luxury', 'street'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 4 },
+      OUTERWEAR: { clusters: ['luxury'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 3 },
+      TOPS: { clusters: ['luxury', 'minimal'], silhouettes: ['relaxed', 'oversized'], maxFormalityDelta: 3 },
+      BOTTOMS: { clusters: ['luxury', 'workwear'], silhouettes: ['relaxed', 'structured'], maxFormalityDelta: 3 },
+      FOOTWEAR: { clusters: ['luxury'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 3 },
     }
   },
   {
     id: 'heritage-classic',
     name: 'Heritage Classic',
     slots: {
-      OUTERWEAR: { clusters: ['heritage', 'minimal'], silhouettes: ['structured'], maxFormalityDelta: 3 },
-      TOPS: { clusters: ['heritage', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 3 },
-      BOTTOMS: { clusters: ['heritage', 'workwear'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 3 },
-      FOOTWEAR: { clusters: ['heritage', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 3 },
+      OUTERWEAR: { clusters: ['heritage'], silhouettes: ['structured'], maxFormalityDelta: 2 },
+      TOPS: { clusters: ['heritage', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
+      BOTTOMS: { clusters: ['heritage'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
+      FOOTWEAR: { clusters: ['heritage', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
     }
   }
 ];
@@ -162,6 +162,9 @@ export interface UserIntent {
   anchorItemId?: string | null;
   lockedItemIds?: string[];
   gender: Gender | 'couple';
+  colors?: string[];
+  brands?: string[];
+  occasion?: string;
 }
 
 export interface OutfitSet {
@@ -217,35 +220,34 @@ export class StylistEngine {
     const anchorItem = intent.anchorItemId ? inventory.find(i => i.id === intent.anchorItemId) : null;
     const lockedItems = intent.lockedItemIds ? inventory.filter(i => intent.lockedItemIds?.includes(i.id)) : [];
 
-    const genderPool = inventory.filter(i => {
+    // Filter inventory by gender and PRICE FLOOR (>= 100 euro for stylist)
+    const filteredPool = inventory.filter(i => {
+      // Basic quality check: Must have price >= 100
+      if (i.listing_price < 100) return false;
+
       if (intent.gender === 'unisex' || intent.gender === 'couple') return true;
       return i.gender === 'unisex' || i.gender === intent.gender;
     });
 
     const pools = {
-      OUTERWEAR: this.shuffle(genderPool.filter(i => this.getCategoryKey(i.category) === 'OUTERWEAR')),
-      TOPS: this.shuffle(genderPool.filter(i => this.getCategoryKey(i.category) === 'TOPS')),
-      BOTTOMS: this.shuffle(genderPool.filter(i => this.getCategoryKey(i.category) === 'BOTTOMS')),
-      FOOTWEAR: this.shuffle(genderPool.filter(i => this.getCategoryKey(i.category) === 'FOOTWEAR')),
+      OUTERWEAR: this.shuffle(filteredPool.filter(i => this.getCategoryKey(i.category) === 'OUTERWEAR')),
+      TOPS: this.shuffle(filteredPool.filter(i => this.getCategoryKey(i.category) === 'TOPS')),
+      BOTTOMS: this.shuffle(filteredPool.filter(i => this.getCategoryKey(i.category) === 'BOTTOMS')),
+      FOOTWEAR: this.shuffle(filteredPool.filter(i => this.getCategoryKey(i.category) === 'FOOTWEAR')),
     };
 
     ARCHETYPES.forEach(archetype => {
-      // Anchor/Lock compatibility check - EVEN MORE RELAXED
+      // Anchor/Lock compatibility check
       const checkItems = anchorItem ? [anchorItem, ...lockedItems] : lockedItems;
       for (const item of checkItems) {
         const slotKey = this.getCategoryKey(item.category);
-        if (!slotKey) continue;
-        const constraints = archetype.slots[slotKey];
-        // We allow the item if it's in a compatible cluster for ANY of the archetype's slots
-        // This makes sure we don't skip an archetype just because one locked item is slightly "off"
-        const isBroadlyCompatible = Object.values(archetype.slots).some(s => 
-          s.clusters.some(c => CLUSTER_COMPATIBILITY[c].includes(item.cluster))
-        );
-        if (!isBroadlyCompatible) return;
+        if (!slotKey || !this.isItemValidForSlot(item, archetype.slots[slotKey], true)) return;
       }
 
       for (let i = 0; i < 200; i++) {
         const items: EnrichedItem[] = [];
+        let substitutedBrands: string[] = [];
+
         for (const [slot, constraints] of Object.entries(archetype.slots)) {
           const slotKey = slot as keyof typeof pools;
           const preselected = lockedItems.find(li => this.getCategoryKey(li.category) === slotKey) || 
@@ -257,31 +259,36 @@ export class StylistEngine {
           }
 
           let pool = pools[slotKey].filter(item => this.isItemValidForSlot(item, constraints));
-          if (pool.length === 0) pool = pools[slotKey].filter(item => this.isItemValidForSlot(item, constraints, true));
           
-          // FINAL FALLBACK: If still empty, just take anything from the pool that isn't hard-clashing
-          if (pool.length === 0) {
-             pool = pools[slotKey].filter(item => {
-                return constraints.clusters.some(c => CLUSTER_COMPATIBILITY[c].includes(item.cluster));
-             });
+          // INTENT BRAND BIAS: Try to find a brand from the user's preferred network first
+          if (intent.brands && intent.brands.length > 0) {
+            const brandPool = pool.filter(item => intent.brands?.includes(item.brand));
+            if (brandPool.length > 0) {
+              pool = brandPool;
+            } else {
+              // If we use a general brand, flag it for the reason
+              substitutedBrands.push(slotKey.toLowerCase());
+            }
           }
 
+          if (pool.length === 0) pool = pools[slotKey].filter(item => this.isItemValidForSlot(item, constraints, true));
           if (pool.length === 0) continue;
 
           const itemIndex = (i * 17 + Object.keys(pools).indexOf(slotKey) * 23) % pool.length;
           items.push(pool[itemIndex]);
         }
 
-        if (items.length >= 2) { // Relaxed to 2 items for even more density
+        if (items.length >= 3) {
           const formalities = items.map(it => it.formality);
           const delta = Math.max(...formalities) - Math.min(...formalities);
+          const maxAllowedDelta = Math.min(...Object.values(archetype.slots).map(s => s.maxFormalityDelta));
           
-          if (delta <= 6) { // Increased allowed delta to 6
+          if (delta <= maxAllowedDelta + 3) {
             outfits.push({
               archetypeId: archetype.id,
               outfitName: archetype.name,
               items,
-              styleReason: this.generateReason(items, archetype)
+              styleReason: this.generateReason(items, archetype, substitutedBrands)
             });
           }
         }
@@ -294,16 +301,22 @@ export class StylistEngine {
       if (!unique.has(key)) unique.set(key, o);
     });
 
-    return Array.from(unique.values()).sort((a, b) => b.items.length - a.items.length).slice(0, 5);
+    return Array.from(unique.values()).slice(0, 5);
   }
 
   private static shuffle<T>(array: T[]): T[] {
     return array.sort((a: any, b: any) => a.id.localeCompare(b.id));
   }
 
-  private static generateReason(items: EnrichedItem[], archetype: Archetype): string {
+  private static generateReason(items: EnrichedItem[], archetype: Archetype, substitutions: string[] = []): string {
     const primaryBrand = items[0].brand;
-    return `A precision-engineered ${archetype.name} coordination, anchored by ${primaryBrand} heritage and silhouette-synchronized layers.`;
+    let reason = `A precision-engineered ${archetype.name} coordination, anchored by ${primaryBrand} heritage and silhouette-synchronized layers.`;
+    
+    if (substitutions.length > 0) {
+      reason += ` Note: Preferred brand nodes for ${substitutions.join(', ')} are currently depleted; high-integrity alternatives substituted.`;
+    }
+
+    return reason;
   }
 
   static coordinationScore(m: OutfitSet, f: OutfitSet): number {
