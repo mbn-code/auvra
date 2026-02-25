@@ -2,6 +2,57 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+export async function sendWelcomeEmail(to: string) {
+  const fromEmail = process.env.MAIL_FROM || 'concierge@auvra.eu';
+
+  const subject = `Access Granted: Welcome to the Pulse Network`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1d1d1f; background-color: #fff; padding: 40px; border: 1px solid #eee; border-radius: 24px;">
+      <h1 style="letter-spacing: -0.04em; font-weight: 900; text-transform: uppercase; margin-bottom: 30px;">AUVRA</h1>
+      
+      <p style="font-size: 20px; font-weight: 900; tracking: tight;">Pulse Network Access: ACTIVE</p>
+      
+      <p style="font-size: 16px; line-height: 1.6; color: #555;">
+        Your node has been successfully integrated into the Auvra Pulse network. You now have priority visibility on all global archive injections.
+      </p>
+
+      <div style="background: #000; color: #fff; padding: 30px; border-radius: 20px; margin: 30px 0; text-align: center;">
+        <p style="margin: 0; font-size: 10px; font-weight: 900; text-transform: uppercase; opacity: 0.6; letter-spacing: 0.2em;">Your Welcome Access Code</p>
+        <p style="margin: 10px 0 0 0; font-size: 32px; font-weight: 900; color: #fbbf24; letter-spacing: 0.1em;">PULSE10</p>
+        <p style="margin: 10px 0 0 0; font-size: 12px; font-weight: 700; opacity: 0.8;">10% OFF YOUR FIRST ACQUISITION</p>
+      </div>
+
+      <div style="margin-top: 30px; border-left: 4px solid #000; padding-left: 20px;">
+        <p style="font-weight: 900; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px;">Membership Benefits Status:</p>
+        <ul style="list-style: none; padding: 0; margin: 0; font-size: 14px; font-weight: 500; color: #333;">
+          <li style="margin-bottom: 8px;">✓ 1-Hour Early Access to Daily Drops</li>
+          <li style="margin-bottom: 8px;">✓ High-Fidelity Archive Insights</li>
+          <li style="margin-bottom: 8px;">✓ Member-Only Concierge Support</li>
+        </ul>
+      </div>
+
+      <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+        <a href="https://auvra.eu/archive" style="display: inline-block; background: #000; color: #fff; padding: 16px 32px; border-radius: 100px; text-decoration: none; font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: 0.2em;">View Latest Drops</a>
+      </div>
+
+      <p style="margin-top: 40px; font-size: 10px; color: #aaa; text-align: center; text-transform: uppercase; letter-spacing: 0.1em;">
+        &copy; ${new Date().getFullYear()} AUVRA. Designed for the Modern Individual.
+      </p>
+    </div>
+  `;
+
+  try {
+    await resend.emails.send({
+      from: `AUVRA <${fromEmail}>`,
+      to: [to],
+      subject: subject,
+      html: html,
+    });
+  } catch (error) {
+    console.error('Error sending welcome email:', error);
+  }
+}
+
 export async function sendOrderEmail(to: string, orderDetails: {
   productName: string,
   price: string,

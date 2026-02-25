@@ -9,6 +9,8 @@ export default function WelcomeModal() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     // Check if the user has already seen the modal or submitted
     const hasSeenModal = localStorage.getItem("auvra_welcome_modal");
@@ -40,20 +42,39 @@ export default function WelcomeModal() {
     localStorage.setItem("auvra_welcome_modal", "true");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || loading) return;
     
-    // In a real app, send to API route or mailing list service (Resend/Loops)
-    console.log("Email captured:", email);
+    setLoading(true);
     
-    setSubmitted(true);
-    localStorage.setItem("auvra_welcome_modal", "true");
-    
-    // Auto close after 3 seconds
-    setTimeout(() => {
-      setIsOpen(false);
-    }, 3000);
+    try {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+        localStorage.setItem("auvra_welcome_modal", "true");
+        
+        // Auto close after 3 seconds
+        setTimeout(() => {
+          setIsOpen(false);
+        }, 3000);
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch (err) {
+      console.error("Subscription error:", err);
+      alert('Failed to connect to the network. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) return null;
