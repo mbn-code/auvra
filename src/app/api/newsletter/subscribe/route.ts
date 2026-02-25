@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sendWelcomeEmail } from '@/lib/email';
+import { sendNewsletterWelcomeEmail } from '@/lib/email';
 
 export async function POST(req: Request) {
   try {
@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     }
 
     // Send the welcome email
-    await sendWelcomeEmail(email);
+    await sendNewsletterWelcomeEmail(email);
 
     return NextResponse.json({ success: true });
   } catch (error) {

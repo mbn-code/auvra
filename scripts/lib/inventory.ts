@@ -77,6 +77,7 @@ const TRANSLATIONS: Record<string, string> = {
 
 const CONVERSION_RATES: Record<string, number> = {
   "dk": 0.13, "pl": 0.23, "de": 1.0, "fi": 1.0, "se": 0.088, "fr": 1.0,
+  "DKK": 0.13, "PLN": 0.23, "SEK": 0.088,
   "USD": 0.92, "GBP": 1.17 
 };
 

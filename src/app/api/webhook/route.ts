@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabase } from "@/lib/supabase";
 import { products } from "@/config/products";
-import { sendOrderEmail } from "@/lib/email";
+import { sendOrderEmail, sendSocietyActiveEmail } from "@/lib/email";
 import { sendSecureNotification } from "@/lib/notifications";
 
 export async function POST(req: NextRequest) {
@@ -39,6 +39,10 @@ export async function POST(req: NextRequest) {
           subscription_status: 'active'
         })
         .eq('id', userId);
+        
+      if (customerEmail) {
+        await sendSocietyActiveEmail(customerEmail);
+      }
         
       console.log(`✅ Membership activated for user ${userId}`);
       return NextResponse.json({ received: true });
