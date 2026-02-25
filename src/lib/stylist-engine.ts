@@ -1,9 +1,7 @@
 /**
- * AUVRA STYLIST ENGINE v2 (DETERMINISTIC)
- * Hierarchical Scoring & Guided Generation
+ * AUVRA STYLIST ENGINE v3.0 (ARCHETYPE-DRIVEN)
+ * Constraint-Satisfaction & Anchor-First Generation
  */
-
-import { supabase } from "@/lib/supabase";
 
 // --- TYPES & REGISTRIES ---
 
@@ -24,6 +22,7 @@ export const BRAND_REGISTRY: Record<string, BrandMeta> = {
   "Prada": { cluster: 'luxury', formalityBias: 8, silhouetteBias: 'relaxed' },
   "Chrome Hearts": { cluster: 'luxury', formalityBias: 5, silhouetteBias: 'relaxed' },
   "Moncler": { cluster: 'luxury', formalityBias: 6, silhouetteBias: 'technical' },
+  "Gucci": { cluster: 'luxury', formalityBias: 8, silhouetteBias: 'relaxed' },
   "Stone Island": { cluster: 'heritage', formalityBias: 4, silhouetteBias: 'technical' },
   "Burberry": { cluster: 'heritage', formalityBias: 7, silhouetteBias: 'structured' },
   "CP Company": { cluster: 'heritage', formalityBias: 4, silhouetteBias: 'technical' },
@@ -32,6 +31,7 @@ export const BRAND_REGISTRY: Record<string, BrandMeta> = {
   "Salomon": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'technical' },
   "Patagonia": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Oakley": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'technical' },
+  "The North Face": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Supreme": { cluster: 'street', formalityBias: 2, silhouetteBias: 'oversized' },
   "A Bathing Ape": { cluster: 'street', formalityBias: 2, silhouetteBias: 'oversized' },
   "Stüssy": { cluster: 'street', formalityBias: 2, silhouetteBias: 'relaxed' },
@@ -40,24 +40,78 @@ export const BRAND_REGISTRY: Record<string, BrandMeta> = {
   "Adidas": { cluster: 'street', formalityBias: 1, silhouetteBias: 'relaxed' },
   "Dickies": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Carhartt": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
-  "Levi's": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Essentials": { cluster: 'minimal', formalityBias: 2, silhouetteBias: 'oversized' },
 };
 
-export const COLOR_FAMILIES: Record<string, string[]> = {
-  "neutrals": ["black", "white", "grey", "charcoal", "slate", "stone", "cream", "sand", "khaki", "beige", "navy"],
-  "earth": ["olive", "forest", "clay", "rust", "espresso", "brown"],
-  "accents": ["red", "blue", "yellow", "pink", "purple", "orange", "electric blue"]
-};
+export interface SlotConstraints {
+  clusters: AestheticCluster[];
+  silhouettes: Silhouette[];
+  maxFormalityDelta: number;
+}
 
-export const CLUSTER_COMPATIBILITY: Record<AestheticCluster, AestheticCluster[]> = {
-  luxury: ['luxury', 'minimal', 'heritage'],
-  street: ['street', 'workwear', 'minimal', 'technical'],
-  technical: ['technical', 'minimal', 'street', 'heritage'], // Gorpcore mixes with street and tech-heritage
-  minimal: ['minimal', 'luxury', 'street', 'technical', 'heritage', 'workwear'],
-  heritage: ['heritage', 'luxury', 'minimal', 'technical'],
-  workwear: ['workwear', 'street', 'minimal']
-};
+export interface Archetype {
+  id: string;
+  name: string;
+  slots: {
+    OUTERWEAR: SlotConstraints;
+    TOPS: SlotConstraints;
+    BOTTOMS: SlotConstraints;
+    FOOTWEAR: SlotConstraints;
+  };
+}
+
+export const ARCHETYPES: Archetype[] = [
+  {
+    id: 'gorpcore-specialist',
+    name: 'The Gorpcore Specialist',
+    slots: {
+      OUTERWEAR: { clusters: ['technical'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 3 },
+      TOPS: { clusters: ['technical', 'minimal', 'street'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 3 },
+      BOTTOMS: { clusters: ['technical', 'workwear'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 3 },
+      FOOTWEAR: { clusters: ['technical'], silhouettes: ['technical'], maxFormalityDelta: 3 },
+    }
+  },
+  {
+    id: 'archive-hero',
+    name: 'The 90s Archive Hero',
+    slots: {
+      OUTERWEAR: { clusters: ['street', 'workwear'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
+      TOPS: { clusters: ['street', 'heritage', 'minimal'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
+      BOTTOMS: { clusters: ['workwear', 'street'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
+      FOOTWEAR: { clusters: ['street', 'minimal'], silhouettes: ['relaxed'], maxFormalityDelta: 3 },
+    }
+  },
+  {
+    id: 'quiet-luxury',
+    name: 'The Quiet Luxury Node',
+    slots: {
+      OUTERWEAR: { clusters: ['luxury', 'heritage', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
+      TOPS: { clusters: ['luxury', 'heritage', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
+      BOTTOMS: { clusters: ['luxury', 'heritage', 'minimal'], silhouettes: ['structured'], maxFormalityDelta: 2 },
+      FOOTWEAR: { clusters: ['luxury', 'heritage', 'minimal'], silhouettes: ['structured'], maxFormalityDelta: 2 },
+    }
+  },
+  {
+    id: 'dark-wear',
+    name: 'Dark Wear / Chrome',
+    slots: {
+      OUTERWEAR: { clusters: ['luxury', 'street'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 4 },
+      TOPS: { clusters: ['luxury', 'minimal', 'street'], silhouettes: ['relaxed', 'oversized'], maxFormalityDelta: 4 },
+      BOTTOMS: { clusters: ['luxury', 'workwear', 'street'], silhouettes: ['relaxed', 'structured'], maxFormalityDelta: 4 },
+      FOOTWEAR: { clusters: ['luxury', 'street'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 4 },
+    }
+  },
+  {
+    id: 'heritage-classic',
+    name: 'Heritage Classic',
+    slots: {
+      OUTERWEAR: { clusters: ['heritage', 'minimal'], silhouettes: ['structured'], maxFormalityDelta: 3 },
+      TOPS: { clusters: ['heritage', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 3 },
+      BOTTOMS: { clusters: ['heritage', 'workwear'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 3 },
+      FOOTWEAR: { clusters: ['heritage', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 3 },
+    }
+  }
+];
 
 export interface EnrichedItem {
   id: string;
@@ -70,48 +124,20 @@ export interface EnrichedItem {
   cluster: AestheticCluster;
   formality: number;
   silhouette: Silhouette;
-  colorFamily: string;
-  raw: any;
 }
 
 export interface UserIntent {
-  colors?: string[];
-  brands?: string[];
-  occasion?: string;
+  anchorItemId?: string;
+  lockedItemIds?: string[];
   gender: Gender | 'couple';
 }
 
-export interface ScoreBreakdown {
-  hardFilters: boolean;
-  structural: number;
-  harmony: number;
-  personalization: number;
-  adjustments: number;
-  total: number;
-}
-
 export interface OutfitSet {
-  id: string;
+  archetypeId: string;
+  outfitName: string;
   items: EnrichedItem[];
-  score: ScoreBreakdown;
-  dominantCluster: AestheticCluster;
+  styleReason: string;
 }
-
-// --- CONSTANTS ---
-
-const BASE_SCORE = 100;
-const WEIGHTS = {
-  SAME_CLUSTER: 40,
-  COMPATIBLE_CLUSTER: 20,
-  SILHOUETTE_SYNC: 30,
-  COLOR_MONOCHROME: 30,
-  COLOR_NEUTRAL_ACCENT: 25,
-  BRAND_MATCH: 25,
-  COLOR_MATCH: 15,
-  CLASH_PENALTY: -60,
-  FORMALITY_CLASH: -40,
-  COLOR_CLASH: -30
-};
 
 // --- CORE ENGINE ---
 
@@ -123,19 +149,9 @@ export class StylistEngine {
       const brand = item.brand;
       const meta = BRAND_REGISTRY[brand] || { cluster: 'minimal', formalityBias: 3, silhouetteBias: 'relaxed' };
       
-      // Gender detection
       let gender: Gender = 'unisex';
       if (/męski|men|guy|homme|herren/i.test(title)) gender = 'male';
       else if (/damski|women|lady|femme|damen|girl/i.test(title)) gender = 'female';
-
-      // Color detection
-      let colorFamily = 'neutrals';
-      for (const [family, keywords] of Object.entries(COLOR_FAMILIES)) {
-        if (keywords.some(k => title.includes(k))) {
-          colorFamily = family;
-          break;
-        }
-      }
 
       return {
         id: item.id,
@@ -147,185 +163,122 @@ export class StylistEngine {
         gender,
         cluster: meta.cluster,
         formality: meta.formalityBias,
-        silhouette: meta.silhouetteBias || (meta.cluster === 'technical' ? 'technical' : 'relaxed'),
-        colorFamily,
-        raw: item
+        silhouette: meta.silhouetteBias || (meta.cluster === 'technical' ? 'technical' : 'relaxed')
       };
     });
   }
 
-  static scoreOutfit(items: EnrichedItem[], intent: UserIntent): ScoreBreakdown {
-    const breakdown: ScoreBreakdown = {
-      hardFilters: true,
-      structural: 0,
-      harmony: 0,
-      personalization: 0,
-      adjustments: 0,
-      total: 0
+  static getCategoryKey(category: string): keyof Archetype['slots'] | null {
+    const c = category.toLowerCase();
+    if (c.includes('jacket') || c.includes('outerwear')) return 'OUTERWEAR';
+    if (c.includes('shirt') || c.includes('top') || c.includes('sweater') || c.includes('knit')) return 'TOPS';
+    if (c.includes('pant') || c.includes('denim')) return 'BOTTOMS';
+    if (c.includes('footwear') || c.includes('shoe')) return 'FOOTWEAR';
+    return null;
+  }
+
+  static isItemValidForSlot(item: EnrichedItem, constraints: SlotConstraints): boolean {
+    return constraints.clusters.includes(item.cluster) && 
+           constraints.silhouettes.includes(item.silhouette);
+  }
+
+  static generateArchetypeOutfits(inventory: EnrichedItem[], intent: UserIntent): OutfitSet[] {
+    const outfits: OutfitSet[] = [];
+    const anchorItem = intent.anchorItemId ? inventory.find(i => i.id === intent.anchorItemId) : null;
+    const lockedItems = intent.lockedItemIds ? inventory.filter(i => intent.lockedItemIds?.includes(i.id)) : [];
+
+    // Filter inventory by gender first
+    const genderPool = inventory.filter(i => {
+      if (intent.gender === 'unisex' || intent.gender === 'couple') return true;
+      return i.gender === 'unisex' || i.gender === intent.gender;
+    });
+
+    const pools = {
+      OUTERWEAR: genderPool.filter(i => this.getCategoryKey(i.category) === 'OUTERWEAR'),
+      TOPS: genderPool.filter(i => this.getCategoryKey(i.category) === 'TOPS'),
+      BOTTOMS: genderPool.filter(i => this.getCategoryKey(i.category) === 'BOTTOMS'),
+      FOOTWEAR: genderPool.filter(i => this.getCategoryKey(i.category) === 'FOOTWEAR'),
     };
 
-    // --- LAYER 1: HARD FILTERS ---
-    const clusters = items.map(i => i.cluster);
-    const uniqueClusters = Array.from(new Set(clusters));
-    const formalities = items.map(i => i.formality);
-    const formalityDelta = Math.max(...formalities) - Math.min(...formalities);
+    ARCHETYPES.forEach(archetype => {
+      // If we have an anchor, check if it's compatible with this archetype's slot
+      if (anchorItem) {
+        const slotKey = this.getCategoryKey(anchorItem.category);
+        if (!slotKey || !this.isItemValidForSlot(anchorItem, archetype.slots[slotKey])) return;
+      }
 
-    // Gender check (if intent is specific)
-    if (intent.gender !== 'unisex' && intent.gender !== 'couple') {
-      const clashingGender = items.some(i => i.gender !== 'unisex' && i.gender !== intent.gender);
-      if (clashingGender) breakdown.hardFilters = false;
-    }
+      // If we have locked items, all must be compatible with their respective slots
+      for (const locked of lockedItems) {
+        const slotKey = this.getCategoryKey(locked.category);
+        if (!slotKey || !this.isItemValidForSlot(locked, archetype.slots[slotKey])) return;
+      }
 
-    // Formality Check
-    if (formalityDelta > 4) breakdown.hardFilters = false;
+      // Generate combinations for this archetype
+      // Deterministic permutation
+      for (let i = 0; i < 10; i++) {
+        const items: EnrichedItem[] = [];
+        let isValid = true;
 
-    // Cluster Conflict
-    const hasConflict = uniqueClusters.some(c1 => 
-      uniqueClusters.some(c2 => !CLUSTER_COMPATIBILITY[c1].includes(c2))
-    );
-    if (hasConflict) breakdown.hardFilters = false;
+        for (const [slot, constraints] of Object.entries(archetype.slots)) {
+          const slotKey = slot as keyof typeof pools;
+          
+          // Use locked or anchor item if present for this slot
+          const preselected = lockedItems.find(li => this.getCategoryKey(li.category) === slotKey) || 
+                             (anchorItem && this.getCategoryKey(anchorItem.category) === slotKey ? anchorItem : null);
+          
+          if (preselected) {
+            items.push(preselected);
+            continue;
+          }
 
-    if (!breakdown.hardFilters) return { ...breakdown, total: -1 };
+          const pool = pools[slotKey].filter(item => this.isItemValidForSlot(item, constraints));
+          if (pool.length === 0) {
+            isValid = false;
+            break;
+          }
 
-    // --- LAYER 2: STRUCTURAL INTEGRITY ---
-    if (uniqueClusters.length === 1) breakdown.structural += WEIGHTS.SAME_CLUSTER;
-    else breakdown.structural += WEIGHTS.COMPATIBLE_CLUSTER;
+          // Deterministic selection
+          const itemIndex = (i * 7 + Object.keys(pools).indexOf(slotKey) * 13) % pool.length;
+          items.push(pool[itemIndex]);
+        }
 
-    const silhouettes = items.map(i => i.silhouette);
-    if (new Set(silhouettes).size === 1) breakdown.structural += WEIGHTS.SILHOUETTE_SYNC;
-
-    // --- LAYER 3: HARMONY ---
-    const colors = items.map(i => i.colorFamily);
-    const uniqueColors = new Set(colors);
-    if (uniqueColors.size === 1) breakdown.harmony += WEIGHTS.COLOR_MONOCHROME;
-    else if (uniqueColors.has('neutrals') && uniqueColors.has('accents') && uniqueColors.size === 2) {
-      breakdown.harmony += WEIGHTS.COLOR_NEUTRAL_ACCENT;
-    }
-
-    // --- LAYER 4: PERSONALIZATION ---
-    items.forEach(item => {
-      if (intent.brands?.includes(item.brand)) breakdown.personalization += WEIGHTS.BRAND_MATCH;
-      const itemTitle = item.title.toLowerCase();
-      if (intent.colors?.some(c => itemTitle.includes(c.toLowerCase()))) {
-        breakdown.personalization += WEIGHTS.COLOR_MATCH;
+        if (isValid && items.length === 4) {
+          // Final check: Formality Delta
+          const formalities = items.map(it => it.formality);
+          const delta = Math.max(...formalities) - Math.min(...formalities);
+          
+          // Use the smallest maxFormalityDelta from slots as the outfit constraint
+          const maxAllowedDelta = Math.min(...Object.values(archetype.slots).map(s => s.maxFormalityDelta));
+          
+          if (delta <= maxAllowedDelta + 2) { // Allow slight grace for overall set
+            outfits.push({
+              archetypeId: archetype.id,
+              outfitName: archetype.name,
+              items,
+              styleReason: this.generateReason(items, archetype)
+            });
+          }
+        }
       }
     });
 
-    // --- LAYER 5: MICRO-ADJUSTMENTS ---
-    const uniqueBrands = new Set(items.map(i => i.brand));
-    if (uniqueBrands.size < items.length && items[0].cluster !== 'luxury') {
-      breakdown.adjustments -= 20; // Penalize brand repetition unless luxury uniform
-    }
-
-    breakdown.total = BASE_SCORE + breakdown.structural + breakdown.harmony + breakdown.personalization + breakdown.adjustments;
-    return breakdown;
-  }
-
-  static getDominantCluster(intent: UserIntent): AestheticCluster {
-    if (intent.brands && intent.brands.length > 0) {
-      const counts: Record<string, number> = {};
-      intent.brands.forEach(b => {
-        const cluster = BRAND_REGISTRY[b]?.cluster;
-        if (cluster) counts[cluster] = (counts[cluster] || 0) + 1;
-      });
-      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-      if (sorted.length > 0) return sorted[0][0] as AestheticCluster;
-    }
-
-    if (intent.occasion) {
-      const occ = intent.occasion.toLowerCase();
-      if (occ.includes('technical') || occ.includes('hiking') || occ.includes('mountain')) return 'technical';
-      if (occ.includes('street') || occ.includes('skate') || occ.includes('urban')) return 'street';
-      if (occ.includes('luxury') || occ.includes('gala') || occ.includes('fashion week')) return 'luxury';
-      if (occ.includes('work') || occ.includes('office') || occ.includes('formal')) return 'heritage';
-    }
-
-    return 'minimal';
-  }
-
-  static generateGuidedOutfits(inventory: EnrichedItem[], intent: UserIntent, count = 50): OutfitSet[] {
-    const outfits: OutfitSet[] = [];
-    const pools: Record<string, EnrichedItem[]> = {
-      OUTERWEAR: inventory.filter(i => i.category.toLowerCase().includes('jacket') || i.category.toLowerCase().includes('outerwear')),
-      TOPS: inventory.filter(i => i.category.toLowerCase().includes('shirt') || i.category.toLowerCase().includes('top') || i.category.toLowerCase().includes('sweater')),
-      BOTTOMS: inventory.filter(i => i.category.toLowerCase().includes('pant') || i.category.toLowerCase().includes('denim')),
-      FOOTWEAR: inventory.filter(i => i.category.toLowerCase().includes('footwear') || i.category.toLowerCase().includes('shoe'))
-    };
-
-    const dominantCluster = this.getDominantCluster(intent);
-    const categoryKeys = ['OUTERWEAR', 'TOPS', 'BOTTOMS', 'FOOTWEAR'];
-    
-    for (let attempt = 0; attempt < 200; attempt++) {
-      const items: EnrichedItem[] = [];
-      
-      categoryKeys.forEach((cat, idx) => {
-        const pool = pools[cat];
-        if (!pool || pool.length === 0) return;
-
-        const clusterPool = pool.filter(i => i.cluster === dominantCluster);
-        const compatPool = pool.filter(i => CLUSTER_COMPATIBILITY[dominantCluster].includes(i.cluster));
-        const finalPool = clusterPool.length > 0 ? clusterPool : (compatPool.length > 0 ? compatPool : pool);
-        
-        const itemIndex = (attempt * 17 + idx * 31) % finalPool.length;
-        items.push(finalPool[itemIndex]);
-      });
-
-      if (items.length >= 3) {
-        const score = this.scoreOutfit(items, intent);
-        if (score.hardFilters) {
-          outfits.push({
-            id: items.map(i => i.id).join('-'),
-            items,
-            score,
-            dominantCluster
-          });
-        }
-      }
-    }
-
-    // Filter duplicates
+    // Deduplicate and return
     const unique = new Map<string, OutfitSet>();
     outfits.forEach(o => {
-      const key = o.items.map(i => i.id).sort().join('|');
+      const key = o.items.map(it => it.id).sort().join('|');
       if (!unique.has(key)) unique.set(key, o);
     });
 
-    return Array.from(unique.values()).sort((a, b) => b.score.total - a.score.total);
+    return Array.from(unique.values()).slice(0, 5);
   }
 
-  static diversityFilter(outfits: OutfitSet[], targetCount = 5): OutfitSet[] {
-    const selected: OutfitSet[] = [];
-    
-    for (const outfit of outfits) {
-      if (selected.length >= targetCount) break;
-
-      const tooSimilar = selected.some(s => {
-        const overlap = outfit.items.filter(item => s.items.some(si => si.id === item.id)).length;
-        return (overlap / outfit.items.length) > 0.7;
-      });
-
-      if (!tooSimilar) selected.push(outfit);
-    }
-
-    return selected;
+  private static generateReason(items: EnrichedItem[], archetype: Archetype): string {
+    const primaryBrand = items[0].brand;
+    return `A precision-engineered ${archetype.name} coordination, anchored by ${primaryBrand} heritage and silhouette-synchronized layers.`;
   }
 
   static coordinationScore(m: OutfitSet, f: OutfitSet): number {
-    let score = 0;
-    if (m.dominantCluster === f.dominantCluster) score += 50;
-    
-    const mFormality = m.items[0].formality;
-    const fFormality = f.items[0].formality;
-    if (Math.abs(mFormality - fFormality) <= 2) score += 30;
-
-    const mColors = new Set(m.items.map(i => i.colorFamily));
-    const fColors = new Set(f.items.map(i => i.colorFamily));
-    const sharedColors = Array.from(mColors).filter(c => fColors.has(c));
-    if (sharedColors.length > 0) score += 20;
-
-    // Conflict
-    if (!CLUSTER_COMPATIBILITY[m.dominantCluster].includes(f.dominantCluster)) score -= 40;
-
-    return score;
+    if (m.archetypeId === f.archetypeId) return 100;
+    return 0; // Strict archetype matching for couples
   }
 }

@@ -1,21 +1,20 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { StylistEngine, UserIntent } from '@/lib/stylist-engine';
+import { StylistEngine, UserIntent, OutfitSet } from '@/lib/stylist-engine';
 
 /**
- * AUVRA STYLIST API v2
- * High-Integrity Deterministic Outfit Coordination
+ * AUVRA STYLIST API v3.0
+ * Archetype-Driven Constraint Satisfaction
  */
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { colors, brands, occasion, gender } = body;
+    const { anchorItemId, lockedItemIds, gender } = body;
 
     const intent: UserIntent = {
-      colors,
-      brands,
-      occasion,
+      anchorItemId,
+      lockedItemIds,
       gender: gender === 'couple' ? 'couple' : (gender || 'unisex')
     };
 
@@ -37,39 +36,34 @@ export async function POST(req: Request) {
       const maleInventory = inventory.filter(i => i.gender !== 'female');
       const femaleInventory = inventory.filter(i => i.gender !== 'male');
 
-      const maleCandidates = StylistEngine.generateGuidedOutfits(maleInventory, { ...intent, gender: 'male' }, 50);
-      const femaleCandidates = StylistEngine.generateGuidedOutfits(femaleInventory, { ...intent, gender: 'female' }, 50);
+      const maleOutfits = StylistEngine.generateArchetypeOutfits(maleInventory, { ...intent, gender: 'male' });
+      const femaleOutfits = StylistEngine.generateArchetypeOutfits(femaleInventory, { ...intent, gender: 'female' });
 
       const couples = [];
-      // Use double loop but with strict coordination scoring
-      for (const m of maleCandidates.slice(0, 20)) {
-        for (const f of femaleCandidates.slice(0, 20)) {
+      // Synchronize by Archetype
+      for (const m of maleOutfits) {
+        for (const f of femaleOutfits) {
           if (couples.length >= 5) break;
           
-          const coordScore = StylistEngine.coordinationScore(m, f);
-          if (coordScore >= 80) {
+          if (StylistEngine.coordinationScore(m, f) >= 100) {
             couples.push({
-              outfitName: "Coordinated Network Set",
+              outfitName: `Synchronized ${m.outfitName} Couple Set`,
               isCouple: true,
-              coordinationScore: coordScore,
               male: formatOutfit(m),
               female: formatOutfit(f),
-              styleReason: `Synchronized ${m.dominantCluster} nodes with shared ${m.items[0].colorFamily} palette.`
+              styleReason: `Twin-node coordination using the ${m.outfitName} blueprint. Matching silhouette and cluster DNA.`
             });
           }
         }
       }
-
-      // If no perfect matches, return top individual ones or lower threshold
-      return NextResponse.json(couples.slice(0, 5));
+      return NextResponse.json(couples);
     }
 
     // 3. STANDARD SINGLE PROTOCOL
-    const allOutfits = StylistEngine.generateGuidedOutfits(inventory, intent, 100);
-    const diverseOutfits = StylistEngine.diversityFilter(allOutfits, 5);
+    const outfits = StylistEngine.generateArchetypeOutfits(inventory, intent);
 
     // 4. FORMATTING
-    const result = diverseOutfits.map(o => formatOutfit(o));
+    const result = outfits.map(o => formatOutfit(o));
 
     return NextResponse.json(result);
 
@@ -79,17 +73,32 @@ export async function POST(req: Request) {
   }
 }
 
-function formatOutfit(o: any) {
+/**
+ * Standardizes outfit JSON structure and enforces item category ordering.
+ */
+function formatOutfit(o: OutfitSet) {
+  const items = [...o.items].sort((a, b) => {
+    const getOrder = (cat: string) => {
+      const c = cat.toLowerCase();
+      if (c.includes('jacket') || c.includes('outerwear')) return 1;
+      if (c.includes('shirt') || c.includes('top') || c.includes('sweater') || c.includes('knit')) return 2;
+      if (c.includes('pant') || c.includes('denim')) return 3;
+      if (c.includes('footwear') || c.includes('shoe')) return 4;
+      return 5;
+    };
+    return getOrder(a.category) - getOrder(b.category);
+  });
+
   return {
-    outfitName: o.outfitName || "Signature Archive Set",
-    outfitScore: o.score.total,
-    styleReason: o.styleReason || `A coherent ${o.dominantCluster} curation anchored by ${o.items[0].brand} aesthetics.`,
-    items: o.items.map((item: any) => ({
+    outfitName: o.outfitName,
+    styleReason: o.styleReason,
+    items: items.map((item) => ({
       name: item.title,
       brand: item.brand,
       image: item.images[0],
       price: `€${Math.round(item.listing_price)}`,
-      url: `https://auvra.eu/archive/${item.id}`
+      url: `https://auvra.eu/archive/${item.id}`,
+      id: item.id
     }))
   };
 }
