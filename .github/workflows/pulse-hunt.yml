@@ -2,12 +2,19 @@ name: Auvra Pulse Hunt
 
 on:
   schedule:
-    - cron: '0 * * * *' # Every hour
+    # 09:00 and 21:00 UTC (The "Archive Drop" Schedule)
+    - cron: '0 9,21 * * *'
   workflow_dispatch: # Manual trigger
+
+# THIS PREVENTS THE PILEUP: It cancels any run already in progress if a new one starts
+concurrency:
+  group: pulse-hunt-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   hunt:
     runs-on: ubuntu-latest
+    timeout-minutes: 45 # Safety cap: kills the job if it takes too long
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
