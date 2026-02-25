@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { ArrowRight, Sparkles, Flame, Zap, Lock } from "lucide-react";
 import NeuralFeed from "@/components/NeuralFeed";
 import TikTokEmbeds from "@/components/TikTokEmbeds";
+import StylistFeature from "@/components/StylistFeature";
 import { createClient } from "@/lib/supabase-server";
 import LimitedIntakes from "@/components/LimitedIntakes";
 import { getEstimatedMarketValue } from "@/lib/pricing";
@@ -180,6 +181,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* 1.2. AI STYLIST FEATURE */}
+      <StylistFeature />
 
       {/* 1.5. SOCIETY MEMBERSHIP CTA */}
       <section className="px-6 mb-12">
