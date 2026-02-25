@@ -1,45 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { chromium } from 'playwright';
 
 /**
- * AUVRA VIBE SEARCH API (Real Pinterest Integration)
+ * AUVRA VIBE SEARCH API (Headless Pinterest Integration)
  */
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get('q') || 'luxury archive fashion';
   
+  let browser;
   try {
-    console.log(`[VibeSearch] Querying Pinterest for: ${q}`);
+    console.log(`[VibeSearch] Launching Headless Hunt for: ${q}`);
     
-    // Pinterest search URL
+    browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    });
+    const page = await context.newPage();
+    
     const searchUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(q)}&rs=typed`;
-    
-    const response = await fetch(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-      }
+    await page.goto(searchUrl, { waitUntil: 'networkidle', timeout: 30000 });
+
+    // Wait for some images to load
+    await page.waitForSelector('img', { timeout: 10000 });
+
+    // Scroll a bit to trigger more loads
+    await page.evaluate(() => window.scrollBy(0, 1000));
+    await new Promise(r => setTimeout(r, 1000));
+
+    const images = await page.evaluate(() => {
+      const imgs = Array.from(document.querySelectorAll('img'));
+      return imgs
+        .map(img => img.src)
+        .filter(src => src.includes('pinimg.com'))
+        .map(src => src.replace('236x', '736x').replace('474x', '736x')); // Upscale to high res
     });
 
-    const html = await response.text();
-    
-    // Extract image URLs using regex
-    // Pinterest pins usually have images in 236x, 474x or 736x formats
-    // We look for the 736x (high res) versions
-    const imageRegex = /https:\/\/i\.pinimg\.com\/736x\/[a-z0-9\/]+\.jpg/g;
-    const matches = html.match(imageRegex) || [];
-    
-    // Deduplicate and limit to 12 results
-    const uniqueImages = [...new Set(matches)].slice(0, 12);
+    const uniqueImages = [...new Set(images)].slice(0, 12);
 
     if (uniqueImages.length === 0) {
-      console.warn("[VibeSearch] No images found via regex, falling back to static seeds.");
-      // Fallback if scraping fails
-      return NextResponse.json([
-        { id: 'f1', url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=500' },
-        { id: 'f2', url: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=500' },
-        { id: 'f3', url: 'https://images.unsplash.com/photo-1511405946472-a37e3b5ccd47?auto=format&fit=crop&q=80&w=500' }
-      ]);
+      throw new Error("No images found on page");
     }
 
     return NextResponse.json(uniqueImages.map((url, i) => ({
@@ -48,7 +48,15 @@ export async function GET(req: NextRequest) {
     })));
 
   } catch (error) {
-    console.error('[VibeSearch] Error:', error);
-    return NextResponse.json({ error: 'Failed to fetch vibes' }, { status: 500 });
+    console.error('[VibeSearch] Scraping Error:', error);
+    // Silent Fallback to high-quality Unsplash seeds
+    return NextResponse.json([
+      { id: 'f1', url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=500' },
+      { id: 'f2', url: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=500' },
+      { id: 'f3', url: 'https://images.unsplash.com/photo-1511405946472-a37e3b5ccd47?auto=format&fit=crop&q=80&w=500' },
+      { id: 'f4', url: 'https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=500' }
+    ]);
+  } finally {
+    if (browser) await browser.close();
   }
 }

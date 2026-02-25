@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Twitter, Youtube, ShieldCheck } from "lucide-react";
+import { Instagram, Twitter, Youtube, ShieldCheck, Music2 } from "lucide-react";
 import Logo from "./Logo";
 
 export default function Footer() {
@@ -15,9 +15,8 @@ export default function Footer() {
             Elevating the everyday through intentional design. We curate the world's most trending essentials with an uncompromising focus on quality and minimalism.
           </p>
           <div className="flex gap-4">
-             <Link href="#" aria-label="Instagram" className="p-2 bg-zinc-50 rounded-full hover:bg-black hover:text-white transition-all"><Instagram size={18} strokeWidth={1.5} /></Link>
-             <Link href="#" aria-label="Twitter" className="p-2 bg-zinc-50 rounded-full hover:bg-black hover:text-white transition-all"><Twitter size={18} strokeWidth={1.5} /></Link>
-             <Link href="#" aria-label="Youtube" className="p-2 bg-zinc-50 rounded-full hover:bg-black hover:text-white transition-all"><Youtube size={18} strokeWidth={1.5} /></Link>
+             <Link href="https://www.instagram.com/auvra.clothing/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="p-2 bg-zinc-50 rounded-full hover:bg-black hover:text-white transition-all"><Instagram size={18} strokeWidth={1.5} /></Link>
+             <Link href="https://www.tiktok.com/@.auvra" target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="p-2 bg-zinc-50 rounded-full hover:bg-black hover:text-white transition-all"><Music2 size={18} strokeWidth={1.5} /></Link>
           </div>
         </div>
         
