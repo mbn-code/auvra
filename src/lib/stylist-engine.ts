@@ -1,6 +1,6 @@
 /**
- * AUVRA STYLIST ENGINE v3.1 (PRODUCTION READY)
- * Constraint-Satisfaction & Anchor-First Generation
+ * AUVRA STYLIST ENGINE v3.2 (AESTHETIC INTEGRITY UPGRADE)
+ * Constraint-Satisfaction & Layering Logic
  */
 
 // --- TYPES & REGISTRIES ---
@@ -24,52 +24,38 @@ export const BRAND_REGISTRY: Record<string, BrandMeta> = {
   "Chrome Hearts": { cluster: 'luxury', formalityBias: 5, silhouetteBias: 'relaxed' },
   "Moncler": { cluster: 'luxury', formalityBias: 6, silhouetteBias: 'technical' },
   "Gucci": { cluster: 'luxury', formalityBias: 8, silhouetteBias: 'relaxed' },
-  "Bottega Veneta": { cluster: 'luxury', formalityBias: 8, silhouetteBias: 'relaxed' },
-  "Amiri": { cluster: 'luxury', formalityBias: 4, silhouetteBias: 'relaxed' },
-
-  // Tier 2: Premium Heritage
   "Stone Island": { cluster: 'heritage', formalityBias: 4, silhouetteBias: 'technical' },
   "Burberry": { cluster: 'heritage', formalityBias: 7, silhouetteBias: 'structured' },
   "CP Company": { cluster: 'heritage', formalityBias: 4, silhouetteBias: 'technical' },
   "Ralph Lauren": { cluster: 'heritage', formalityBias: 6, silhouetteBias: 'structured' },
-  "Barbour": { cluster: 'heritage', formalityBias: 5, silhouetteBias: 'structured' },
-
-  // Tier 3: Performance / Technical
   "Arc'teryx": { cluster: 'technical', formalityBias: 3, silhouetteBias: 'technical' },
   "Salomon": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'technical' },
   "Patagonia": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Oakley": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'technical' },
   "The North Face": { cluster: 'technical', formalityBias: 2, silhouetteBias: 'relaxed' },
-
-  // Tier 4: Streetwear Heat
   "Supreme": { cluster: 'street', formalityBias: 2, silhouetteBias: 'oversized' },
   "A Bathing Ape": { cluster: 'street', formalityBias: 2, silhouetteBias: 'oversized' },
   "Stüssy": { cluster: 'street', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Corteiz": { cluster: 'street', formalityBias: 1, silhouetteBias: 'oversized' },
   "Nike": { cluster: 'street', formalityBias: 1, silhouetteBias: 'relaxed' },
   "Adidas": { cluster: 'street', formalityBias: 1, silhouetteBias: 'relaxed' },
-  "Hellstar": { cluster: 'street', formalityBias: 1, silhouetteBias: 'oversized' },
-  "Sp5der": { cluster: 'street', formalityBias: 1, silhouetteBias: 'oversized' },
-  "Denim Tears": { cluster: 'street', formalityBias: 2, silhouetteBias: 'relaxed' },
-  "Gallery Dept": { cluster: 'street', formalityBias: 2, silhouetteBias: 'relaxed' },
-  "Broken Planet": { cluster: 'street', formalityBias: 1, silhouetteBias: 'oversized' },
-
-  // Tier 5: Mass / Contemporary
   "Dickies": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
   "Carhartt": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
-  "Levi's": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
-  "Levis": { cluster: 'workwear', formalityBias: 2, silhouetteBias: 'relaxed' },
-  "Diesel": { cluster: 'workwear', formalityBias: 3, silhouetteBias: 'relaxed' },
-  "Lacoste": { cluster: 'minimal', formalityBias: 4, silhouetteBias: 'relaxed' },
   "Essentials": { cluster: 'minimal', formalityBias: 2, silhouetteBias: 'oversized' },
   "New Balance": { cluster: 'minimal', formalityBias: 2, silhouetteBias: 'relaxed' },
   "ASICS": { cluster: 'minimal', formalityBias: 2, silhouetteBias: 'relaxed' },
 };
 
+export const COLOR_FAMILIES: Record<string, string[]> = {
+  "neutrals": ["black", "white", "grey", "charcoal", "slate", "stone", "cream", "sand", "khaki", "beige", "navy"],
+  "earth": ["olive", "forest", "clay", "rust", "espresso", "brown"],
+  "accents": ["red", "blue", "yellow", "pink", "purple", "orange", "electric blue"]
+};
+
 export const CLUSTER_COMPATIBILITY: Record<AestheticCluster, AestheticCluster[]> = {
   luxury: ['luxury', 'minimal', 'heritage'],
-  street: ['street', 'workwear', 'minimal', 'technical'],
-  technical: ['technical', 'minimal', 'street', 'heritage'],
+  street: ['street', 'workwear', 'minimal'],
+  technical: ['technical', 'minimal', 'heritage'], 
   minimal: ['minimal', 'luxury', 'street', 'technical', 'heritage', 'workwear'],
   heritage: ['heritage', 'luxury', 'minimal', 'technical'],
   workwear: ['workwear', 'street', 'minimal']
@@ -79,6 +65,7 @@ export interface SlotConstraints {
   clusters: AestheticCluster[];
   silhouettes: Silhouette[];
   maxFormalityDelta: number;
+  forbiddenBrands?: string[];
 }
 
 export interface Archetype {
@@ -97,20 +84,20 @@ export const ARCHETYPES: Archetype[] = [
     id: 'gorpcore-specialist',
     name: 'The Gorpcore Specialist',
     slots: {
-      OUTERWEAR: { clusters: ['technical'], silhouettes: ['technical'], maxFormalityDelta: 2 },
-      TOPS: { clusters: ['technical', 'minimal'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 2 },
-      BOTTOMS: { clusters: ['technical'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 2 },
-      FOOTWEAR: { clusters: ['technical'], silhouettes: ['technical'], maxFormalityDelta: 2 },
+      OUTERWEAR: { clusters: ['technical'], silhouettes: ['technical'], maxFormalityDelta: 2, forbiddenBrands: ['Nike', 'Adidas', 'MLB'] },
+      TOPS: { clusters: ['technical', 'minimal', 'heritage'], silhouettes: ['relaxed', 'technical'], maxFormalityDelta: 2 }, 
+      BOTTOMS: { clusters: ['technical', 'workwear'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 2 },
+      FOOTWEAR: { clusters: ['technical', 'minimal'], silhouettes: ['technical', 'relaxed'], maxFormalityDelta: 2 },
     }
   },
   {
     id: 'archive-hero',
     name: 'The 90s Archive Hero',
     slots: {
-      OUTERWEAR: { clusters: ['street', 'workwear'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
-      TOPS: { clusters: ['street', 'heritage'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
-      BOTTOMS: { clusters: ['workwear', 'street'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
-      FOOTWEAR: { clusters: ['street'], silhouettes: ['relaxed'], maxFormalityDelta: 3 },
+      OUTERWEAR: { clusters: ['street', 'workwear', 'heritage'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
+      TOPS: { clusters: ['street', 'heritage', 'minimal'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
+      BOTTOMS: { clusters: ['workwear', 'street', 'heritage'], silhouettes: ['oversized', 'relaxed'], maxFormalityDelta: 3 },
+      FOOTWEAR: { clusters: ['street', 'minimal'], silhouettes: ['relaxed'], maxFormalityDelta: 3 },
     }
   },
   {
@@ -118,29 +105,9 @@ export const ARCHETYPES: Archetype[] = [
     name: 'The Quiet Luxury Node',
     slots: {
       OUTERWEAR: { clusters: ['luxury', 'heritage'], silhouettes: ['structured'], maxFormalityDelta: 2 },
-      TOPS: { clusters: ['luxury', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
-      BOTTOMS: { clusters: ['luxury', 'heritage'], silhouettes: ['structured'], maxFormalityDelta: 2 },
-      FOOTWEAR: { clusters: ['luxury', 'minimal'], silhouettes: ['structured'], maxFormalityDelta: 2 },
-    }
-  },
-  {
-    id: 'dark-wear',
-    name: 'Dark Wear / Chrome',
-    slots: {
-      OUTERWEAR: { clusters: ['luxury'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 3 },
-      TOPS: { clusters: ['luxury', 'minimal'], silhouettes: ['relaxed', 'oversized'], maxFormalityDelta: 3 },
-      BOTTOMS: { clusters: ['luxury', 'workwear'], silhouettes: ['relaxed', 'structured'], maxFormalityDelta: 3 },
-      FOOTWEAR: { clusters: ['luxury'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 3 },
-    }
-  },
-  {
-    id: 'heritage-classic',
-    name: 'Heritage Classic',
-    slots: {
-      OUTERWEAR: { clusters: ['heritage'], silhouettes: ['structured'], maxFormalityDelta: 2 },
-      TOPS: { clusters: ['heritage', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
-      BOTTOMS: { clusters: ['heritage'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
-      FOOTWEAR: { clusters: ['heritage', 'minimal'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
+      TOPS: { clusters: ['luxury', 'minimal', 'heritage'], silhouettes: ['structured', 'relaxed'], maxFormalityDelta: 2 },
+      BOTTOMS: { clusters: ['luxury', 'heritage', 'minimal'], silhouettes: ['structured'], maxFormalityDelta: 2 },
+      FOOTWEAR: { clusters: ['luxury', 'minimal', 'heritage'], silhouettes: ['structured'], maxFormalityDelta: 2 },
     }
   }
 ];
@@ -156,6 +123,9 @@ export interface EnrichedItem {
   cluster: AestheticCluster;
   formality: number;
   silhouette: Silhouette;
+  colorFamily: string;
+  isPolluted: boolean;
+  layerWeight: number; // 3: Heavy Outerwear, 2: Mid (Hoodie/Sweater), 1: Light (Tee/Shirt)
 }
 
 export interface UserIntent {
@@ -172,6 +142,7 @@ export interface OutfitSet {
   outfitName: string;
   items: EnrichedItem[];
   styleReason: string;
+  score: number;
 }
 
 export class StylistEngine {
@@ -182,9 +153,27 @@ export class StylistEngine {
       const brand = item.brand;
       const meta = BRAND_REGISTRY[brand] || { cluster: 'minimal', formalityBias: 3, silhouetteBias: 'relaxed' };
       
+      // Data Pollution Check
+      const otherBrands = Object.keys(BRAND_REGISTRY).filter(b => b !== brand && b.length > 3);
+      const isPolluted = otherBrands.some(ob => title.includes(ob.toLowerCase()));
+
       let gender: Gender = 'unisex';
       if (/męski|men|guy|homme|herren/i.test(title)) gender = 'male';
       else if (/damski|women|lady|femme|damen|girl/i.test(title)) gender = 'female';
+
+      let colorFamily = 'neutrals';
+      for (const [family, keywords] of Object.entries(COLOR_FAMILIES)) {
+        if (keywords.some(k => title.includes(k))) {
+          colorFamily = family;
+          break;
+        }
+      }
+
+      // Determine Layer Weight
+      let layerWeight = 1;
+      const cat = item.category.toLowerCase();
+      if (cat.includes('jacket') || cat.includes('outerwear')) layerWeight = 3;
+      else if (cat.includes('sweater') || cat.includes('knit') || title.includes('hoodie') || title.includes('fleece')) layerWeight = 2;
 
       return {
         id: item.id,
@@ -194,9 +183,12 @@ export class StylistEngine {
         category: item.category,
         images: item.images,
         gender,
-        cluster: meta.cluster,
+        cluster: isPolluted ? 'minimal' : meta.cluster,
         formality: meta.formalityBias,
-        silhouette: meta.silhouetteBias || (meta.cluster === 'technical' ? 'technical' : 'relaxed')
+        silhouette: meta.silhouetteBias || (meta.cluster === 'technical' ? 'technical' : 'relaxed'),
+        colorFamily,
+        isPolluted,
+        layerWeight
       };
     });
   }
@@ -211,6 +203,8 @@ export class StylistEngine {
   }
 
   static isItemValidForSlot(item: EnrichedItem, constraints: SlotConstraints, relaxed = false): boolean {
+    if (item.isPolluted && !relaxed) return false;
+    if (constraints.forbiddenBrands?.includes(item.brand)) return false;
     if (relaxed) return constraints.clusters.includes(item.cluster);
     return constraints.clusters.includes(item.cluster) && constraints.silhouettes.includes(item.silhouette);
   }
@@ -222,9 +216,7 @@ export class StylistEngine {
 
     // Filter inventory by gender and PRICE FLOOR (>= 100 euro for stylist)
     const filteredPool = inventory.filter(i => {
-      // Basic quality check: Must have price >= 100
       if (i.listing_price < 100) return false;
-
       if (intent.gender === 'unisex' || intent.gender === 'couple') return true;
       return i.gender === 'unisex' || i.gender === intent.gender;
     });
@@ -237,16 +229,19 @@ export class StylistEngine {
     };
 
     ARCHETYPES.forEach(archetype => {
-      // Anchor/Lock compatibility check
       const checkItems = anchorItem ? [anchorItem, ...lockedItems] : lockedItems;
       for (const item of checkItems) {
         const slotKey = this.getCategoryKey(item.category);
-        if (!slotKey || !this.isItemValidForSlot(item, archetype.slots[slotKey], true)) return;
+        if (!slotKey) continue;
+        const constraints = archetype.slots[slotKey];
+        const isCompatible = constraints.clusters.some(c => CLUSTER_COMPATIBILITY[c].includes(item.cluster));
+        if (!isCompatible) return;
       }
 
-      for (let i = 0; i < 200; i++) {
+      for (let i = 0; i < 300; i++) {
         const items: EnrichedItem[] = [];
         let substitutedBrands: string[] = [];
+        let score = 100;
 
         for (const [slot, constraints] of Object.entries(archetype.slots)) {
           const slotKey = slot as keyof typeof pools;
@@ -260,14 +255,14 @@ export class StylistEngine {
 
           let pool = pools[slotKey].filter(item => this.isItemValidForSlot(item, constraints));
           
-          // INTENT BRAND BIAS: Try to find a brand from the user's preferred network first
           if (intent.brands && intent.brands.length > 0) {
             const brandPool = pool.filter(item => intent.brands?.includes(item.brand));
             if (brandPool.length > 0) {
               pool = brandPool;
+              score += 50;
             } else {
-              // If we use a general brand, flag it for the reason
               substitutedBrands.push(slotKey.toLowerCase());
+              score -= 20;
             }
           }
 
@@ -278,17 +273,30 @@ export class StylistEngine {
           items.push(pool[itemIndex]);
         }
 
+        // Integrity Checks
         if (items.length >= 3) {
           const formalities = items.map(it => it.formality);
           const delta = Math.max(...formalities) - Math.min(...formalities);
-          const maxAllowedDelta = Math.min(...Object.values(archetype.slots).map(s => s.maxFormalityDelta));
           
-          if (delta <= maxAllowedDelta + 3) {
+          // Layering Logic: Outerwear >= Top Weight
+          const outerwear = items.find(it => this.getCategoryKey(it.category) === 'OUTERWEAR');
+          const top = items.find(it => this.getCategoryKey(it.category) === 'TOPS');
+          if (outerwear && top && outerwear.layerWeight < top.layerWeight) continue;
+
+          // Color family consistency if intent colors provided
+          if (intent.colors && intent.colors.length > 0) {
+             const matchesColor = items.some(it => intent.colors?.some(c => it.title.toLowerCase().includes(c.toLowerCase())));
+             if (!matchesColor) continue;
+             score += 30;
+          }
+
+          if (delta <= 5) {
             outfits.push({
               archetypeId: archetype.id,
               outfitName: archetype.name,
               items,
-              styleReason: this.generateReason(items, archetype, substitutedBrands)
+              styleReason: this.generateReason(items, archetype, substitutedBrands),
+              score
             });
           }
         }
@@ -301,7 +309,7 @@ export class StylistEngine {
       if (!unique.has(key)) unique.set(key, o);
     });
 
-    return Array.from(unique.values()).slice(0, 5);
+    return Array.from(unique.values()).sort((a, b) => b.score - a.score).slice(0, 5);
   }
 
   private static shuffle<T>(array: T[]): T[] {
@@ -313,7 +321,7 @@ export class StylistEngine {
     let reason = `A precision-engineered ${archetype.name} coordination, anchored by ${primaryBrand} heritage and silhouette-synchronized layers.`;
     
     if (substitutions.length > 0) {
-      reason += ` Note: Preferred brand nodes for ${substitutions.join(', ')} are currently depleted; high-integrity alternatives substituted.`;
+      reason += ` Note: Preferred brand nodes for ${substitutions.join(', ')} are currently depleted; high-integrity alternatives substituted to maintain Aura.`;
     }
 
     return reason;

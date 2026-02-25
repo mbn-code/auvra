@@ -2,9 +2,15 @@
 import { scrapeVinted } from './predator';
 import { scrapeGrailed } from './grailed';
 import { saveToSupabase } from './lib/inventory';
+import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 const BRANDS = [
   "Louis Vuitton", "Chrome Hearts", "Canada Goose", "Syna World", 
@@ -19,9 +25,28 @@ const BRANDS = [
 
 const LOCALES = ["dk", "de", "pl", "se", "fi"];
 
+async function checkHuntQueue() {
+  const { data: queue, error } = await supabase
+    .from('hunt_queue')
+    .select('*')
+    .eq('status', 'pending')
+    .limit(1);
+
+  if (error || !queue || queue.length === 0) return null;
+  return queue[0];
+}
+
 async function runPulseCycle() {
   const args = process.argv.slice(2);
-  const targetBrands = args.length > 0 ? args : null;
+  let targetBrands = args.length > 0 ? args : null;
+
+  // 0. Check for user-requested hunts first
+  const hunt = await checkHuntQueue();
+  if (hunt) {
+    console.log(`[Hunt] User requested deep hunt for: ${hunt.brands.join(', ')}`);
+    targetBrands = hunt.brands;
+    await supabase.from('hunt_queue').update({ status: 'hunting', last_hunt_at: new Date().toISOString() }).eq('id', hunt.id);
+  }
 
   console.log(`[${new Date().toISOString()}] 🚀 Starting ${targetBrands ? 'Targeted Hunt' : 'Global Pulse Cycle'}...`);
 
@@ -36,11 +61,9 @@ async function runPulseCycle() {
           console.log(`📦 ${brand}: Scraped ${vintedItems.length} items from Vinted.${locale}`);
           for (const item of vintedItems) await saveToSupabase(item);
         }
-        // If targeted hunt, we want to be fast but thorough
         if (targetBrands) await new Promise(r => setTimeout(r, 1000));
       }
 
-      // Grailed Hunt
       const grailedItems = await scrapeGrailed(brand);
       if (grailedItems.length > 0) {
         console.log(`📦 ${brand}: Scraped ${grailedItems.length} items from Grailed`);
@@ -51,6 +74,10 @@ async function runPulseCycle() {
     }
     
     if (!targetBrands) await new Promise(r => setTimeout(r, 3000));
+  }
+
+  if (hunt) {
+    await supabase.from('hunt_queue').update({ status: 'completed' }).eq('id', hunt.id);
   }
 
   console.log(`[${new Date().toISOString()}] ✅ Cycle Complete.`);

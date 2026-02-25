@@ -132,7 +132,10 @@ export default function StylistPage() {
   };
 
   const toggleLock = (itemId: string) => {
-    setLockedItemIds(prev => prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]);
+    setLockedItemIds(prev => {
+      const newLocks = prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId];
+      return newLocks;
+    });
   };
 
   const generateOutfits = async (isReroll = false) => {
@@ -154,15 +157,23 @@ export default function StylistPage() {
       });
       const data = await response.json();
       
+      // If we got results, but they are all "Substituted" or few, we can still show them BUT trigger hunt
+      const hasFewResults = !data || data.length < 3;
+      const hasSubstitutions = data?.some((o: any) => o.styleReason.includes("depleted"));
+
+      if (hasFewResults || hasSubstitutions) {
+        if (selectedBrands.length > 0) {
+          setHunting(true);
+          fetch("/api/ai/stylist/hunt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ brands: selectedBrands, occasion })
+          });
+        }
+      }
+
       if (!data || data.length === 0) {
-        setHunting(true);
-        // Trigger live hunt in background
-        fetch("/api/ai/stylist/hunt", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ brands: selectedBrands, occasion })
-        });
-        return;
+        return; // Hunting state already set above
       }
 
       setOutfits(data);
