@@ -92,15 +92,20 @@ function StylistContent() {
   }, [outfitId]);
 
   const loadOutfit = async (id: string) => {
+    setLoading(true);
     try {
       const res = await fetch(`/api/ai/stylist/outfit?id=${id}`);
       const data = await res.json();
       if (res.ok) {
         setCanvasOutfit(data.outfit);
+        // Hydrate the workspace with some initial vibes so it's not empty
+        await fetchVibes();
         setOutfits([]); // Show builder UI
       }
     } catch (err) {
       console.error("Failed to load outfit:", err);
+    } finally {
+      setLoading(false);
     }
   };
 

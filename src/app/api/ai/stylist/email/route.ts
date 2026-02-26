@@ -23,8 +23,19 @@ export async function POST(req: Request) {
       }
     );
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return NextResponse.json({ error: 'Auth required' }, { status: 401 });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Auth required' }, { status: 401 });
+
+    // Check membership tier
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('membership_tier')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || profile.membership_tier !== 'society') {
+      return NextResponse.json({ error: 'Society Membership Required' }, { status: 403 });
+    }
 
     const { slots } = await req.json();
 
@@ -47,8 +58,8 @@ export async function POST(req: Request) {
     `).join('');
 
     const { data, error } = await resend.emails.send({
-      from: 'Auvra Stylist <noreply@mbn-code.dk>',
-      to: [session.user.email!],
+      from: 'Auvra <noreply@mbn-code.dk>', // Ensure mbn-code.dk is verified in Resend Dashboard
+      to: [user.email!],
       subject: 'Your Auvra Style DNA Brief',
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 40px; border: 1px solid #000;">
