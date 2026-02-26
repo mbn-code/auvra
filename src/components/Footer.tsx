@@ -66,10 +66,14 @@ export default function Footer() {
             Independent curator mesh. All assets verified by Auvra Neural Engine. Not authorized by represented labels.
           </p>
         </div>
-            <div className="flex gap-4 items-center">
-               <ShieldCheck size={12} className="text-zinc-900" />
-               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900 border-r border-zinc-200 pr-4 mr-2">Secure Node</span>
-               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Visa / Mastercard / Stripe</span>
+            <div className="flex gap-6 items-center grayscale group hover:grayscale-0 transition-all duration-700">
+                <div className="flex items-center gap-2 mr-6 border-r border-zinc-200 pr-8">
+                   <ShieldCheck size={14} className="text-zinc-900" />
+                   <span className="text-[9px] font-black uppercase tracking-widest text-zinc-900">Secure Node</span>
+                </div>
+                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Visa</span>
+                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Mastercard</span>
+                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Stripe</span>
             </div>
       </div>
     </footer>

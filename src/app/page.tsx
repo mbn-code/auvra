@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { products } from "@/config/products";
-import { supabase } from "@/lib/supabase";
 import { ArrowRight, Sparkles, Flame, Zap, Lock, Cpu, Globe, Fingerprint, Hexagon } from "lucide-react";
 import NeuralFeed from "@/components/NeuralFeed";
 import TikTokEmbeds from "@/components/TikTokEmbeds";
@@ -15,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function Home() {
   const supabaseServer = await createClient();
   
-  // Check membership status
+  // Check membership status with fresh server context
   const { data: { user } } = await supabaseServer.auth.getUser();
   let isMember = false;
   if (user) {
@@ -25,9 +24,6 @@ export default async function Home() {
       .eq('id', user.id)
       .single();
     if (profile?.membership_tier === 'society') isMember = true;
-    console.log(`[Home] User: ${user.email}, isMember: ${isMember}`);
-  } else {
-    console.log(`[Home] No authenticated user detected.`);
   }
   
   const allowedBrands = [
@@ -41,7 +37,7 @@ export default async function Home() {
     .select('*')
     .in('status', ['available', 'sold'])
     .in('brand', allowedBrands)
-    .gte('listing_price', 200)
+    .gte('listing_price', 200) 
     .order('created_at', { ascending: false })
     .limit(12);
 
@@ -56,7 +52,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
-      {/* 1. ARCHIVE CAROUSEL HERO */}
+      {/* ARCHIVE CAROUSEL HERO */}
       <section className="relative pt-32 pb-24 overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none text-black">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -94,7 +90,7 @@ export default async function Home() {
               archiveItems.map((item) => {
                 const isSold = item.status === 'sold';
                 const isVault = item.potential_profit > 200;
-                // If the user is a society member, we NEVER blur.
+                // SOCIETY MEMBER BYPASS BLUR
                 const isLocked = isVault && !isMember && !isSold;
                 const charSum = item.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
                 const viewingCount = (charSum % 17) + 1;
@@ -109,6 +105,7 @@ export default async function Home() {
                       <Image 
                         src={item.images[0]} 
                         fill
+                        unoptimized
                         sizes="(max-width: 768px) 100vw, 450px"
                         className={`object-cover transition-transform duration-1000 group-hover:scale-105 ${isLocked ? 'blur-md opacity-90 scale-105' : ''} ${isSold ? 'opacity-40' : ''}`} 
                         alt={`${item.brand} ${item.title}`} 
@@ -130,7 +127,7 @@ export default async function Home() {
                       </div>
                       
                       <div className="absolute top-8 right-8 z-10 flex flex-col gap-2 items-end">
-                         <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm">
+                         <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm">
                             {item.size || 'OS'}
                          </div>
                       </div>
@@ -164,10 +161,8 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 1.2. AI STYLIST FEATURE */}
       <StylistFeature />
 
-      {/* 1.5. SOCIETY MEMBERSHIP CTA */}
       <section className="px-6 mb-24">
         <div className="max-w-7xl mx-auto bg-black rounded-[4rem] p-12 md:p-24 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12">
            <div className="absolute top-0 right-0 p-64 bg-yellow-400 blur-[180px] opacity-[0.08] rounded-full pointer-events-none"></div>
@@ -199,7 +194,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 3. THE PHILOSOPHY */}
       <section className="max-w-7xl mx-auto px-6 py-40 text-center">
          <Hexagon size={40} className="mx-auto text-zinc-900 mb-12 animate-in fade-in duration-1000" />
          <h2 className="text-6xl md:text-[8rem] font-black tracking-[-0.06em] mb-12 leading-[0.8] uppercase italic">
@@ -215,7 +209,6 @@ export default async function Home() {
          </div>
       </section>
 
-      {/* 3.5. BROWSE BY CATEGORY */}
       <section className="max-w-7xl mx-auto px-6 py-32 border-t border-zinc-100">
         <div className="flex justify-between items-end mb-16">
           <h2 className="text-4xl font-black tracking-tighter uppercase italic">Indexing</h2>
@@ -234,7 +227,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 5. COMMUNITY */}
       <section className="max-w-7xl mx-auto px-6 pb-40">
         <div className="text-center mb-24">
           <div className="inline-flex items-center gap-2 mb-6">

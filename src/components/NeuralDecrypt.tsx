@@ -25,13 +25,14 @@ export default function NeuralDecrypt({
     }
   }, [isLocked]);
 
-  if (!isLocked) return <Image src={imageUrl} fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover" alt="" />;
+  if (!isLocked) return <Image src={imageUrl} unoptimized fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover" alt="" />;
 
   return (
     <div className="relative w-full h-full bg-zinc-950 overflow-hidden group">
       {/* Blurred Base */}
       <Image 
         src={imageUrl} 
+        unoptimized
         fill
         sizes="(max-width: 768px) 100vw, 400px"
         className="object-cover blur-md opacity-90 scale-105" 
