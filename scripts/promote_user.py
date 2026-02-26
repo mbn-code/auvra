@@ -21,12 +21,29 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 def promote_user(email: str):
     print(f"🚀 Promoting user {email} to Society Membership...")
     
-    # 1. Find user ID in auth.users (requires service role)
-    # Actually, we can just look up by email in profiles if it exists
     try:
+        # 1. Check if profile exists
         response = supabase.table("profiles").select("id").eq("email", email).execute()
+        
         if not response.data:
-            print(f"⚠️ Profile for {email} not found. Please log in to the website once first to create a profile.")
+            print(f"⚠️ Profile for {email} not found. Attempting to create one from auth.users...")
+            # We need to find the user in auth.users first. 
+            # Note: This requires service role which we have in SUPABASE_SERVICE_ROLE_KEY
+            auth_user = supabase.auth.admin.list_users()
+            user = next((u for u in auth_user.users if u.email == email), None)
+            
+            if not user:
+                print(f"❌ Error: User with email {email} not found in Supabase Auth.")
+                return
+            
+            print(f"✅ Found Auth User: {user.id}. Creating profile...")
+            supabase.table("profiles").insert({
+                "id": user.id,
+                "email": email,
+                "membership_tier": "society",
+                "subscription_status": "active"
+            }).execute()
+            print(f"✅ Success! {email} profile created and promoted.")
             return
 
         user_id = response.data[0]['id']
@@ -39,7 +56,6 @@ def promote_user(email: str):
         
         if update_res.data:
             print(f"✅ Success! {email} is now a member of The Society.")
-            print("🔗 You can now test 'Lock Archive Look' and 'Export Style DNA' on the website.")
         else:
             print("❌ Failed to update profile.")
 

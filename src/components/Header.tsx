@@ -1,12 +1,22 @@
 import Link from "next/link";
-import { ShoppingBag, Menu, User } from "lucide-react";
+import { ShoppingBag, Menu, User, Zap } from "lucide-react";
 import AnnouncementMarquee from "./AnnouncementMarquee";
 import Logo from "./Logo";
 import { createClient } from "@/lib/supabase-server";
 
 export default async function Header() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  let isSociety = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('membership_tier')
+      .eq('id', user.id)
+      .single();
+    if (profile?.membership_tier === 'society') isSociety = true;
+  }
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[100]">
@@ -20,7 +30,13 @@ export default async function Header() {
           <nav className="hidden lg:flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">
             <Link href="/archive" className="hover:text-black transition-colors text-zinc-900 italic">Archive Pulse</Link>
             <Link href="/stylist" className="hover:text-black transition-colors">AI Stylist</Link>
-            <Link href="/pricing" className="text-zinc-900 hover:opacity-50 transition-opacity border-b-2 border-yellow-400 pb-0.5">Society</Link>
+            {isSociety ? (
+              <Link href="/account" className="text-yellow-600 flex items-center gap-2">
+                <Zap size={10} className="fill-yellow-600" /> Society Node
+              </Link>
+            ) : (
+              <Link href="/pricing" className="text-zinc-900 hover:opacity-50 transition-opacity border-b-2 border-yellow-400 pb-0.5">Society</Link>
+            )}
             <Link href="/shipping" className="hover:text-black transition-colors">Logistics</Link>
           </nav>
 
@@ -29,7 +45,7 @@ export default async function Header() {
           </div>
           
           <div className="flex items-center gap-6">
-            <Link href={session ? "/account" : "/login"} className="p-2 text-zinc-900 hover:opacity-50 transition-opacity">
+            <Link href={user ? "/account" : "/login"} className="p-2 text-zinc-900 hover:opacity-50 transition-opacity">
               <User size={20} strokeWidth={1.5} />
             </Link>
             <button className="relative p-2 text-zinc-900">

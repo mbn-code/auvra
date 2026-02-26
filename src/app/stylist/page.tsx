@@ -1,18 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { Sparkles, ArrowRight, Zap, Cpu, RefreshCw, Layers, CheckCircle, Flame, ShieldCheck, GripVertical, X, Search } from "lucide-react";
 import Link from "next/link";
 import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors, pointerWithin } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
+import { useSearchParams } from "next/navigation";
 
 import { SkeletonCanvas } from "@/components/stylist/SkeletonCanvas";
 import { DraggableItem } from "@/components/stylist/DraggableItem";
 import { SocietyModal } from "@/components/stylist/SocietyModal";
 
 /**
- * AUVRA ARCHIVE BUILDER v5.2 (Neural Workspace)
- * High-fidelity workstation with multi-item slots and strict drop logic.
+ * AUVRA ARCHIVE BUILDER v5.3 (Neural Workspace)
+ * High-fidelity workstation with outfit hydration and membership protection.
  */
 
 const slotToCategoryMap: Record<string, string> = {
@@ -30,6 +31,14 @@ const slotToCategoryMap: Record<string, string> = {
 };
 
 export default function StylistPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#fafafa] flex items-center justify-center"><RefreshCw className="animate-spin text-zinc-300" size={32} /></div>}>
+      <StylistContent />
+    </Suspense>
+  );
+}
+
+function StylistContent() {
   const [vibePool, setVibePool] = useState<any[]>([]);
   const [selectedVibeIds, setSelectedVibeIds] = useState<string[]>([]);
   const [outfits, setOutfits] = useState<any[] | null>(null);
@@ -72,9 +81,28 @@ export default function StylistPage() {
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
   );
 
+  const searchParams = useSearchParams();
+  const outfitId = searchParams.get("outfit");
+
   useEffect(() => {
     fetchVibes();
-  }, []);
+    if (outfitId) {
+      loadOutfit(outfitId);
+    }
+  }, [outfitId]);
+
+  const loadOutfit = async (id: string) => {
+    try {
+      const res = await fetch(`/api/ai/stylist/outfit?id=${id}`);
+      const data = await res.json();
+      if (res.ok) {
+        setCanvasOutfit(data.outfit);
+        setOutfits([]); // Show builder UI
+      }
+    } catch (err) {
+      console.error("Failed to load outfit:", err);
+    }
+  };
 
   const fetchVibes = async (keepSelected = false, query = "") => {
     setDiscoveryLoading(true);
@@ -168,11 +196,9 @@ export default function StylistPage() {
       const allSlots = Object.keys(canvasOutfit);
       let targetSlot: string | null = null;
 
-      // 1. Direct Hit Priority
       if (hoveredSlotId && allSlots.includes(hoveredSlotId)) {
         targetSlot = hoveredSlotId;
       } 
-      // 2. Intelligent Routing (Only if dropped on General Sidebar background)
       else if (hoveredSlotId === 'skeleton-sidebar') {
         const cat = item.category?.toLowerCase() || '';
         if (cat.includes('headwear') || cat.includes('hat')) targetSlot = 'head';
@@ -236,13 +262,15 @@ export default function StylistPage() {
         body: JSON.stringify({ slots })
       });
 
-      if (!response.ok) {
+      if (response.status === 403 || response.status === 401) {
         setModalConfig({
           isOpen: true,
           title: "Lock Your Archive",
           description: "To save this lookbook to your permanent archive and access it anywhere, you need to join The Society.",
           feature: 'save'
         });
+      } else if (!response.ok) {
+        throw new Error("Failed to save");
       } else {
         alert("Lookbook Locked to your Archive.");
       }
@@ -268,13 +296,15 @@ export default function StylistPage() {
         body: JSON.stringify({ slots })
       });
 
-      if (!response.ok) {
+      if (response.status === 403 || response.status === 401) {
         setModalConfig({
           isOpen: true,
           title: "Export Style DNA",
           description: "To receive this lookbook as a high-fidelity DNA brief via email, you need to be a member of The Society.",
           feature: 'export'
         });
+      } else if (!response.ok) {
+        throw new Error("Failed to export");
       } else {
         alert("Style DNA Brief sent to your email.");
       }
@@ -292,14 +322,14 @@ export default function StylistPage() {
       modifiers={[restrictToWindowEdges]}
       collisionDetection={pointerWithin}
     >
-      <div className="min-h-screen bg-white text-zinc-900 pt-32 pb-20">
+      <div className="min-h-screen bg-[#fafafa] text-zinc-900 pt-32 pb-20">
         <div className="max-w-7xl mx-auto px-6">
           
           <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-200 bg-white mb-8 shadow-sm">
                 <Cpu size={10} className="text-zinc-400" />
-                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Neural Archive Builder v5.2</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Neural Archive Builder v5.3</span>
               </div>
               <h1 className="text-7xl md:text-[9rem] font-black tracking-[-0.06em] leading-[0.8] mb-12 uppercase italic">
                 Manifest <br /> 
@@ -314,7 +344,7 @@ export default function StylistPage() {
             </div>
           </div>
 
-          {!outfits ? (
+          {outfits === null ? (
             <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12 border-b border-zinc-100 pb-6">
                  <div>
@@ -375,7 +405,7 @@ export default function StylistPage() {
               </div>
             </section>
           ) : (
-            <div className="flex flex-col lg:flex-row gap-12">
+            <div className="flex flex-col lg:flex-row gap-12 animate-in fade-in duration-1000">
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-12 border-b border-zinc-100 pb-6">
                    <div className="flex items-center gap-4">
@@ -394,13 +424,18 @@ export default function StylistPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {outfits.length === 0 && !loading && (
+                    <div className="col-span-full py-32 text-center border-2 border-dashed border-zinc-100 rounded-[3rem]">
+                       <p className="text-zinc-300 font-black uppercase tracking-widest text-sm">"Library Hydrated. Awaiting interaction."</p>
+                    </div>
+                  )}
                   {outfits.map((item: any) => (
                     <DraggableItem key={item.id} item={item}>
-                      <div className="group bg-zinc-50 rounded-[2.5rem] p-6 border border-zinc-100 hover:shadow-2xl transition-all relative h-full">
+                      <div className="group bg-white rounded-[2.5rem] p-6 border border-zinc-100 hover:shadow-2xl transition-all relative h-full">
                         <div className="absolute top-6 right-6 z-10 flex flex-col gap-2">
                            <div className="bg-yellow-400 text-black text-[8px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1"><Zap size={8} fill="black" /> {item.matchScore}%</div>
                         </div>
-                        <div className="aspect-[4/5] bg-white rounded-[2rem] mb-4 overflow-hidden relative border border-zinc-100 shadow-inner group-hover:scale-[1.02] transition-transform">
+                        <div className="aspect-[4/5] bg-white rounded-[2rem] mb-4 overflow-hidden relative border border-zinc-100 shadow-inner group-hover:scale-[1.02] transition-transform duration-500">
                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <div className="bg-white text-black p-3 rounded-full shadow-2xl"><Sparkles size={16} /></div>

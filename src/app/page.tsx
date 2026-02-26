@@ -10,17 +10,19 @@ import { createClient } from "@/lib/supabase-server";
 import LimitedIntakes from "@/components/LimitedIntakes";
 import { getEstimatedMarketValue } from "@/lib/pricing";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const authSupabase = await createClient();
   
   // Check membership status
-  const { data: { session } } = await authSupabase.auth.getSession();
+  const { data: { user } } = await authSupabase.auth.getUser();
   let isMember = false;
-  if (session) {
+  if (user) {
     const { data: profile } = await authSupabase
       .from('profiles')
       .select('membership_tier')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
     if (profile?.membership_tier === 'society') isMember = true;
   }

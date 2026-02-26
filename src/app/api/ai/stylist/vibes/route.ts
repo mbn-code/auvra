@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
         .from('pulse_inventory')
         .select('id, category, title')
         .or(`title.ilike.%${query}%,category.ilike.%${query}%`)
+        .eq('status', 'available') // Only discover available items if searching
         .limit(50);
 
       if (searchError) throw searchError;
@@ -36,10 +37,19 @@ export async function GET(req: NextRequest) {
       })));
     }
 
-    // Default: Return random/recent latent space pool
+    // Default: Return random pool of currently available items for discovery
+    // We join with pulse_inventory to ensure we only show active seeds
     const { data: vibes, error } = await supabase
       .from('style_latent_space')
-      .select('id, image_url, archetype')
+      .select(`
+        id, 
+        image_url, 
+        archetype,
+        pulse_inventory!inner (
+          status
+        )
+      `)
+      .eq('pulse_inventory.status', 'available')
       .limit(100);
 
     if (error) throw error;
