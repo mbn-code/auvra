@@ -66,15 +66,11 @@ export default function Footer() {
             Independent curator mesh. All assets verified by Auvra Neural Engine. Not authorized by represented labels.
           </p>
         </div>
-        <div className="flex gap-6 items-center grayscale group hover:grayscale-0 transition-all duration-700">
-            <div className="flex items-center gap-2 mr-6 border-r border-zinc-200 pr-8">
-               <ShieldCheck size={14} className="text-zinc-900" />
-               <span className="text-[9px] font-black uppercase tracking-widest text-zinc-900">Secure Node</span>
+            <div className="flex gap-4 items-center">
+               <ShieldCheck size={12} className="text-zinc-900" />
+               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900 border-r border-zinc-200 pr-4 mr-2">Secure Node</span>
+               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Visa / Mastercard / Stripe</span>
             </div>
-            <Image src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" width={32} height={16} className="h-4 w-auto opacity-40 group-hover:opacity-100 transition-opacity" />
-            <Image src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa" width={32} height={12} className="h-3 w-auto opacity-40 group-hover:opacity-100 transition-opacity" />
-            <Image src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" width={32} height={20} className="h-5 w-auto opacity-40 group-hover:opacity-100 transition-opacity" />
-        </div>
       </div>
     </footer>
   );

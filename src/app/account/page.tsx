@@ -9,9 +9,9 @@ import { ShieldCheck, Zap, Mail, Crown, Package, LogOut, ArrowRight, Layers, Cpu
  */
 export default async function AccountPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     redirect("/login");
   }
 
@@ -19,14 +19,14 @@ export default async function AccountPage() {
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
 
   // Fetch User Outfits
   const { data: outfits } = await supabase
     .from('user_outfits')
     .select('*')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   const isSociety = profile?.membership_tier === 'society';
@@ -58,7 +58,7 @@ export default async function AccountPage() {
             </h1>
           </div>
           <div className="flex flex-col items-end gap-4">
-             <p className="text-xs font-black uppercase tracking-widest text-zinc-400">{session.user.email}</p>
+             <p className="text-xs font-black uppercase tracking-widest text-zinc-400">{user.email}</p>
              <form action="/api/auth/logout" method="POST">
                 <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors">
                    <LogOut size={14} /> De-Authenticate Node

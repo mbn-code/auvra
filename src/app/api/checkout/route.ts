@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { products } from "@/config/products";
+import { products as staticProducts } from "@/config/products";
 import { supabase } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase-server";
 
@@ -12,35 +12,47 @@ const ZONE_COUNTRIES: Record<string, string[]> = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { productId, quantity } = await req.json();
+    const { productId, productIds: passedProductIds, quantity } = await req.json();
     
+    const productIds = passedProductIds || (productId ? [productId] : []);
+    if (productIds.length === 0) {
+      return NextResponse.json({ error: "No products provided" }, { status: 400 });
+    }
+
     // Check Membership Status
     const authSupabase = await createClient();
-    const { data: { session } } = await authSupabase.auth.getSession();
+    const { data: { user } } = await authSupabase.auth.getUser();
     let isMember = false;
 
-    if (session) {
+    if (user) {
       const { data: profile } = await authSupabase
         .from('profiles')
         .select('membership_tier')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single();
       if (profile?.membership_tier === 'society') isMember = true;
     }
 
-    let product: any = products[productId];
-    let isArchive = false;
-    let shippingZone = "GLOBAL";
+    const lineItems = [];
+    const unavailableItems = [];
+    let shippingZone = "EU_ONLY"; // Default to stricter zone if mixing
 
-    if (!product) {
-      const { data: item, error } = await supabase
-        .from('pulse_inventory')
-        .select('*')
-        .eq('id', productId)
-        .eq('status', 'available')
-        .single();
-      
-      if (item && !error) {
+    for (const id of productIds) {
+      let product: any = staticProducts[id];
+      let isArchive = false;
+
+      if (!product) {
+        const { data: item, error } = await supabase
+          .from('pulse_inventory')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (!item || error || item.status !== 'available') {
+          unavailableItems.push(id);
+          continue;
+        }
+
         // Pulse-Check: Verify item is still live
         try {
           const response = await fetch(item.source_url, {
@@ -49,8 +61,9 @@ export async function POST(req: NextRequest) {
           });
           const html = await response.text();
           if (html.toLowerCase().includes('sold') || html.toLowerCase().includes('solgt')) {
-             await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', productId);
-             return NextResponse.json({ error: "Archive Node Failure: This piece has just been secured by another party." }, { status: 410 });
+             await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', id);
+             unavailableItems.push(id);
+             continue; // Skip sold items
           }
         } catch (e) {
           console.error("Pulse-Check Error:", e);
@@ -67,40 +80,28 @@ export async function POST(req: NextRequest) {
           description: item.description || `Archive piece: ${item.brand}`,
         };
         isArchive = true;
-        shippingZone = item.shipping_zone || "EU_ONLY";
+        // If any item is EU_ONLY, the whole session becomes EU_ONLY for safety
+        if (item.shipping_zone === "EU_ONLY") shippingZone = "EU_ONLY";
+        else if (item.shipping_zone === "SCANDINAVIA_ONLY" && shippingZone !== "EU_ONLY") shippingZone = "SCANDINAVIA_ONLY";
       }
-    } else {
-      shippingZone = product.shippingZone || "GLOBAL";
-    }
 
-    if (!product) {
-      return NextResponse.json({ error: "Archive Piece no longer available" }, { status: 404 });
-    }
+      if (product) {
+        // ... unitAmount logic ...
+        const qty = productIds.length === 1 ? (Number(quantity) || 1) : 1;
+        let unitAmount = product.price;
 
-    const qty = Number(quantity) || 1;
-    let unitAmount = product.price;
+        if (!isArchive) {
+          if (isMember) {
+            unitAmount = Math.round(unitAmount * 0.9);
+          } else if (qty > 1) {
+            let discount = 0;
+            if (qty === 2) discount = 0.15;
+            if (qty >= 3) discount = 0.25;
+            unitAmount = Math.round(product.price * (1 - discount));
+          }
+        }
 
-    if (!isArchive) {
-      // Static products discount logic
-      if (isMember) {
-         // Apply member discount on top or instead? 
-         // Let's say members get 10% off static items too
-         unitAmount = Math.round(unitAmount * 0.9);
-      } else {
-        // Quantity discounts for non-members (or both)
-        let discount = 0;
-        if (qty === 2) discount = 0.15;
-        if (qty >= 3) discount = 0.25;
-        unitAmount = Math.round(product.price * (1 - discount));
-      }
-    }
-
-    const allowedCountries = ZONE_COUNTRIES[shippingZone] || ZONE_COUNTRIES["EU_ONLY"];
-
-    const stripeSession = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
+        lineItems.push({
           price_data: {
             currency: product.currency,
             product_data: {
@@ -111,12 +112,32 @@ export async function POST(req: NextRequest) {
             unit_amount: unitAmount,
           },
           quantity: qty,
-        },
-      ],
+        });
+      }
+    }
+
+    // If some items are unavailable, we inform the user instead of proceeding with a partial cart
+    // This prevents confusion about why the price or item list changed.
+    if (unavailableItems.length > 0) {
+      return NextResponse.json({ 
+        error: "Inventory Conflict", 
+        unavailableIds: unavailableItems 
+      }, { status: 409 }); // 409 Conflict
+    }
+
+    if (lineItems.length === 0) {
+      return NextResponse.json({ error: "Items no longer available" }, { status: 404 });
+    }
+
+    const allowedCountries = ZONE_COUNTRIES[shippingZone] || ZONE_COUNTRIES["EU_ONLY"];
+
+    const stripeSession = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: lineItems,
       mode: "payment",
       metadata: {
-        productId: productId,
-        type: isArchive ? 'archive' : 'static',
+        productIds: productIds.join(','),
+        type: 'mixed',
         isMember: isMember ? 'true' : 'false'
       },
       shipping_address_collection: {
@@ -126,8 +147,8 @@ export async function POST(req: NextRequest) {
       phone_number_collection: {
         enabled: true,
       },
-      success_url: `${req.nextUrl.origin}/success?session_id={CHECKOUT_SESSION_ID}&id=${productId}&type=${isArchive ? 'archive' : 'static'}`,
-      cancel_url: isArchive ? `${req.nextUrl.origin}/archive/${productId}` : `${req.nextUrl.origin}/product/${productId}`,
+      success_url: `${req.nextUrl.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.nextUrl.origin}/stylist`,
     });
 
     return NextResponse.json({ url: stripeSession.url });

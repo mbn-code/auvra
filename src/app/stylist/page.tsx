@@ -100,9 +100,31 @@ function StylistContent() {
       const data = await res.json();
       if (res.ok) {
         setCanvasOutfit(data.outfit);
-        // Hydrate the workspace with some initial vibes so it's not empty
+        
+        // Extract IDs for centroid calculation
+        const ids: string[] = [];
+        Object.values(data.outfit).forEach((slotItems: any) => {
+          if (Array.isArray(slotItems) && slotItems.length > 0) {
+            ids.push(slotItems[0].id);
+          }
+        });
+
+        // Hydrate discovery pool
         await fetchVibes();
-        setOutfits([]); // Show builder UI
+
+        if (ids.length > 0) {
+          // If the outfit has items, perform a neural match based on those items
+          const matchRes = await fetch("/api/ai/stylist", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ selectedVibeIds: ids.slice(0, 7) })
+          });
+          const matchData = await matchRes.json();
+          if (matchRes.ok) setOutfits(matchData);
+          else setOutfits([]);
+        } else {
+          setOutfits([]); 
+        }
       }
     } catch (err) {
       console.error("Failed to load outfit:", err);

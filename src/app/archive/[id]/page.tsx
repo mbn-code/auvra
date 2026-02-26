@@ -43,23 +43,24 @@ export const dynamic = 'force-dynamic';
 
 export default async function ArchiveProductPage({ params }: ArchiveProductPageProps) {
   const { id } = await params;
-  const authSupabase = await createClient();
+  const supabaseServer = await createClient();
   
   // Check membership status
-  const { data: { user } } = await authSupabase.auth.getUser();
+  const { data: { user } } = await supabaseServer.auth.getUser();
   let isMember = false;
   
   if (user) {
-    const { data: profile } = await authSupabase
+    const { data: profile } = await supabaseServer
       .from('profiles')
       .select('membership_tier')
       .eq('id', user.id)
       .single();
     if (profile?.membership_tier === 'society') isMember = true;
+    console.log(`[Product] User: ${user.email}, isMember: ${isMember}`);
   }
 
-  // Fetch product
-  const { data: item, error } = await supabase
+  // Fetch product using the server client for consistent session context
+  const { data: item, error } = await supabaseServer
     .from('pulse_inventory')
     .select('*')
     .eq('id', id)

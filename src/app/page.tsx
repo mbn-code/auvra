@@ -25,6 +25,9 @@ export default async function Home() {
       .eq('id', user.id)
       .single();
     if (profile?.membership_tier === 'society') isMember = true;
+    console.log(`[Home] User: ${user.email}, isMember: ${isMember}`);
+  } else {
+    console.log(`[Home] No authenticated user detected.`);
   }
   
   const allowedBrands = [

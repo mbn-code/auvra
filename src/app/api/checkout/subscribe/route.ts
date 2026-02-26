@@ -4,9 +4,9 @@ import { createClient } from "@/lib/supabase-server";
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     return NextResponse.redirect(new URL('/login?redirect=/pricing', req.url));
   }
 
@@ -20,9 +20,9 @@ export async function GET(req: NextRequest) {
         },
       ],
       mode: "subscription",
-      customer_email: session.user.email,
+      customer_email: user.email,
       metadata: {
-        userId: session.user.id,
+        userId: user.id,
         type: 'membership'
       },
       success_url: `${req.nextUrl.origin}/account?session_id={CHECKOUT_SESSION_ID}`,
