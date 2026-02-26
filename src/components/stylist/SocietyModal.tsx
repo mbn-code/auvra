@@ -66,7 +66,7 @@ export function SocietyModal({ isOpen, onClose, title, description, feature }: S
           </div>
 
           <a 
-            href="/membership"
+            href="/pricing"
             className="w-full py-6 rounded-full bg-black text-white text-xs font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
           >
             Join The Society <ArrowRight size={16} />
