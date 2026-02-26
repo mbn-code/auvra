@@ -1,9 +1,13 @@
 import Link from "next/link";
-import { ShoppingBag, Menu } from "lucide-react";
+import { ShoppingBag, Menu, User } from "lucide-react";
 import AnnouncementMarquee from "./AnnouncementMarquee";
 import Logo from "./Logo";
+import { createClient } from "@/lib/supabase-server";
 
-export default function Header() {
+export default async function Header() {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
   return (
     <div className="fixed top-0 left-0 right-0 z-[100]">
       <AnnouncementMarquee />
@@ -25,6 +29,9 @@ export default function Header() {
           </div>
           
           <div className="flex items-center gap-6">
+            <Link href={session ? "/account" : "/login"} className="p-2 text-zinc-900 hover:opacity-50 transition-opacity">
+              <User size={20} strokeWidth={1.5} />
+            </Link>
             <button className="relative p-2 text-zinc-900">
               <ShoppingBag size={20} strokeWidth={1.5} />
               <span className="absolute top-1 right-1 bg-black text-white text-[8px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-bold">0</span>
