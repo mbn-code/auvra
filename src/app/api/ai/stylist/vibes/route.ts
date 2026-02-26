@@ -12,17 +12,38 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get('q');
 
-    let supabaseQuery = supabase
-      .from('style_latent_space')
-      .select('id, image_url, archetype');
-
     if (query) {
-      supabaseQuery = supabaseQuery.ilike('archetype', `%${query}%`).limit(50);
-    } else {
-      supabaseQuery = supabaseQuery.limit(100);
+      // Perform a search across product titles and categories
+      const { data: searchResults, error: searchError } = await supabase
+        .from('pulse_inventory')
+        .select('id, category, title')
+        .or(`title.ilike.%${query}%,category.ilike.%${query}%`)
+        .limit(50);
+
+      if (searchError) throw searchError;
+
+      const productIds = searchResults.map(r => r.id);
+
+      // Now get the latent space records for these products
+      const { data: vibes, error } = await supabase
+        .from('style_latent_space')
+        .select('id, image_url, archetype, product_id')
+        .in('product_id', productIds);
+
+      if (error) throw error;
+
+      return NextResponse.json((vibes || []).map(v => ({
+        id: v.id,
+        url: v.image_url,
+        archetype: v.archetype
+      })));
     }
 
-    const { data: vibes, error } = await supabaseQuery;
+    // Default: Return random/recent latent space pool
+    const { data: vibes, error } = await supabase
+      .from('style_latent_space')
+      .select('id, image_url, archetype')
+      .limit(100);
 
     if (error) throw error;
 

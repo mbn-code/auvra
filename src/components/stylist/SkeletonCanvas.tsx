@@ -102,7 +102,6 @@ export function SkeletonCanvas({
 
   return (
     <div 
-      ref={setNodeRef}
       className="sticky top-32 w-full max-w-sm bg-white rounded-[4rem] border border-zinc-100 p-6 flex flex-col items-center shadow-2xl"
     >
       <div className="mb-6 text-center">
@@ -114,7 +113,7 @@ export function SkeletonCanvas({
         <p className="text-[8px] text-zinc-400 mt-1 uppercase tracking-widest">Drag items to slots or anywhere on body</p>
       </div>
 
-      <div className="relative w-full h-[800px] flex flex-col items-center overflow-visible pt-4">
+      <div ref={setNodeRef} className="relative w-full h-[800px] flex flex-col items-center overflow-visible pt-4">
         {/* HEAD */}
         <DropSlot id="head" label="Headwear" items={outfit.head} activeIndex={activeIndices.head} onSwitch={onSwitch} onRemove={onRemove} onSearch={onSearch} size="md" icon={<HardHat size={16} />} className="z-50" />
         

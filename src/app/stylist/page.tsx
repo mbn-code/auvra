@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Sparkles, ArrowRight, Zap, Cpu, RefreshCw, Layers, CheckCircle, Flame, ShieldCheck, GripVertical, X, Search } from "lucide-react";
 import Link from "next/link";
-import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors, pointerWithin } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 
 import { SkeletonCanvas } from "@/components/stylist/SkeletonCanvas";
@@ -16,16 +16,16 @@ import { DraggableItem } from "@/components/stylist/DraggableItem";
 
 const slotToCategoryMap: Record<string, string> = {
   head: 'Headwear',
-  neck: 'Accessories',
+  neck: 'Scarf', // Keyword search will catch this
   outer_upper: 'Jackets',
   mid_upper: 'Sweaters',
   inner_upper: 'Tops',
-  hands: 'Accessories',
-  waist: 'Accessories',
+  hands: 'Gloves',
+  waist: 'Belt',
   lower: 'Pants',
-  legwear: 'Archive', 
-  footwear: 'Archive',
-  accessory: 'Accessories'
+  legwear: 'Socks',
+  footwear: 'Shoe', // Matches 'Shoes' in titles
+  accessory: 'Bag'
 };
 
 export default function StylistPage() {
@@ -173,6 +173,7 @@ export default function StylistPage() {
         else if (cat.includes('shoe') || cat.includes('boot') || cat.includes('footwear')) targetSlot = 'footwear';
         else if (cat.includes('socks')) targetSlot = 'legwear';
         else if (cat.includes('belt')) targetSlot = 'waist';
+        else if (cat.includes('bag') || cat.includes('accessory')) targetSlot = 'accessory';
         else if (cat.includes('scarf') || cat.includes('necklace')) targetSlot = 'neck';
         else targetSlot = 'accessory';
       }
@@ -261,7 +262,12 @@ export default function StylistPage() {
   };
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd} modifiers={[restrictToWindowEdges]}>
+    <DndContext 
+      sensors={sensors} 
+      onDragEnd={handleDragEnd} 
+      modifiers={[restrictToWindowEdges]}
+      collisionDetection={pointerWithin}
+    >
       <div className="min-h-screen bg-white text-zinc-900 pt-32 pb-20">
         <div className="max-w-7xl mx-auto px-6">
           
