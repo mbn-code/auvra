@@ -48,13 +48,24 @@ export default function StylistPage() {
     fetchVibes();
   }, []);
 
-  const fetchVibes = async () => {
+  const fetchVibes = async (keepSelected = false) => {
     setDiscoveryLoading(true);
     try {
       const res = await fetch("/api/ai/stylist/vibes");
       const data = await res.json();
-      const shuffled = [...data].sort(() => 0.5 - Math.random()).slice(0, 24);
-      setVibePool(shuffled);
+      
+      // Get the full objects for currently selected vibes
+      const currentlySelected = vibePool.filter(v => selectedVibeIds.includes(v.id));
+      
+      // Filter out selected ones from new data to avoid duplicates
+      const newData = data.filter((v: any) => !selectedVibeIds.includes(v.id));
+      
+      // Shuffle new data and take enough to fill 24 slots total
+      const randomCount = 24 - (keepSelected ? currentlySelected.length : 0);
+      const shuffled = [...newData].sort(() => 0.5 - Math.random()).slice(0, randomCount);
+      
+      const finalPool = keepSelected ? [...currentlySelected, ...shuffled] : shuffled;
+      setVibePool(finalPool);
     } catch (err) {
       console.error("[VibeDiscovery] Fetch Failed:", err);
     } finally {
@@ -169,7 +180,7 @@ export default function StylistPage() {
                 </div>
               )}
 
-              <div className="mt-16 flex flex-col items-center">
+              <div className="mt-16 flex flex-col items-center gap-8">
                  <button
                    onClick={() => initializeCuration(false)}
                    disabled={loading || selectedVibeIds.length === 0}
@@ -177,6 +188,21 @@ export default function StylistPage() {
                  >
                    {loading ? <RefreshCw className="animate-spin" /> : <><Sparkles size={24} className={selectedVibeIds.length > 0 ? "text-yellow-400" : ""} />Initialize Builder</>}
                  </button>
+
+                 <div className="flex items-center gap-6">
+                    <button 
+                      onClick={() => fetchVibes(true)} 
+                      className="text-[10px] font-black uppercase tracking-widest text-zinc-900 bg-zinc-100 px-6 py-3 rounded-full hover:bg-zinc-200 flex items-center gap-2 transition-all"
+                    >
+                       <RefreshCw size={12}/> Keep Picked & Reload
+                    </button>
+                    <button 
+                      onClick={() => fetchVibes(false)} 
+                      className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black flex items-center gap-2 transition-colors"
+                    >
+                       <RefreshCw size={12}/> Full Refresh
+                    </button>
+                 </div>
               </div>
             </section>
           ) : (
