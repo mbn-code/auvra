@@ -295,13 +295,17 @@ export default function StylistPage() {
       <div className="min-h-screen bg-white text-zinc-900 pt-32 pb-20">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-20">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-zinc-900 to-zinc-700 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-6 shadow-lg">
-                <Cpu size={10} className="text-yellow-400" /> Neural Archive Builder v5.2
+          <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-200 bg-white mb-8 shadow-sm">
+                <Cpu size={10} className="text-zinc-400" />
+                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Neural Archive Builder v5.2</span>
               </div>
-              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8">Manifest <br />Aesthetics.</h1>
-              <p className="text-zinc-500 text-lg font-medium leading-relaxed">
+              <h1 className="text-7xl md:text-[9rem] font-black tracking-[-0.06em] leading-[0.8] mb-12 uppercase italic">
+                Manifest <br /> 
+                <span className="text-transparent bg-clip-text bg-gradient-to-b from-black to-zinc-400">Aesthetics.</span>
+              </h1>
+              <p className="text-zinc-500 text-xl font-medium leading-tight tracking-tight max-w-lg">
                 Tune your DNA, curate your archive, and build your lookbook in the neural latent space. Drag items from the grid onto the builder skeleton.
               </p>
             </div>
