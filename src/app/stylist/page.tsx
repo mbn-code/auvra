@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles, ArrowRight, Zap, Cpu, RefreshCw, Layers, CheckCircle, Flame, ShieldCheck, GripVertical } from "lucide-react";
+import { Sparkles, ArrowRight, Zap, Cpu, RefreshCw, Layers, CheckCircle, Flame, ShieldCheck, GripVertical, X } from "lucide-react";
 import Link from "next/link";
 import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
@@ -190,8 +190,13 @@ export default function StylistPage() {
 
   const handleSearchForSlot = (slotId: string, label: string) => {
     const category = slotToCategoryMap[slotId];
-    setActiveCategory(category);
-    initializeCuration(false, category);
+    if (activeCategory === category) {
+      setActiveCategory(null);
+      initializeCuration(false, null);
+    } else {
+      setActiveCategory(category);
+      initializeCuration(false, category);
+    }
   };
 
   const handleSave = async () => {
@@ -331,13 +336,24 @@ export default function StylistPage() {
               {/* RESULTS GRID (Draggable) */}
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-12 border-b border-zinc-100 pb-6">
-                   <h3 className="text-xl font-black uppercase tracking-tighter italic text-zinc-400 italic">"Neural Result Set"</h3>
+                   <div className="flex items-center gap-4">
+                      <h3 className="text-xl font-black uppercase tracking-tighter italic text-zinc-400">"Neural Result Set"</h3>
+                      {activeCategory && (
+                        <div className="bg-yellow-400 text-black px-3 py-1 rounded-full text-[9px] font-black uppercase flex items-center gap-2 animate-in fade-in zoom-in duration-300">
+                          <span>Filtering: {activeCategory}</span>
+                          <button onClick={() => { setActiveCategory(null); initializeCuration(false, null); }} className="hover:scale-110">
+                            <X size={10} strokeWidth={3} />
+                          </button>
+                        </div>
+                      )}
+                   </div>
                    <button 
                     onClick={() => { 
                       setOutfits(null); 
                       setSelectedVibeIds([]); 
                       setOffset(0);
                       setHasMore(true);
+                      setActiveCategory(null);
                       setCanvasOutfit({
                         head: [], neck: [], inner_upper: [], mid_upper: [], 
                         outer_upper: [], hands: [], waist: [], lower: [], 
