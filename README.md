@@ -21,48 +21,48 @@ A professional-grade, drag-and-drop workstation for manifest-level outfit buildi
 - **Aesthetic Centroid Seeding:** Users select up to 7 visual seeds to define their Style DNA. The engine calculates the mathematical average (Centroid) to find matching pieces.
 - **Comparative Stacking:** Slots support multiple items. Use **Chevron Arrows** to toggle between different silhouettes instantly.
 - **Location-First D&D:** Implements `pointerWithin` collision detection. Items land exactly where you drop them, with an intelligent auto-categorization fallback.
+- **Checkout Look:** Integrated multi-item purchase flow. Verifies real-time availability (Pulse-Check) before creating a unified Stripe session.
 
 ### 2. Sourcing Protocol ("Predator" Algorithm)
 Autonomous agents monitor global marketplaces to secure grails before they hit the mainstream.
 - **`neural_sync.py`:** Synchronizes the internal archive with the latent space vector database.
 - **`prune_archive.py`:** A parallel verification bot that checks `source_url` health and auto-marks dead nodes as "Secured" (Sold).
-- **Vercel Cron Integration:** Automated hourly mesh inspection to ensure 100% checkout reliability.
-
-### 3. Society Membership (The Inner Circle)
-A tiered access system designed for high-retention and data-driven sourcing.
-- **Cloud State Persistence:** Members lock their lookbooks to the global neural mesh.
-- **Style DNA Briefs:** High-fidelity PDF dossiers sent via Resend featuring purchase paths and silhouette analysis.
-- **Neural Decryption:** Automatic bypass of high-value asset blurring and direct source-link reveals for low-margin "steals."
-
----
-
-## 🎨 Aesthetic Manifesto: Alabaster Noir
-The interface is engineered to feel physical, tactile, and editorial.
-- **Foundation:** `#fafafa` Alabaster base with a **tactile SVG noise/grain overlay**.
-- **Typography:** Massive, italicized Brutalist headers (`text-[9rem]`) that act as a brand manifesto.
-- **Infrastructure:** Asymmetrical architectural grids and high-contrast neural motifs.
+- **Vercel Cron Integration:** Automated hourly mesh inspection (0 1 * * * for Hobby) to ensure 100% checkout reliability.
 
 ---
 
 ## 🛠️ Technical Architecture & Ops
 
+### Critical Implementation Rules
+1. **Real-Time Auth:** Always use `supabase.auth.getUser()` on server components to ensure Society Membership is recognized.
+2. **Dynamic Rendering:** Key pages (`/`, `/archive/[id]`, `/stylist`) must use `export const dynamic = 'force-dynamic'` to bypass stale build caches.
+3. **Hobby Tier Protection:** Sitewide `unoptimized: true` in `next.config.ts` is mandatory to stay within Vercel's free image transformation limits.
+
 ### API Endpoints
-- `GET /api/ai/stylist/vibes`: Search and discover visual seeds (Cached 24h).
+- `GET /api/ai/stylist/vibes`: Search and discover visual seeds (Cached 24h, supports `?q=`).
 - `POST /api/ai/stylist`: Neural matching with strict category and keyword filtering.
 - `GET /api/ai/stylist/outfit`: Hydrates stored lookbooks with live product metadata.
-- `GET /api/admin/prune`: Vercel Cron endpoint for automated mesh cleaning.
+- `GET /api/admin/prune`: Vercel Cron endpoint for automated mesh cleaning (Requires `CRON_SECRET`).
+- `POST /api/ai/stylist/email`: Society-only feature to export DNA briefs via Resend.
 
 ### CLI Commands (Admin)
 ```bash
-# 1. Sync the Archive DNA
+# 1. Sync the Archive DNA (Requires CLIP model)
 source venv/bin/activate && python3 scripts/neural_sync.py
 
-# 2. Promote a Node to Society Status
+# 2. Promote a Node to Society Status (Testing God-Account)
 python3 scripts/promote_user.py user@example.com
 
-# 3. Manual Mesh Pruning
+# 3. Manual Mesh Pruning (Check dead links)
 python3 scripts/prune_archive.py
 ```
+
+### Database & Migrations
+Always check `supabase/migrations/` for the latest schema updates. Key migrations include:
+- `20260226_archive_builder.sql`: Core `user_outfits` persistence.
+- `20260226_robust_matching.sql`: Keyword-aware neural matching RPC.
+- `20260226_auto_profile_trigger.sql`: Automated profile creation on signup.
+
 
 ---
 
