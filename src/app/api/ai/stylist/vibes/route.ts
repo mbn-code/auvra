@@ -9,17 +9,23 @@ export const revalidate = 86400; // Strictly Cache for 24h
 
 export async function GET(req: NextRequest) {
   try {
-    // Fetch a high-quality pool from the latent space to allow frontend shuffling
-    // We pick 100 items for diversity while maintaining response performance
-    const { data: vibes, error } = await supabase
+    const { searchParams } = new URL(req.url);
+    const query = searchParams.get('q');
+
+    let supabaseQuery = supabase
       .from('style_latent_space')
-      .select('id, image_url, archetype')
-      .limit(100);
+      .select('id, image_url, archetype');
+
+    if (query) {
+      supabaseQuery = supabaseQuery.ilike('archetype', `%${query}%`).limit(50);
+    } else {
+      supabaseQuery = supabaseQuery.limit(100);
+    }
+
+    const { data: vibes, error } = await supabaseQuery;
 
     if (error) throw error;
 
-    // We return the stable pool of 100 items. 
-    // Randomization is handled on the client to circumvent 24h cache persistence.
     return NextResponse.json((vibes || []).map(v => ({
       id: v.id,
       url: v.image_url,

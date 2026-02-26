@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles, ArrowRight, Zap, Cpu, RefreshCw, Layers, CheckCircle, Flame, ShieldCheck, GripVertical, X } from "lucide-react";
+import { Sparkles, ArrowRight, Zap, Cpu, RefreshCw, Layers, CheckCircle, Flame, ShieldCheck, GripVertical, X, Search } from "lucide-react";
 import Link from "next/link";
 import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
@@ -10,12 +10,8 @@ import { SkeletonCanvas } from "@/components/stylist/SkeletonCanvas";
 import { DraggableItem } from "@/components/stylist/DraggableItem";
 
 /**
- * AUVRA ARCHIVE BUILDER v5.0 (Neural Workspace)
- * Pinterest-style discovery with a Drag-and-Drop Outfit Builder.
- */
-/**
- * AUVRA ARCHIVE BUILDER v5.1 (Neural Workspace)
- * Pinterest-style discovery with a Layered Drag-and-Drop Outfit Builder.
+ * AUVRA ARCHIVE BUILDER v5.2 (Neural Workspace)
+ * High-fidelity workstation with multi-item slots and strict drop logic.
  */
 
 const slotToCategoryMap: Record<string, string> = {
@@ -27,7 +23,7 @@ const slotToCategoryMap: Record<string, string> = {
   hands: 'Accessories',
   waist: 'Accessories',
   lower: 'Pants',
-  legwear: 'Archive',
+  legwear: 'Archive', 
   footwear: 'Archive',
   accessory: 'Accessories'
 };
@@ -39,6 +35,7 @@ export default function StylistPage() {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [moreLoading, setMoreLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   
   const [loading, setLoading] = useState(false);
   const [discoveryLoading, setDiscoveryLoading] = useState(true);
@@ -48,17 +45,8 @@ export default function StylistPage() {
 
   // Archive Builder State (Arrays for comparison)
   const [canvasOutfit, setCanvasOutfit] = useState<Record<string, any[]>>({
-    head: [],
-    neck: [],
-    inner_upper: [],
-    mid_upper: [],
-    outer_upper: [],
-    hands: [],
-    waist: [],
-    lower: [],
-    legwear: [],
-    footwear: [],
-    accessory: []
+    head: [], neck: [], inner_upper: [], mid_upper: [], outer_upper: [],
+    hands: [], waist: [], lower: [], legwear: [], footwear: [], accessory: []
   });
 
   const [activeIndices, setActiveIndices] = useState<Record<string, number>>({
@@ -75,17 +63,26 @@ export default function StylistPage() {
     fetchVibes();
   }, []);
 
-  const fetchVibes = async (keepSelected = false) => {
+  const fetchVibes = async (keepSelected = false, query = "") => {
     setDiscoveryLoading(true);
     try {
-      const res = await fetch("/api/ai/stylist/vibes");
+      const url = new URL("/api/ai/stylist/vibes", window.location.origin);
+      if (query) url.searchParams.set("q", query);
+      
+      const res = await fetch(url.toString());
       const data = await res.json();
       
       const currentlySelected = vibePool.filter(v => selectedVibeIds.includes(v.id));
       const newData = data.filter((v: any) => !selectedVibeIds.includes(v.id));
-      const randomCount = 24 - (keepSelected ? currentlySelected.length : 0);
-      const shuffled = [...newData].sort(() => 0.5 - Math.random()).slice(0, Math.max(0, randomCount));
       
+      const randomCount = 24 - (keepSelected ? currentlySelected.length : 0);
+      let processedData = [...newData];
+      
+      if (!query) {
+        processedData = processedData.sort(() => 0.5 - Math.random());
+      }
+      
+      const shuffled = processedData.slice(0, Math.max(0, randomCount));
       const finalPool = keepSelected ? [...currentlySelected, ...shuffled] : shuffled;
       setVibePool(finalPool);
     } catch (err) {
@@ -103,6 +100,11 @@ export default function StylistPage() {
     });
   };
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchVibes(true, searchQuery);
+  };
+
   const initializeCuration = async (isLoadMore = false, preferredCategory: string | null = null) => {
     if (selectedVibeIds.length === 0) return;
     
@@ -112,7 +114,7 @@ export default function StylistPage() {
       setLoading(true);
       setOffset(0);
       setHasMore(true);
-      if (!isLoadMore) setOutfits(null); // Reset if full reload
+      if (!isLoadMore) setOutfits(null);
     }
 
     const currentOffset = isLoadMore ? offset + 20 : 0;
@@ -151,17 +153,18 @@ export default function StylistPage() {
     const { over, active } = event;
     if (active && active.data.current) {
       const item = active.data.current;
-      let targetSlot = over?.id as string;
+      const hoveredSlotId = over?.id as string;
 
-      // Auto-Categorization Logic: 
-      // If dropped on the sidebar or not a specific slot, find the best fit
-      const isOverSidebar = over?.id === 'skeleton-sidebar';
-      const isValidSlot = Object.keys(canvasOutfit).includes(targetSlot);
+      const allSlots = Object.keys(canvasOutfit);
+      let targetSlot: string | null = null;
 
-      if (isOverSidebar || !isValidSlot) {
-        // Precise category mapping
+      // 1. Target specifically where the user is hovering
+      if (hoveredSlotId && allSlots.includes(hoveredSlotId)) {
+        targetSlot = hoveredSlotId;
+      } 
+      // 2. Only if dropped on general sidebar area, then auto-categorize
+      else if (hoveredSlotId === 'skeleton-sidebar') {
         const cat = item.category?.toLowerCase() || '';
-        
         if (cat.includes('headwear') || cat.includes('hat')) targetSlot = 'head';
         else if (cat.includes('jacket') || cat.includes('coat')) targetSlot = 'outer_upper';
         else if (cat.includes('sweater') || cat.includes('hoodie')) targetSlot = 'mid_upper';
@@ -170,19 +173,18 @@ export default function StylistPage() {
         else if (cat.includes('shoe') || cat.includes('boot') || cat.includes('footwear')) targetSlot = 'footwear';
         else if (cat.includes('socks')) targetSlot = 'legwear';
         else if (cat.includes('belt')) targetSlot = 'waist';
-        else if (cat.includes('bag') || cat.includes('accessory')) targetSlot = 'accessory';
         else if (cat.includes('scarf') || cat.includes('necklace')) targetSlot = 'neck';
-        else targetSlot = 'accessory'; // Fallback
+        else targetSlot = 'accessory';
       }
 
       if (targetSlot && canvasOutfit[targetSlot]) {
         setCanvasOutfit(prev => {
-          const exists = prev[targetSlot].some((i: any) => i.id === item.id);
+          const exists = prev[targetSlot!].some((i: any) => i.id === item.id);
           if (exists) return prev;
-          const newItems = [item, ...prev[targetSlot]];
-          return { ...prev, [targetSlot]: newItems };
+          const newItems = [item, ...prev[targetSlot!]];
+          return { ...prev, [targetSlot!]: newItems };
         });
-        setActiveIndices(prev => ({ ...prev, [targetSlot]: 0 }));
+        setActiveIndices(prev => ({ ...prev, [targetSlot!]: 0 }));
       }
     }
   };
@@ -213,7 +215,6 @@ export default function StylistPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Collect active items
       const slots: any = {};
       Object.keys(canvasOutfit).forEach(slot => {
         const activeItem = canvasOutfit[slot][activeIndices[slot]];
@@ -226,12 +227,8 @@ export default function StylistPage() {
         body: JSON.stringify({ slots })
       });
 
-      if (!response.ok) {
-        // Show "Society" modal here in real implementation
-        alert("Society Membership Required to Save Archive Looks.");
-      } else {
-        alert("Lookbook Locked to your Archive.");
-      }
+      if (!response.ok) alert("Society Membership Required to Save Archive Looks.");
+      else alert("Lookbook Locked to your Archive.");
     } catch (err) {
       console.error(err);
     } finally {
@@ -254,11 +251,8 @@ export default function StylistPage() {
         body: JSON.stringify({ slots })
       });
 
-      if (!response.ok) {
-        alert("Society Membership required to export Style Briefs.");
-      } else {
-        alert("Style DNA Brief sent to your email.");
-      }
+      if (!response.ok) alert("Society Membership required to export Style Briefs.");
+      else alert("Style DNA Brief sent to your email.");
     } catch (err) {
       console.error(err);
     } finally {
@@ -274,7 +268,7 @@ export default function StylistPage() {
           <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-20">
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-zinc-900 to-zinc-700 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-6 shadow-lg">
-                <Cpu size={10} className="text-yellow-400" /> Neural Archive Builder v5.0
+                <Cpu size={10} className="text-yellow-400" /> Neural Archive Builder v5.2
               </div>
               <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8">
                 Manifest <br />Aesthetics.
@@ -290,9 +284,27 @@ export default function StylistPage() {
 
           {!outfits ? (
             <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <div className="flex justify-between items-end mb-12 border-b border-zinc-100 pb-6">
-                 <h3 className="text-xl font-black uppercase tracking-tighter">01. Seed Your Centroid</h3>
-                 <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest">{selectedVibeIds.length}/7 Seeds Collected</span>
+              <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12 border-b border-zinc-100 pb-6">
+                 <div>
+                    <h3 className="text-xl font-black uppercase tracking-tighter">01. Seed Your Centroid</h3>
+                    <p className="text-[10px] text-zinc-400 uppercase tracking-widest mt-1">Pick aesthetic references to define your style DNA</p>
+                 </div>
+                 
+                 <div className="flex items-center gap-4 w-full md:w-auto">
+                    <form onSubmit={handleSearchSubmit} className="relative w-full md:w-64">
+                       <input 
+                        type="text" 
+                        placeholder="Search Vibes (e.g. Leather, Grunge)" 
+                        className="w-full bg-zinc-50 border border-zinc-100 rounded-full px-4 py-2 text-xs focus:outline-none focus:border-black transition-all"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                       />
+                       <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black">
+                          <Search size={14} />
+                       </button>
+                    </form>
+                    <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest min-w-[100px] text-right">{selectedVibeIds.length}/7 Seeds</span>
+                 </div>
               </div>
 
               {discoveryLoading ? (
@@ -344,7 +356,6 @@ export default function StylistPage() {
             </section>
           ) : (
             <div className="flex flex-col lg:flex-row gap-12">
-              {/* RESULTS GRID (Draggable) */}
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-12 border-b border-zinc-100 pb-6">
                    <div className="flex items-center gap-4">
@@ -419,7 +430,6 @@ export default function StylistPage() {
                 )}
               </div>
 
-              {/* SKELETON SIDEBAR */}
               <div className="w-full lg:w-[400px]">
                 <SkeletonCanvas 
                   outfit={canvasOutfit} 
@@ -430,6 +440,7 @@ export default function StylistPage() {
                   onSave={handleSave}
                   onExport={handleExport}
                   isSaving={isSaving}
+                  isExporting={isExporting}
                 />
               </div>
             </div>
