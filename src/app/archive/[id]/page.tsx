@@ -137,7 +137,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#fafafa]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
@@ -173,7 +173,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                           <Zap size={10} className="text-yellow-400" />
                           Auvra Pulse Selection
                        </div>
-                       <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-zinc-100 flex items-center gap-2">
+                       <div className="bg-[#fafafa]/80 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-zinc-100 flex items-center gap-2">
                           <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                           Regional Dispatch: {item.locale?.toUpperCase()}
                        </div>
@@ -247,7 +247,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                      )}
                   </div>
 
-                  <div className={`flex items-center justify-between p-4 rounded-3xl border-2 ${isMember ? 'border-yellow-400 bg-yellow-50/10' : 'border-zinc-100 bg-white opacity-60'}`}>
+                  <div className={`flex items-center justify-between p-4 rounded-3xl border-2 ${isMember ? 'border-yellow-400 bg-yellow-50/10' : 'border-zinc-100 bg-[#fafafa] opacity-60'}`}>
                      <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-yellow-600 uppercase tracking-widest flex items-center gap-2">
                            <Zap size={10} className="fill-yellow-600" /> Society Direct Source Link
@@ -322,7 +322,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                        <a 
                         href={item.source_url} 
                         target="_blank"
-                        className="w-full bg-white text-black py-6 rounded-full font-black text-[13px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-yellow-400 transition-all shadow-xl shadow-yellow-900/20"
+                        className="w-full bg-[#fafafa] text-black py-6 rounded-full font-black text-[13px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-yellow-400 transition-all shadow-xl shadow-yellow-900/20"
                        >
                          Secure at Source <ExternalLink size={16} />
                        </a>

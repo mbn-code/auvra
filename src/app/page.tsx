@@ -13,13 +13,13 @@ import { getEstimatedMarketValue } from "@/lib/pricing";
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const authSupabase = await createClient();
+  const supabaseServer = await createClient();
   
   // Check membership status
-  const { data: { user } } = await authSupabase.auth.getUser();
+  const { data: { user } } = await supabaseServer.auth.getUser();
   let isMember = false;
   if (user) {
-    const { data: profile } = await authSupabase
+    const { data: profile } = await supabaseServer
       .from('profiles')
       .select('membership_tier')
       .eq('id', user.id)
@@ -33,7 +33,7 @@ export default async function Home() {
     "CP Company", "Moncler", "A Bathing Ape", "Prada"
   ];
 
-  const { data: archiveItems } = await supabase
+  const { data: archiveItems } = await supabaseServer
     .from('pulse_inventory')
     .select('*')
     .in('status', ['available', 'sold'])
@@ -42,7 +42,7 @@ export default async function Home() {
     .order('created_at', { ascending: false })
     .limit(12);
 
-  const { data: latestItem } = await supabase
+  const { data: latestItem } = await supabaseServer
     .from('pulse_inventory')
     .select('created_at')
     .order('created_at', { ascending: false })

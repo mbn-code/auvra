@@ -326,9 +326,14 @@ function StylistContent() {
     setIsCheckingOut(true);
     try {
       const productIds: string[] = [];
+      const productToSlotMap: Record<string, string> = {};
+
       Object.keys(canvasOutfit).forEach(slot => {
         const activeItem = canvasOutfit[slot][activeIndices[slot]];
-        if (activeItem) productIds.push(activeItem.id);
+        if (activeItem) {
+          productIds.push(activeItem.id);
+          productToSlotMap[activeItem.id] = slot;
+        }
       });
 
       if (productIds.length === 0) {
@@ -344,6 +349,27 @@ function StylistContent() {
       });
 
       const data = await response.json();
+      
+      if (response.status === 409 && data.unavailableIds) {
+        // Inventory Conflict: Some items were sold
+        const unavailableIds: string[] = data.unavailableIds;
+        
+        // Remove unavailable items from the outfit automatically
+        setCanvasOutfit(prev => {
+          const next = { ...prev };
+          unavailableIds.forEach(id => {
+            const slot = productToSlotMap[id];
+            if (slot) {
+              next[slot] = next[slot].filter(item => item.id !== id);
+            }
+          });
+          return next;
+        });
+
+        alert("Some items in your lookbook were just secured by another node and are no longer available. We have removed them from your canvas.");
+        return;
+      }
+
       if (!response.ok) throw new Error(data.error || "Checkout failed");
       
       if (data.url) {
