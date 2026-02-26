@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
  */
 export async function POST(req: Request) {
   try {
-    const { selectedVibeIds } = await req.json();
+    const { selectedVibeIds, offset = 0 } = await req.json();
 
     if (!selectedVibeIds || selectedVibeIds.length === 0) {
       return NextResponse.json({ error: 'At least one aesthetic seed is required' }, { status: 400 });
@@ -44,11 +44,12 @@ export async function POST(req: Request) {
     const finalCentroid = centroid.map(sum => sum / embeddings.length);
 
     // 3. Call the Neural Matching RPC
-    // match_inventory_to_dna(user_dna, match_threshold, match_count)
+    // match_inventory_to_dna(user_dna, match_threshold, match_count, match_offset)
     const { data: items, error: matchError } = await supabase.rpc('match_inventory_to_dna', {
       user_dna: finalCentroid,
       match_threshold: 0.4,
-      match_count: 20
+      match_count: 20,
+      match_offset: offset
     });
 
     if (matchError) {

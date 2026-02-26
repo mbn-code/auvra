@@ -12,6 +12,9 @@ export default function StylistPage() {
   const [vibePool, setVibePool] = useState<any[]>([]);
   const [selectedVibeIds, setSelectedVibeIds] = useState<string[]>([]);
   const [outfits, setOutfits] = useState<any[] | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [moreLoading, setMoreLoading] = useState(false);
   
   const [loading, setLoading] = useState(false);
   const [discoveryLoading, setDiscoveryLoading] = useState(true);
@@ -47,22 +50,42 @@ export default function StylistPage() {
     });
   };
 
-  const initializeCuration = async () => {
+  const initializeCuration = async (isLoadMore = false) => {
     if (selectedVibeIds.length === 0) return;
     
-    setLoading(true);
+    if (isLoadMore) {
+      setMoreLoading(true);
+    } else {
+      setLoading(true);
+      setOffset(0);
+      setHasMore(true);
+    }
+
+    const currentOffset = isLoadMore ? offset + 20 : 0;
+
     try {
       const response = await fetch("/api/ai/stylist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selectedVibeIds })
+        body: JSON.stringify({ selectedVibeIds, offset: currentOffset })
       });
       const data = await response.json();
-      setOutfits(data);
+      
+      if (isLoadMore) {
+        setOutfits(prev => [...(prev || []), ...data]);
+        setOffset(currentOffset);
+      } else {
+        setOutfits(data);
+      }
+
+      if (data.length < 20) {
+        setHasMore(false);
+      }
     } catch (err) {
       console.error("[NeuralMatch] Curation Failed:", err);
     } finally {
       setLoading(false);
+      setMoreLoading(false);
     }
   };
 
@@ -135,7 +158,7 @@ export default function StylistPage() {
 
               <div className="mt-16 flex flex-col items-center">
                  <button
-                   onClick={initializeCuration}
+                   onClick={() => initializeCuration(false)}
                    disabled={loading || selectedVibeIds.length === 0}
                    className={`w-full max-w-lg py-10 rounded-[3rem] font-black uppercase tracking-[0.4em] flex flex-col items-center justify-center gap-4 transition-all ${selectedVibeIds.length > 0 ? 'bg-zinc-900 text-white hover:bg-black shadow-2xl' : 'bg-zinc-50 text-zinc-300'}`}
                  >
@@ -166,7 +189,12 @@ export default function StylistPage() {
                   </div>
                </div>
                <button 
-                onClick={() => { setOutfits(null); setSelectedVibeIds([]); }} 
+                onClick={() => { 
+                  setOutfits(null); 
+                  setSelectedVibeIds([]); 
+                  setOffset(0);
+                  setHasMore(true);
+                }} 
                 className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest transition-transform hover:scale-105 active:scale-95"
                >
                  Tune DNA
@@ -232,6 +260,21 @@ export default function StylistPage() {
                   </Link>
                 ))}
               </div>
+
+              {hasMore && (
+                <div className="mt-20 flex justify-center">
+                   <button 
+                    onClick={() => initializeCuration(true)}
+                    disabled={moreLoading}
+                    className="group flex flex-col items-center gap-4 transition-all hover:scale-105 active:scale-95"
+                   >
+                     <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center text-white shadow-2xl group-hover:bg-black">
+                        {moreLoading ? <RefreshCw className="animate-spin" size={24} /> : <ArrowRight size={24} />}
+                     </div>
+                     <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 group-hover:text-black">Expand Results</span>
+                   </button>
+                </div>
+              )}
             </div>
           </div>
         )}
