@@ -49,9 +49,9 @@ export default function StylistFeature() {
           {/* Visual Side (Simulated Outfit) */}
           <div className="flex-1 w-full bg-zinc-100/50 p-8 lg:p-12 relative min-h-[500px] flex items-center justify-center">
              <div className="grid grid-cols-2 gap-4 w-full max-w-md animate-in fade-in zoom-in duration-1000">
-                <div className="aspect-[4/5] bg-white rounded-3xl border border-zinc-200 p-2 shadow-xl -rotate-3 hover:rotate-0 transition-transform duration-500 relative group">
+                 <div className="aspect-[4/5] bg-white rounded-3xl border border-zinc-200 p-2 shadow-xl -rotate-3 hover:rotate-0 transition-transform duration-500 relative group">
                    <div className="w-full h-full bg-zinc-50 rounded-2xl flex items-center justify-center overflow-hidden">
-                      <Image src="https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/a0nllqrvwh2iafjz9vhx" fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="Arc'teryx Alpha SV" />
+                      <Image src="https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/a0nllqrvwh2iafjz9vhx" unoptimized fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="Arc'teryx Alpha SV" />
                    </div>
                    <div className="absolute bottom-4 left-4 right-4 bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10">
                       <p className="text-[7px] font-black text-white uppercase tracking-widest text-center">Arc'teryx Alpha SV</p>
@@ -59,7 +59,7 @@ export default function StylistFeature() {
                 </div>
                 <div className="aspect-[4/5] bg-white rounded-3xl border border-zinc-200 p-2 shadow-xl rotate-6 translate-y-8 hover:rotate-0 transition-transform duration-500 relative group">
                    <div className="w-full h-full bg-zinc-50 rounded-2xl flex items-center justify-center overflow-hidden">
-                      <Image src="https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/ezmxxsrfdx0zpzomrawl" fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="Arc'teryx Bib Pants" />
+                      <Image src="https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/ezmxxsrfdx0zpzomrawl" unoptimized fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="Arc'teryx Bib Pants" />
                    </div>
                    <div className="absolute bottom-4 left-4 right-4 bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10">
                       <p className="text-[7px] font-black text-white uppercase tracking-widest text-center">Arc'teryx Bib Pants</p>
@@ -67,7 +67,7 @@ export default function StylistFeature() {
                 </div>
                 <div className="aspect-[4/5] bg-white rounded-3xl border border-zinc-200 p-2 shadow-xl -rotate-6 -translate-y-4 hover:rotate-0 transition-transform duration-500 relative group">
                    <div className="w-full h-full bg-zinc-50 rounded-2xl flex items-center justify-center overflow-hidden">
-                      <Image src="https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/u0ocezd7zzdtbfelpbux" fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="ASICS Gel NYC" />
+                      <Image src="https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/u0ocezd7zzdtbfelpbux" unoptimized fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="ASICS Gel NYC" />
                    </div>
                    <div className="absolute bottom-4 left-4 right-4 bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10">
                       <p className="text-[7px] font-black text-white uppercase tracking-widest text-center">ASICS Gel NYC</p>
@@ -75,7 +75,7 @@ export default function StylistFeature() {
                 </div>
                 <div className="aspect-[4/5] bg-white rounded-3xl border border-zinc-200 p-2 shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500 relative group">
                    <div className="w-full h-full bg-zinc-50 rounded-2xl flex items-center justify-center overflow-hidden">
-                      <Image src="https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/rar3s1sn1pfsoc3899qb" fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="Salomon S/Lab Vesta" />
+                      <Image src="https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/rar3s1sn1pfsoc3899qb" unoptimized fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="Salomon S/Lab Vesta" />
                    </div>
                    <div className="absolute bottom-4 left-4 right-4 bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10">
                       <p className="text-[7px] font-black text-white uppercase tracking-widest text-center">Salomon S/Lab</p>

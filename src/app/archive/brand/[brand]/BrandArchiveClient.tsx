@@ -317,6 +317,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                     <Image 
                       src={item.images[0]} 
                       fill
+                      unoptimized
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                       className={`object-cover transition-all duration-1000 ${isLocked ? 'blur-md opacity-90 scale-105' : ''} ${isSold ? 'opacity-40' : 'grayscale-[0.2] group-hover:grayscale-0'} ${!isSold && !isLocked && item.images.length > 1 ? 'group-hover:opacity-0' : ''}`} 
                       alt={item.title} 
@@ -335,6 +336,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                       <Image 
                         src={item.images[1]} 
                         fill
+                        unoptimized
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                         className="object-cover opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-110 group-hover:scale-100" 
                         alt={`${item.title} alternate`} 
