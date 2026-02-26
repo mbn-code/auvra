@@ -94,6 +94,7 @@ export default async function Home() {
               archiveItems.map((item) => {
                 const isSold = item.status === 'sold';
                 const isVault = item.potential_profit > 200;
+                // If the user is a society member, we NEVER blur.
                 const isLocked = isVault && !isMember && !isSold;
                 const charSum = item.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
                 const viewingCount = (charSum % 17) + 1;

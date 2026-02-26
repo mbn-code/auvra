@@ -2,6 +2,10 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+/**
+ * AUVRA OUTFIT HYDRATION API
+ * Fetches product details for stored lookbook IDs.
+ */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -35,14 +39,18 @@ export async function GET(req: Request) {
     // 2. Hydrate slots (fetch product details for IDs)
     const productIds = Object.values(outfitData.slots).filter(v => v !== null) as string[];
     
+    if (productIds.length === 0) {
+      return NextResponse.json({ outfit: outfitData.slots });
+    }
+
     const { data: products, error: prodError } = await supabase
       .from('pulse_inventory')
-      .select('id, title, brand, listing_price, images, category')
+      .select('id, title, brand, listing_price, images, category, potential_profit')
       .in('id', productIds);
 
     if (prodError) throw prodError;
 
-    // Map products back to slots
+    // Map products back to slots as ARRAYS (for v5.1+ compatibility)
     const hydratedOutfit: any = {};
     Object.keys(outfitData.slots).forEach(slotKey => {
       const prodId = outfitData.slots[slotKey];
@@ -55,7 +63,7 @@ export async function GET(req: Request) {
           price: `€${Math.round(product.listing_price)}`,
           image: product.images[0],
           category: product.category,
-          matchScore: 100 // Default for stored items
+          matchScore: 100
         }];
       } else {
         hydratedOutfit[slotKey] = [];

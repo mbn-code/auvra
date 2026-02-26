@@ -6,6 +6,7 @@ import Link from "next/link";
 import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors, pointerWithin } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { useSearchParams, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase-client";
 
 import { SkeletonCanvas } from "@/components/stylist/SkeletonCanvas";
 import { DraggableItem } from "@/components/stylist/DraggableItem";
@@ -54,6 +55,7 @@ function StylistContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isMember, setIsMember] = useState(false);
 
   // Archive Builder State
   const [canvasOutfit, setCanvasOutfit] = useState<Record<string, any[]>>({
@@ -85,13 +87,29 @@ function StylistContent() {
 
   const searchParams = useSearchParams();
   const outfitId = searchParams.get("outfit");
+  const supabase = createClient();
 
   useEffect(() => {
     fetchVibes();
+    checkMembership();
     if (outfitId) {
       loadOutfit(outfitId);
     }
   }, [outfitId]);
+
+  const checkMembership = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('membership_tier')
+        .eq('id', user.id)
+        .single();
+      if (profile?.membership_tier === 'society') {
+        setIsMember(true);
+      }
+    }
+  };
 
   const loadOutfit = async (id: string) => {
     setLoading(true);
@@ -113,7 +131,6 @@ function StylistContent() {
         await fetchVibes();
 
         if (ids.length > 0) {
-          // If the outfit has items, perform a neural match based on those items
           const matchRes = await fetch("/api/ai/stylist", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -225,9 +242,11 @@ function StylistContent() {
       const allSlots = Object.keys(canvasOutfit);
       let targetSlot: string | null = null;
 
+      // 1. Direct Hit Priority
       if (hoveredSlotId && allSlots.includes(hoveredSlotId)) {
         targetSlot = hoveredSlotId;
       } 
+      // 2. Intelligent Routing (Only if dropped on General Sidebar background)
       else if (hoveredSlotId === 'skeleton-sidebar') {
         const cat = item.category?.toLowerCase() || '';
         if (cat.includes('headwear') || cat.includes('hat')) targetSlot = 'head';
@@ -277,6 +296,16 @@ function StylistContent() {
   };
 
   const handleSave = async () => {
+    if (!isMember) {
+      setModalConfig({
+        isOpen: true,
+        title: "Lock Your Archive",
+        description: "To save this lookbook to your permanent archive and access it anywhere, you need to join The Society.",
+        feature: 'save'
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const slots: any = {};
@@ -291,18 +320,8 @@ function StylistContent() {
         body: JSON.stringify({ slots })
       });
 
-      if (response.status === 403 || response.status === 401) {
-        setModalConfig({
-          isOpen: true,
-          title: "Lock Your Archive",
-          description: "To save this lookbook to your permanent archive and access it anywhere, you need to join The Society.",
-          feature: 'save'
-        });
-      } else if (!response.ok) {
-        throw new Error("Failed to save");
-      } else {
-        alert("Lookbook Locked to your Archive.");
-      }
+      if (!response.ok) throw new Error("Failed to save");
+      alert("Lookbook Locked to your Archive.");
     } catch (err) {
       console.error(err);
     } finally {
@@ -311,6 +330,16 @@ function StylistContent() {
   };
 
   const handleExport = async () => {
+    if (!isMember) {
+      setModalConfig({
+        isOpen: true,
+        title: "Export Style DNA",
+        description: "To receive this lookbook as a high-fidelity DNA brief via email, you need to be a member of The Society.",
+        feature: 'export'
+      });
+      return;
+    }
+
     setIsExporting(true);
     try {
       const slots: any = {};
@@ -325,18 +354,8 @@ function StylistContent() {
         body: JSON.stringify({ slots })
       });
 
-      if (response.status === 403 || response.status === 401) {
-        setModalConfig({
-          isOpen: true,
-          title: "Export Style DNA",
-          description: "To receive this lookbook as a high-fidelity DNA brief via email, you need to be a member of The Society.",
-          feature: 'export'
-        });
-      } else if (!response.ok) {
-        throw new Error("Failed to export");
-      } else {
-        alert("Style DNA Brief sent to your email.");
-      }
+      if (!response.ok) throw new Error("Failed to export");
+      alert("Style DNA Brief sent to your email.");
     } catch (err) {
       console.error(err);
     } finally {
@@ -373,30 +392,21 @@ function StylistContent() {
       const data = await response.json();
       
       if (response.status === 409 && data.unavailableIds) {
-        // Inventory Conflict: Some items were sold
         const unavailableIds: string[] = data.unavailableIds;
-        
-        // Remove unavailable items from the outfit automatically
         setCanvasOutfit(prev => {
           const next = { ...prev };
           unavailableIds.forEach(id => {
             const slot = productToSlotMap[id];
-            if (slot) {
-              next[slot] = next[slot].filter(item => item.id !== id);
-            }
+            if (slot) next[slot] = next[slot].filter(item => item.id !== id);
           });
           return next;
         });
-
-        alert("Some items in your lookbook were just secured by another node and are no longer available. We have removed them from your canvas.");
+        alert("Some items in your lookbook were just secured and are no longer available. We have removed them from your canvas.");
         return;
       }
 
       if (!response.ok) throw new Error(data.error || "Checkout failed");
-      
-      if (data.url) {
-        window.location.href = data.url;
-      }
+      if (data.url) window.location.href = data.url;
     } catch (err: any) {
       console.error(err);
       alert(err.message || "Failed to initialize checkout.");
@@ -421,10 +431,7 @@ function StylistContent() {
                 <Cpu size={10} className="text-zinc-400" />
                 <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Neural Archive Builder v5.3</span>
               </div>
-              <h1 className="text-7xl md:text-[9rem] font-black tracking-[-0.06em] leading-[0.8] mb-12 uppercase italic">
-                Manifest <br /> 
-                <span className="text-transparent bg-clip-text bg-gradient-to-b from-black to-zinc-400">Aesthetics.</span>
-              </h1>
+              <h1 className="text-7xl md:text-[9rem] font-black tracking-[-0.06em] leading-[0.8] mb-12 uppercase italic">Manifest <br /> <span className="text-transparent bg-clip-text bg-gradient-to-b from-black to-zinc-400">Aesthetics.</span></h1>
               <p className="text-zinc-500 text-xl font-medium leading-tight tracking-tight max-w-lg">
                 Tune your DNA, curate your archive, and build your lookbook in the neural latent space. Drag items from the grid onto the builder skeleton.
               </p>
@@ -441,16 +448,9 @@ function StylistContent() {
                     <h3 className="text-xl font-black uppercase tracking-tighter">01. Seed Your Centroid</h3>
                     <p className="text-[10px] text-zinc-400 uppercase tracking-widest mt-1">Pick aesthetic references to define your style DNA</p>
                  </div>
-                 
                  <div className="flex items-center gap-4 w-full md:w-auto">
                     <form onSubmit={handleSearchSubmit} className="relative w-full md:w-64">
-                       <input 
-                        type="text" 
-                        placeholder="Search Vibes (e.g. Leather, Grunge)" 
-                        className="w-full bg-zinc-50 border border-zinc-100 rounded-full px-4 py-2 text-xs focus:outline-none focus:border-black transition-all"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                       />
+                       <input type="text" placeholder="Search Vibes..." className="w-full bg-zinc-50 border border-zinc-100 rounded-full px-4 py-2 text-xs font-black outline-none focus:bg-white focus:border-black transition-all" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                        <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black"><Search size={14} /></button>
                     </form>
                     <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest min-w-[100px] text-right">{selectedVibeIds.length}/7 Seeds</span>
@@ -462,11 +462,7 @@ function StylistContent() {
               ) : (
                 <div className="columns-2 md:columns-4 lg:columns-6 gap-4 space-y-4">
                   {vibePool.map((v) => (
-                    <button 
-                      key={v.id} 
-                      onClick={() => toggleVibe(v.id)}
-                      className={`group relative w-full mb-4 break-inside-avoid rounded-[2rem] overflow-hidden border-4 transition-all duration-500 ${selectedVibeIds.includes(v.id) ? 'border-black scale-95 shadow-2xl' : 'border-transparent hover:border-zinc-200'}`}
-                    >
+                    <button key={v.id} onClick={() => toggleVibe(v.id)} className={`group relative w-full mb-4 break-inside-avoid rounded-[2rem] overflow-hidden border-4 transition-all duration-500 ${selectedVibeIds.includes(v.id) ? 'border-black scale-95 shadow-2xl' : 'border-transparent hover:border-zinc-200'}`}>
                       <img src={v.url} className="w-full h-auto object-cover transition-all duration-700" alt="" loading="lazy" />
                       {selectedVibeIds.includes(v.id) && (
                         <div className="absolute top-4 right-4 bg-black text-white p-2 rounded-full shadow-xl"><CheckCircle size={16} /></div>
@@ -480,14 +476,9 @@ function StylistContent() {
               )}
 
               <div className="mt-16 flex flex-col items-center gap-8">
-                 <button
-                   onClick={() => initializeCuration(false)}
-                   disabled={loading || selectedVibeIds.length === 0}
-                   className={`w-full max-w-lg py-10 rounded-[3rem] font-black uppercase tracking-[0.4em] flex flex-col items-center justify-center gap-4 transition-all ${selectedVibeIds.length > 0 ? 'bg-zinc-900 text-white hover:bg-black shadow-2xl' : 'bg-zinc-50 text-zinc-300'}`}
-                 >
+                 <button onClick={() => initializeCuration(false)} disabled={loading || selectedVibeIds.length === 0} className={`w-full max-w-lg py-10 rounded-[3rem] font-black uppercase tracking-[0.4em] flex flex-col items-center justify-center gap-4 transition-all ${selectedVibeIds.length > 0 ? 'bg-zinc-900 text-white hover:bg-black shadow-2xl' : 'bg-zinc-50 text-zinc-300'}`}>
                    {loading ? <RefreshCw className="animate-spin" /> : <><Sparkles size={24} className={selectedVibeIds.length > 0 ? "text-yellow-400" : ""} />Initialize Builder</>}
                  </button>
-
                  <div className="flex items-center gap-6">
                     <button onClick={() => fetchVibes(true)} className="text-[10px] font-black uppercase tracking-widest text-zinc-900 bg-zinc-100 px-6 py-3 rounded-full hover:bg-zinc-200 flex items-center gap-2 transition-all"><RefreshCw size={12}/> Keep Picked & Reload</button>
                     <button onClick={() => fetchVibes(false)} className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black flex items-center gap-2 transition-colors"><RefreshCw size={12}/> Full Refresh</button>
@@ -507,10 +498,7 @@ function StylistContent() {
                         </div>
                       )}
                    </div>
-                   <button 
-                    onClick={() => { setOutfits(null); setSelectedVibeIds([]); setOffset(0); setHasMore(true); setActiveCategory(null); setCanvasOutfit({ head: [], neck: [], inner_upper: [], mid_upper: [], outer_upper: [], hands: [], waist: [], lower: [], legwear: [], footwear: [], accessory: [] }); setActiveIndices({ head: 0, neck: 0, inner_upper: 0, mid_upper: 0, outer_upper: 0, hands: 0, waist: 0, lower: 0, legwear: 0, footwear: 0, accessory: 0 }); }} 
-                    className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest transition-transform hover:scale-105"
-                   >Tune DNA</button>
+                   <button onClick={() => { setOutfits(null); setSelectedVibeIds([]); setOffset(0); setHasMore(true); setActiveCategory(null); setCanvasOutfit({ head: [], neck: [], inner_upper: [], mid_upper: [], outer_upper: [], hands: [], waist: [], lower: [], legwear: [], footwear: [], accessory: [] }); setActiveIndices({ head: 0, neck: 0, inner_upper: 0, mid_upper: 0, outer_upper: 0, hands: 0, waist: 0, lower: 0, legwear: 0, footwear: 0, accessory: 0 }); }} className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest transition-transform hover:scale-105">Tune DNA</button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

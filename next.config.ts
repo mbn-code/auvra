@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    unoptimized: true, // Temporarily bypass Next.js image optimization to debug loading issue
     remotePatterns: [
       { protocol: 'https', hostname: "images.unsplash.com" },
       { protocol: 'https', hostname: "ae01.alicdn.com" },

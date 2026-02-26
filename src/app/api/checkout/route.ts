@@ -53,14 +53,14 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
-        // Pulse-Check: Verify item is still live
+        // Pulse-Check: Verify item is still live (Only 404 means definitively sold)
         try {
           const response = await fetch(item.source_url, {
+            method: 'HEAD',
             headers: { 'User-Agent': 'Mozilla/5.0' },
             next: { revalidate: 0 }
           });
-          const html = await response.text();
-          if (html.toLowerCase().includes('sold') || html.toLowerCase().includes('solgt')) {
+          if (response.status === 404) {
              await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', id);
              unavailableItems.push(id);
              continue; // Skip sold items
