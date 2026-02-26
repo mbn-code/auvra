@@ -8,6 +8,7 @@ import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 
 import { SkeletonCanvas } from "@/components/stylist/SkeletonCanvas";
 import { DraggableItem } from "@/components/stylist/DraggableItem";
+import { SocietyModal } from "@/components/stylist/SocietyModal";
 
 /**
  * AUVRA ARCHIVE BUILDER v5.2 (Neural Workspace)
@@ -16,7 +17,7 @@ import { DraggableItem } from "@/components/stylist/DraggableItem";
 
 const slotToCategoryMap: Record<string, string> = {
   head: 'Headwear',
-  neck: 'Scarf', // Keyword search will catch this
+  neck: 'Scarf',
   outer_upper: 'Jackets',
   mid_upper: 'Sweaters',
   inner_upper: 'Tops',
@@ -24,7 +25,7 @@ const slotToCategoryMap: Record<string, string> = {
   waist: 'Belt',
   lower: 'Pants',
   legwear: 'Socks',
-  footwear: 'Shoe', // Matches 'Shoes' in titles
+  footwear: 'Shoe',
   accessory: 'Bag'
 };
 
@@ -43,7 +44,7 @@ export default function StylistPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  // Archive Builder State (Arrays for comparison)
+  // Archive Builder State
   const [canvasOutfit, setCanvasOutfit] = useState<Record<string, any[]>>({
     head: [], neck: [], inner_upper: [], mid_upper: [], outer_upper: [],
     hands: [], waist: [], lower: [], legwear: [], footwear: [], accessory: []
@@ -52,6 +53,18 @@ export default function StylistPage() {
   const [activeIndices, setActiveIndices] = useState<Record<string, number>>({
     head: 0, neck: 0, inner_upper: 0, mid_upper: 0, outer_upper: 0, 
     hands: 0, waist: 0, lower: 0, legwear: 0, footwear: 0, accessory: 0
+  });
+
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    feature: 'save' | 'export';
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    feature: 'save'
   });
 
   const sensors = useSensors(
@@ -77,10 +90,7 @@ export default function StylistPage() {
       
       const randomCount = 24 - (keepSelected ? currentlySelected.length : 0);
       let processedData = [...newData];
-      
-      if (!query) {
-        processedData = processedData.sort(() => 0.5 - Math.random());
-      }
+      if (!query) processedData = processedData.sort(() => 0.5 - Math.random());
       
       const shuffled = processedData.slice(0, Math.max(0, randomCount));
       const finalPool = keepSelected ? [...currentlySelected, ...shuffled] : shuffled;
@@ -158,11 +168,11 @@ export default function StylistPage() {
       const allSlots = Object.keys(canvasOutfit);
       let targetSlot: string | null = null;
 
-      // 1. Target specifically where the user is hovering
+      // 1. Direct Hit Priority
       if (hoveredSlotId && allSlots.includes(hoveredSlotId)) {
         targetSlot = hoveredSlotId;
       } 
-      // 2. Only if dropped on general sidebar area, then auto-categorize
+      // 2. Intelligent Routing (Only if dropped on General Sidebar background)
       else if (hoveredSlotId === 'skeleton-sidebar') {
         const cat = item.category?.toLowerCase() || '';
         if (cat.includes('headwear') || cat.includes('hat')) targetSlot = 'head';
@@ -190,9 +200,7 @@ export default function StylistPage() {
     }
   };
 
-  const handleSwitch = (slotId: string, index: number) => {
-    setActiveIndices(prev => ({ ...prev, [slotId]: index }));
-  };
+  const handleSwitch = (slotId: string, index: number) => setActiveIndices(prev => ({ ...prev, [slotId]: index }));
 
   const handleRemove = (slotId: string, index: number) => {
     setCanvasOutfit(prev => {
@@ -228,8 +236,16 @@ export default function StylistPage() {
         body: JSON.stringify({ slots })
       });
 
-      if (!response.ok) alert("Society Membership Required to Save Archive Looks.");
-      else alert("Lookbook Locked to your Archive.");
+      if (!response.ok) {
+        setModalConfig({
+          isOpen: true,
+          title: "Lock Your Archive",
+          description: "To save this lookbook to your permanent archive and access it anywhere, you need to join The Society.",
+          feature: 'save'
+        });
+      } else {
+        alert("Lookbook Locked to your Archive.");
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -252,8 +268,16 @@ export default function StylistPage() {
         body: JSON.stringify({ slots })
       });
 
-      if (!response.ok) alert("Society Membership required to export Style Briefs.");
-      else alert("Style DNA Brief sent to your email.");
+      if (!response.ok) {
+        setModalConfig({
+          isOpen: true,
+          title: "Export Style DNA",
+          description: "To receive this lookbook as a high-fidelity DNA brief via email, you need to be a member of The Society.",
+          feature: 'export'
+        });
+      } else {
+        alert("Style DNA Brief sent to your email.");
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -276,9 +300,7 @@ export default function StylistPage() {
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-zinc-900 to-zinc-700 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-6 shadow-lg">
                 <Cpu size={10} className="text-yellow-400" /> Neural Archive Builder v5.2
               </div>
-              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8">
-                Manifest <br />Aesthetics.
-              </h1>
+              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8">Manifest <br />Aesthetics.</h1>
               <p className="text-zinc-500 text-lg font-medium leading-relaxed">
                 Tune your DNA, curate your archive, and build your lookbook in the neural latent space. Drag items from the grid onto the builder skeleton.
               </p>
@@ -305,9 +327,7 @@ export default function StylistPage() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                        />
-                       <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black">
-                          <Search size={14} />
-                       </button>
+                       <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black"><Search size={14} /></button>
                     </form>
                     <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest min-w-[100px] text-right">{selectedVibeIds.length}/7 Seeds</span>
                  </div>
@@ -345,18 +365,8 @@ export default function StylistPage() {
                  </button>
 
                  <div className="flex items-center gap-6">
-                    <button 
-                      onClick={() => fetchVibes(true)} 
-                      className="text-[10px] font-black uppercase tracking-widest text-zinc-900 bg-zinc-100 px-6 py-3 rounded-full hover:bg-zinc-200 flex items-center gap-2 transition-all"
-                    >
-                       <RefreshCw size={12}/> Keep Picked & Reload
-                    </button>
-                    <button 
-                      onClick={() => fetchVibes(false)} 
-                      className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black flex items-center gap-2 transition-colors"
-                    >
-                       <RefreshCw size={12}/> Full Refresh
-                    </button>
+                    <button onClick={() => fetchVibes(true)} className="text-[10px] font-black uppercase tracking-widest text-zinc-900 bg-zinc-100 px-6 py-3 rounded-full hover:bg-zinc-200 flex items-center gap-2 transition-all"><RefreshCw size={12}/> Keep Picked & Reload</button>
+                    <button onClick={() => fetchVibes(false)} className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black flex items-center gap-2 transition-colors"><RefreshCw size={12}/> Full Refresh</button>
                  </div>
               </div>
             </section>
@@ -369,51 +379,29 @@ export default function StylistPage() {
                       {activeCategory && (
                         <div className="bg-yellow-400 text-black px-3 py-1 rounded-full text-[9px] font-black uppercase flex items-center gap-2 animate-in fade-in zoom-in duration-300">
                           <span>Filtering: {activeCategory}</span>
-                          <button onClick={() => { setActiveCategory(null); initializeCuration(false, null); }} className="hover:scale-110">
-                            <X size={10} strokeWidth={3} />
-                          </button>
+                          <button onClick={() => { setActiveCategory(null); initializeCuration(false, null); }} className="hover:scale-110"><X size={10} strokeWidth={3} /></button>
                         </div>
                       )}
                    </div>
                    <button 
-                    onClick={() => { 
-                      setOutfits(null); 
-                      setSelectedVibeIds([]); 
-                      setOffset(0);
-                      setHasMore(true);
-                      setActiveCategory(null);
-                      setCanvasOutfit({
-                        head: [], neck: [], inner_upper: [], mid_upper: [], 
-                        outer_upper: [], hands: [], waist: [], lower: [], 
-                        legwear: [], footwear: [], accessory: []
-                      });
-                      setActiveIndices({
-                        head: 0, neck: 0, inner_upper: 0, mid_upper: 0, 
-                        outer_upper: 0, hands: 0, waist: 0, lower: 0, 
-                        legwear: 0, footwear: 0, accessory: 0
-                      });
-                    }} 
+                    onClick={() => { setOutfits(null); setSelectedVibeIds([]); setOffset(0); setHasMore(true); setActiveCategory(null); setCanvasOutfit({ head: [], neck: [], inner_upper: [], mid_upper: [], outer_upper: [], hands: [], waist: [], lower: [], legwear: [], footwear: [], accessory: [] }); setActiveIndices({ head: 0, neck: 0, inner_upper: 0, mid_upper: 0, outer_upper: 0, hands: 0, waist: 0, lower: 0, legwear: 0, footwear: 0, accessory: 0 }); }} 
                     className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest transition-transform hover:scale-105"
                    >Tune DNA</button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {outfits.map((item: any, i: number) => (
+                  {outfits.map((item: any) => (
                     <DraggableItem key={item.id} item={item}>
                       <div className="group bg-zinc-50 rounded-[2.5rem] p-6 border border-zinc-100 hover:shadow-2xl transition-all relative h-full">
                         <div className="absolute top-6 right-6 z-10 flex flex-col gap-2">
-                           <div className="bg-yellow-400 text-black text-[8px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
-                              <Zap size={8} fill="black" /> {item.matchScore}%
-                           </div>
+                           <div className="bg-yellow-400 text-black text-[8px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1"><Zap size={8} fill="black" /> {item.matchScore}%</div>
                         </div>
-
                         <div className="aspect-[4/5] bg-white rounded-[2rem] mb-4 overflow-hidden relative border border-zinc-100 shadow-inner group-hover:scale-[1.02] transition-transform">
                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <div className="bg-white text-black p-3 rounded-full shadow-2xl"><Sparkles size={16} /></div>
                            </div>
                         </div>
-                        
                         <div className="px-2">
                           <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">{item.brand}</p>
                           <h4 className="text-sm font-black tracking-tight mb-2 truncate">{item.name}</h4>
@@ -453,6 +441,14 @@ export default function StylistPage() {
           )}
         </div>
       </div>
+
+      <SocietyModal 
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+        title={modalConfig.title}
+        description={modalConfig.description}
+        feature={modalConfig.feature}
+      />
     </DndContext>
   );
 }
