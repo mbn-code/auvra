@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-/**
- * AUVRA VIBE DISCOVERY API v4.2 (Neural Activation)
- * Return a high-quality pool of images from the latent space library.
- */
-export const revalidate = 86400; // Strictly Cache for 24h
+// Dynamic Route - Handled on demand due to search params
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
