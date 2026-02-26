@@ -154,20 +154,31 @@ export default function StylistPage() {
       let targetSlot = over?.id as string;
 
       // Auto-Categorization Logic: 
-      // If dropped on the skeleton but not a specific slot, find the best fit
-      if (!targetSlot || !Object.keys(canvasOutfit).includes(targetSlot)) {
-        // Find slot that matches item category
-        const entries = Object.entries(slotToCategoryMap);
-        const match = entries.find(([_, cat]) => item.category === cat);
-        if (match) targetSlot = match[0];
+      // If dropped on the sidebar or not a specific slot, find the best fit
+      const isOverSidebar = over?.id === 'skeleton-sidebar';
+      const isValidSlot = Object.keys(canvasOutfit).includes(targetSlot);
+
+      if (isOverSidebar || !isValidSlot) {
+        // Precise category mapping
+        const cat = item.category?.toLowerCase() || '';
+        
+        if (cat.includes('headwear') || cat.includes('hat')) targetSlot = 'head';
+        else if (cat.includes('jacket') || cat.includes('coat')) targetSlot = 'outer_upper';
+        else if (cat.includes('sweater') || cat.includes('hoodie')) targetSlot = 'mid_upper';
+        else if (cat.includes('top') || cat.includes('shirt') || cat.includes('tee')) targetSlot = 'inner_upper';
+        else if (cat.includes('pants') || cat.includes('trouser') || cat.includes('skirt') || cat.includes('jeans')) targetSlot = 'lower';
+        else if (cat.includes('shoe') || cat.includes('boot') || cat.includes('footwear')) targetSlot = 'footwear';
+        else if (cat.includes('socks')) targetSlot = 'legwear';
+        else if (cat.includes('belt')) targetSlot = 'waist';
+        else if (cat.includes('bag') || cat.includes('accessory')) targetSlot = 'accessory';
+        else if (cat.includes('scarf') || cat.includes('necklace')) targetSlot = 'neck';
+        else targetSlot = 'accessory'; // Fallback
       }
 
       if (targetSlot && canvasOutfit[targetSlot]) {
         setCanvasOutfit(prev => {
-          // Add to array if not already present
           const exists = prev[targetSlot].some((i: any) => i.id === item.id);
           if (exists) return prev;
-          
           const newItems = [item, ...prev[targetSlot]];
           return { ...prev, [targetSlot]: newItems };
         });
