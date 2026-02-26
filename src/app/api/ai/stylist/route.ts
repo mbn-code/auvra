@@ -1,107 +1,77 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { StylistEngine, UserIntent, OutfitSet } from '@/lib/stylist-engine';
 
 /**
- * AUVRA STYLIST API v3.0
- * Archetype-Driven Constraint Satisfaction
+ * AUVRA NEURAL MATCHING API v4.2 (Neural Activation)
+ * Calculates Style Centroid from aesthetic seeds and maps to inventory DNA.
  */
-
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { anchorItemId, lockedItemIds, gender, colors, brands, occasion } = body;
+    const { selectedVibeIds } = await req.json();
 
-    const intent: UserIntent = {
-      anchorItemId,
-      lockedItemIds,
-      gender: gender === 'couple' ? 'couple' : (gender || 'unisex'),
-      colors,
-      brands,
-      occasion
-    };
-
-    // 1. INVENTORY ADAPTER (Fetch & Enrich)
-    const { data: rawInventory, error } = await supabase
-      .from('pulse_inventory')
-      .select('id, title, brand, listing_price, category, images, status')
-      .eq('status', 'available')
-      .limit(1000);
-
-    if (error || !rawInventory) {
-      return NextResponse.json({ error: 'Inventory sync failed' }, { status: 500 });
+    if (!selectedVibeIds || selectedVibeIds.length === 0) {
+      return NextResponse.json({ error: 'At least one aesthetic seed is required' }, { status: 400 });
     }
 
-    const inventory = StylistEngine.enrichInventory(rawInventory);
+    // 1. Fetch Embeddings for Selected Vibes
+    // Note: Supabase returns the 'vector' type as a numeric array directly.
+    const { data: vibes, error: vibeError } = await supabase
+      .from('style_latent_space')
+      .select('embedding')
+      .in('id', selectedVibeIds);
 
-    // 2. COUPLE MATCHING PROTOCOL
-    if (intent.gender === 'couple') {
-      const maleInventory = inventory.filter(i => i.gender !== 'female');
-      const femaleInventory = inventory.filter(i => i.gender !== 'male');
+    if (vibeError || !vibes || vibes.length === 0) {
+      console.error('[NeuralMatch] Vibe Fetch Error:', vibeError);
+      return NextResponse.json({ error: 'Failed to resolve aesthetic seeds' }, { status: 500 });
+    }
 
-      const maleOutfits = StylistEngine.generateArchetypeOutfits(maleInventory, { ...intent, gender: 'male' });
-      const femaleOutfits = StylistEngine.generateArchetypeOutfits(femaleInventory, { ...intent, gender: 'female' });
+    // 2. Calculate the "Style Centroid" (Mathematical Average)
+    // CLIP ViT-B/32 generates 512-dimension vectors.
+    const embeddings = vibes.map(v => {
+      // Handle potential string vs array return from Supabase client
+      return typeof v.embedding === 'string' ? JSON.parse(v.embedding) : v.embedding;
+    });
+    
+    const dim = embeddings[0].length;
+    const centroid = Array(dim).fill(0);
 
-      const couples = [];
-      // Synchronize by Archetype
-      for (const m of maleOutfits) {
-        for (const f of femaleOutfits) {
-          if (couples.length >= 5) break;
-          
-          if (StylistEngine.coordinationScore(m, f) >= 100) {
-            couples.push({
-              outfitName: `Synchronized ${m.outfitName} Couple Set`,
-              isCouple: true,
-              male: formatOutfit(m),
-              female: formatOutfit(f),
-              styleReason: `Twin-node coordination using the ${m.outfitName} blueprint. Matching silhouette and cluster DNA.`
-            });
-          }
-        }
+    for (const emb of embeddings) {
+      for (let i = 0; i < dim; i++) {
+        centroid[i] += emb[i];
       }
-      return NextResponse.json(couples);
     }
 
-    // 3. STANDARD SINGLE PROTOCOL
-    const outfits = StylistEngine.generateArchetypeOutfits(inventory, intent);
+    const finalCentroid = centroid.map(sum => sum / embeddings.length);
 
-    // 4. FORMATTING
-    const result = outfits.map(o => formatOutfit(o));
+    // 3. Call the Neural Matching RPC
+    // match_inventory_to_dna(user_dna, match_threshold, match_count)
+    const { data: items, error: matchError } = await supabase.rpc('match_inventory_to_dna', {
+      user_dna: finalCentroid,
+      match_threshold: 0.4,
+      match_count: 20
+    });
+
+    if (matchError) {
+      console.error('[NeuralMatch] RPC Error:', matchError);
+      return NextResponse.json({ error: 'Curation engine match failure' }, { status: 500 });
+    }
+
+    // 4. Formatting for Premium AI-First UI
+    const result = items.map((item: any) => ({
+      id: item.id,
+      name: item.title,
+      brand: item.brand,
+      price: `€${Math.round(item.listing_price)}`,
+      image: item.images && item.images.length > 0 ? item.images[0] : null,
+      url: `https://auvra.eu/archive/${item.id}`,
+      // Convert cosine similarity to a human-friendly match percentage
+      matchScore: Math.round(item.similarity * 100)
+    }));
 
     return NextResponse.json(result);
 
   } catch (error) {
-    console.error('Stylist Error:', error);
-    return NextResponse.json({ error: 'Styling engine failure' }, { status: 500 });
+    console.error('[NeuralMatch] Critical Failure:', error);
+    return NextResponse.json({ error: 'Internal Neural failure' }, { status: 500 });
   }
-}
-
-/**
- * Standardizes outfit JSON structure and enforces item category ordering.
- */
-function formatOutfit(o: OutfitSet) {
-  const items = [...o.items].sort((a, b) => {
-    const getOrder = (cat: string) => {
-      const c = cat.toLowerCase();
-      if (c.includes('jacket') || c.includes('outerwear')) return 1;
-      if (c.includes('shirt') || c.includes('top') || c.includes('sweater') || c.includes('knit')) return 2;
-      if (c.includes('pant') || c.includes('denim')) return 3;
-      if (c.includes('footwear') || c.includes('shoe')) return 4;
-      return 5;
-    };
-    return getOrder(a.category) - getOrder(b.category);
-  });
-
-  return {
-    outfitName: o.outfitName,
-    styleReason: o.styleReason,
-    items: items.map((item) => ({
-      name: item.title,
-      brand: item.brand,
-      image: item.images[0],
-      price: `€${Math.round(item.listing_price)}`,
-      url: `https://auvra.eu/archive/${item.id}`,
-      id: item.id
-    }))
-  };
 }
