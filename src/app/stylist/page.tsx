@@ -13,6 +13,25 @@ import { DraggableItem } from "@/components/stylist/DraggableItem";
  * AUVRA ARCHIVE BUILDER v5.0 (Neural Workspace)
  * Pinterest-style discovery with a Drag-and-Drop Outfit Builder.
  */
+/**
+ * AUVRA ARCHIVE BUILDER v5.1 (Neural Workspace)
+ * Pinterest-style discovery with a Layered Drag-and-Drop Outfit Builder.
+ */
+
+const slotToCategoryMap: Record<string, string> = {
+  head: 'Headwear',
+  neck: 'Accessories',
+  outer_upper: 'Jackets',
+  mid_upper: 'Sweaters',
+  inner_upper: 'Tops',
+  hands: 'Accessories',
+  waist: 'Accessories',
+  lower: 'Pants',
+  legwear: 'Archive',
+  footwear: 'Archive',
+  accessory: 'Accessories'
+};
+
 export default function StylistPage() {
   const [vibePool, setVibePool] = useState<any[]>([]);
   const [selectedVibeIds, setSelectedVibeIds] = useState<string[]>([]);
@@ -23,20 +42,28 @@ export default function StylistPage() {
   
   const [loading, setLoading] = useState(false);
   const [discoveryLoading, setDiscoveryLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
-  // Archive Builder State
-  const [canvasOutfit, setCanvasOutfit] = useState({
-    head: null,
-    neck: null,
-    inner_upper: null,
-    mid_upper: null,
-    outer_upper: null,
-    hands: null,
-    waist: null,
-    lower: null,
-    legwear: null,
-    footwear: null,
-    accessory: null
+  // Archive Builder State (Arrays for comparison)
+  const [canvasOutfit, setCanvasOutfit] = useState<Record<string, any[]>>({
+    head: [],
+    neck: [],
+    inner_upper: [],
+    mid_upper: [],
+    outer_upper: [],
+    hands: [],
+    waist: [],
+    lower: [],
+    legwear: [],
+    footwear: [],
+    accessory: []
+  });
+
+  const [activeIndices, setActiveIndices] = useState<Record<string, number>>({
+    head: 0, neck: 0, inner_upper: 0, mid_upper: 0, outer_upper: 0, 
+    hands: 0, waist: 0, lower: 0, legwear: 0, footwear: 0, accessory: 0
   });
 
   const sensors = useSensors(
@@ -54,15 +81,10 @@ export default function StylistPage() {
       const res = await fetch("/api/ai/stylist/vibes");
       const data = await res.json();
       
-      // Get the full objects for currently selected vibes
       const currentlySelected = vibePool.filter(v => selectedVibeIds.includes(v.id));
-      
-      // Filter out selected ones from new data to avoid duplicates
       const newData = data.filter((v: any) => !selectedVibeIds.includes(v.id));
-      
-      // Shuffle new data and take enough to fill 24 slots total
       const randomCount = 24 - (keepSelected ? currentlySelected.length : 0);
-      const shuffled = [...newData].sort(() => 0.5 - Math.random()).slice(0, randomCount);
+      const shuffled = [...newData].sort(() => 0.5 - Math.random()).slice(0, Math.max(0, randomCount));
       
       const finalPool = keepSelected ? [...currentlySelected, ...shuffled] : shuffled;
       setVibePool(finalPool);
@@ -81,7 +103,7 @@ export default function StylistPage() {
     });
   };
 
-  const initializeCuration = async (isLoadMore = false) => {
+  const initializeCuration = async (isLoadMore = false, preferredCategory: string | null = null) => {
     if (selectedVibeIds.length === 0) return;
     
     if (isLoadMore) {
@@ -90,6 +112,7 @@ export default function StylistPage() {
       setLoading(true);
       setOffset(0);
       setHasMore(true);
+      if (!isLoadMore) setOutfits(null); // Reset if full reload
     }
 
     const currentOffset = isLoadMore ? offset + 20 : 0;
@@ -98,7 +121,11 @@ export default function StylistPage() {
       const response = await fetch("/api/ai/stylist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selectedVibeIds, offset: currentOffset })
+        body: JSON.stringify({ 
+          selectedVibeIds, 
+          offset: currentOffset,
+          preferredCategory: preferredCategory || activeCategory
+        })
       });
       
       const data = await response.json();
@@ -122,10 +149,104 @@ export default function StylistPage() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { over, active } = event;
-    if (over && active) {
-      const slot = over.id as string;
+    if (active && active.data.current) {
       const item = active.data.current;
-      setCanvasOutfit(prev => ({ ...prev, [slot]: item }));
+      let targetSlot = over?.id as string;
+
+      // Auto-Categorization Logic: 
+      // If dropped on the skeleton but not a specific slot, find the best fit
+      if (!targetSlot || !Object.keys(canvasOutfit).includes(targetSlot)) {
+        // Find slot that matches item category
+        const entries = Object.entries(slotToCategoryMap);
+        const match = entries.find(([_, cat]) => item.category === cat);
+        if (match) targetSlot = match[0];
+      }
+
+      if (targetSlot && canvasOutfit[targetSlot]) {
+        setCanvasOutfit(prev => {
+          // Add to array if not already present
+          const exists = prev[targetSlot].some((i: any) => i.id === item.id);
+          if (exists) return prev;
+          
+          const newItems = [item, ...prev[targetSlot]];
+          return { ...prev, [targetSlot]: newItems };
+        });
+        setActiveIndices(prev => ({ ...prev, [targetSlot]: 0 }));
+      }
+    }
+  };
+
+  const handleSwitch = (slotId: string, index: number) => {
+    setActiveIndices(prev => ({ ...prev, [slotId]: index }));
+  };
+
+  const handleRemove = (slotId: string, index: number) => {
+    setCanvasOutfit(prev => {
+      const newItems = prev[slotId].filter((_, i) => i !== index);
+      return { ...prev, [slotId]: newItems };
+    });
+    setActiveIndices(prev => ({ ...prev, [slotId]: 0 }));
+  };
+
+  const handleSearchForSlot = (slotId: string, label: string) => {
+    const category = slotToCategoryMap[slotId];
+    setActiveCategory(category);
+    initializeCuration(false, category);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      // Collect active items
+      const slots: any = {};
+      Object.keys(canvasOutfit).forEach(slot => {
+        const activeItem = canvasOutfit[slot][activeIndices[slot]];
+        slots[slot] = activeItem ? activeItem.id : null;
+      });
+
+      const response = await fetch("/api/ai/stylist/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slots })
+      });
+
+      if (!response.ok) {
+        // Show "Society" modal here in real implementation
+        alert("Society Membership Required to Save Archive Looks.");
+      } else {
+        alert("Lookbook Locked to your Archive.");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const slots: any = {};
+      Object.keys(canvasOutfit).forEach(slot => {
+        const activeItem = canvasOutfit[slot][activeIndices[slot]];
+        slots[slot] = activeItem ? activeItem.id : null;
+      });
+
+      const response = await fetch("/api/ai/stylist/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slots })
+      });
+
+      if (!response.ok) {
+        alert("Society Membership required to export Style Briefs.");
+      } else {
+        alert("Style DNA Brief sent to your email.");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -218,17 +339,14 @@ export default function StylistPage() {
                       setOffset(0);
                       setHasMore(true);
                       setCanvasOutfit({
-                        head: null,
-                        neck: null,
-                        inner_upper: null,
-                        mid_upper: null,
-                        outer_upper: null,
-                        hands: null,
-                        waist: null,
-                        lower: null,
-                        legwear: null,
-                        footwear: null,
-                        accessory: null
+                        head: [], neck: [], inner_upper: [], mid_upper: [], 
+                        outer_upper: [], hands: [], waist: [], lower: [], 
+                        legwear: [], footwear: [], accessory: []
+                      });
+                      setActiveIndices({
+                        head: 0, neck: 0, inner_upper: 0, mid_upper: 0, 
+                        outer_upper: 0, hands: 0, waist: 0, lower: 0, 
+                        legwear: 0, footwear: 0, accessory: 0
                       });
                     }} 
                     className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest transition-transform hover:scale-105"
@@ -276,7 +394,16 @@ export default function StylistPage() {
 
               {/* SKELETON SIDEBAR */}
               <div className="w-full lg:w-[400px]">
-                <SkeletonCanvas outfit={canvasOutfit} />
+                <SkeletonCanvas 
+                  outfit={canvasOutfit} 
+                  activeIndices={activeIndices}
+                  onSwitch={handleSwitch}
+                  onRemove={handleRemove}
+                  onSearch={handleSearchForSlot}
+                  onSave={handleSave}
+                  onExport={handleExport}
+                  isSaving={isSaving}
+                />
               </div>
             </div>
           )}
