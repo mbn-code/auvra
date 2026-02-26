@@ -33,9 +33,9 @@ const DropSlot = ({ id, label, items, activeIndex, onSwitch, onRemove, onSearch,
       className={`relative group rounded-2xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center gap-1 ${
         sizeClasses[size]
       } ${
-        isOver ? 'border-yellow-400 bg-yellow-50/50 scale-105 shadow-lg z-30' : 
+        isOver ? 'border-yellow-400 bg-yellow-50/50 scale-105 shadow-lg z-50' : 
         item ? 'border-zinc-900 bg-white shadow-md' : 'border-zinc-200 bg-zinc-50'
-      } ${className}`}
+      } hover:z-50 ${className}`}
     >
       {item ? (
         <>
@@ -114,7 +114,7 @@ export function SkeletonCanvas({
         <DropSlot id="neck" label="Neck/Scarf" items={outfit.neck} activeIndex={activeIndices.neck} onSwitch={onSwitch} onRemove={onRemove} onSearch={onSearch} size="sm" icon={<Disc size={14} />} className="-mt-4 z-20" />
 
         <div className="relative w-full flex flex-col items-center -mt-2">
-           <DropSlot id="outer_upper" label="Outer Shell" items={outfit.outer_upper} activeIndex={activeIndices.outer_upper} onSwitch={onSwitch} onRemove={onRemove} onSearch={onSearch} size="lg" icon={<Shirt size={20} />} className="z-10" />
+           <DropSlot id="outer_upper" label="Outer Shell" items={outfit.outer_upper} activeIndex={activeIndices.outer_upper} onSwitch={onSwitch} onRemove={onRemove} onSearch={onSearch} size="lg" icon={<Shirt size={20} />} className="z-30" />
            <div className="flex gap-2 -mt-12 z-20">
               <DropSlot id="mid_upper" label="Mid Layer" items={outfit.mid_upper} activeIndex={activeIndices.mid_upper} onSwitch={onSwitch} onRemove={onRemove} onSearch={onSearch} size="md" icon={<Shirt size={16} />} className="shadow-xl" />
               <DropSlot id="inner_upper" label="Base Layer" items={outfit.inner_upper} activeIndex={activeIndices.inner_upper} onSwitch={onSwitch} onRemove={onRemove} onSearch={onSearch} size="md" icon={<User size={16} />} className="shadow-xl" />
