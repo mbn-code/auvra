@@ -85,8 +85,10 @@ export function SkeletonCanvas({
   onSearch,
   onSave,
   onExport,
+  onCheckout,
   isSaving,
-  isExporting
+  isExporting,
+  isCheckingOut
 }: { 
   outfit: Record<string, any[]>, 
   activeIndices: Record<string, number>,
@@ -95,8 +97,10 @@ export function SkeletonCanvas({
   onSearch: (id: string, label: string) => void,
   onSave: () => void,
   onExport: () => void,
+  onCheckout: () => void,
   isSaving?: boolean,
-  isExporting?: boolean
+  isExporting?: boolean,
+  isCheckingOut?: boolean
 }) {
   return (
     <div className="sticky top-32 w-full max-w-sm bg-white rounded-[4rem] border border-zinc-100 p-8 flex flex-col items-center shadow-2xl overflow-hidden">
@@ -157,10 +161,13 @@ export function SkeletonCanvas({
       </div>
 
       <div className="mt-12 w-full space-y-4">
-         <button onClick={onSave} disabled={isSaving} className="w-full py-6 rounded-full bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
+         <button onClick={onSave} disabled={isSaving || isCheckingOut || isExporting} className="w-full py-6 rounded-full bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
             {isSaving ? "Archiving..." : "Lock Archive Look"}
          </button>
-         <button onClick={onExport} disabled={isExporting} className="w-full py-4 rounded-full border border-zinc-200 text-zinc-400 text-[8px] font-black uppercase tracking-[0.4em] hover:text-black transition-colors disabled:opacity-50">
+         <button onClick={onCheckout} disabled={isSaving || isCheckingOut || isExporting} className="w-full py-4 rounded-full bg-zinc-900 text-white text-[8px] font-black uppercase tracking-[0.4em] hover:bg-black transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+            {isCheckingOut ? "Preparing Cart..." : <><ShoppingBag size={12} /> Checkout Look</>}
+         </button>
+         <button onClick={onExport} disabled={isSaving || isCheckingOut || isExporting} className="w-full py-4 rounded-full border border-zinc-200 text-zinc-400 text-[8px] font-black uppercase tracking-[0.4em] hover:text-black transition-colors disabled:opacity-50">
             {isExporting ? "Sending DNA..." : "Export Style DNA"}
          </button>
       </div>

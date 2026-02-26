@@ -38,23 +38,20 @@ export async function GET(req: NextRequest) {
     }
 
     // Default: Return random pool of currently available items for discovery
-    // We join with pulse_inventory to ensure we only show active seeds
     const { data: vibes, error } = await supabase
       .from('style_latent_space')
       .select(`
         id, 
         image_url, 
         archetype,
-        pulse_inventory!inner (
-          status
-        )
+        pulse_inventory!inner(status)
       `)
       .eq('pulse_inventory.status', 'available')
       .limit(100);
 
     if (error) throw error;
 
-    return NextResponse.json((vibes || []).map(v => ({
+    return NextResponse.json((vibes || []).map((v: any) => ({
       id: v.id,
       url: v.image_url,
       archetype: v.archetype

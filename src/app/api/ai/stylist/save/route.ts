@@ -20,9 +20,9 @@ export async function POST(req: Request) {
       }
     );
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: 'Auth required' }, { status: 401 });
     }
 
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('membership_tier')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
 
     if (!profile || profile.membership_tier !== 'society') {
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     const { data, error } = await supabase
       .from('user_outfits')
       .insert({
-        user_id: session.user.id,
+        user_id: user.id,
         name,
         slots,
         is_public: false

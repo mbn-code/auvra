@@ -23,7 +23,7 @@ export default function ArchivePage() {
     let query = supabase
       .from('pulse_inventory')
       .select('brand, images, listing_price, category, status')
-      .in('status', ['available', 'sold']);
+      .eq('status', 'available'); // Default to only showing available in discovery
 
     if (initialCategory) {
       query = query.eq('category', initialCategory);

@@ -73,7 +73,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#fafafa]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
@@ -95,7 +95,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                            {product.badge || "Limited Edition"}
                         </div>
                      )}
-                     <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-zinc-100 flex items-center gap-2">
+                     <div className="bg-[#fafafa]/80 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-zinc-100 flex items-center gap-2">
                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                         Available for Immediate Dispatch
                      </div>
@@ -217,7 +217,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                { name: "Elena R.", text: "Minimalist design at its best. It simply works without any unnecessary complexity.", city: "London" },
                { name: "Satoshi T.", text: "The curation here is unmatched. Finally, a shop that values quality over volume.", city: "Tokyo" }
              ].map((review, i) => (
-               <div key={i} className="bg-white p-12 rounded-[3rem] border border-zinc-100 shadow-sm relative group hover:shadow-xl transition-all duration-700">
+               <div key={i} className="bg-[#fafafa] p-12 rounded-[3rem] border border-zinc-100 shadow-sm relative group hover:shadow-xl transition-all duration-700">
                   <div className="flex gap-1 mb-8">
                     {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-zinc-900 text-zinc-900" />)}
                   </div>
