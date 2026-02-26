@@ -1,11 +1,11 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import { Sparkles, ArrowRight, Zap, Cpu, RefreshCw, Layers, CheckCircle, Flame, ShieldCheck, GripVertical, X, Search } from "lucide-react";
+import { Sparkles, ArrowRight, Zap, Cpu, RefreshCw, Layers, CheckCircle, Flame, ShieldCheck, GripVertical, X, Search, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors, pointerWithin } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 import { SkeletonCanvas } from "@/components/stylist/SkeletonCanvas";
 import { DraggableItem } from "@/components/stylist/DraggableItem";
@@ -39,6 +39,7 @@ export default function StylistPage() {
 }
 
 function StylistContent() {
+  const router = useRouter();
   const [vibePool, setVibePool] = useState<any[]>([]);
   const [selectedVibeIds, setSelectedVibeIds] = useState<string[]>([]);
   const [outfits, setOutfits] = useState<any[] | null>(null);
@@ -52,6 +53,7 @@ function StylistContent() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   // Archive Builder State
   const [canvasOutfit, setCanvasOutfit] = useState<Record<string, any[]>>({
@@ -320,6 +322,41 @@ function StylistContent() {
     }
   };
 
+  const handleCheckout = async () => {
+    setIsCheckingOut(true);
+    try {
+      const productIds: string[] = [];
+      Object.keys(canvasOutfit).forEach(slot => {
+        const activeItem = canvasOutfit[slot][activeIndices[slot]];
+        if (activeItem) productIds.push(activeItem.id);
+      });
+
+      if (productIds.length === 0) {
+        alert("Add some items to your lookbook first!");
+        setIsCheckingOut(false);
+        return;
+      }
+
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productIds })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Checkout failed");
+      
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Failed to initialize checkout.");
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
   return (
     <DndContext 
       sensors={sensors} 
@@ -477,8 +514,10 @@ function StylistContent() {
                   onSearch={handleSearchForSlot}
                   onSave={handleSave}
                   onExport={handleExport}
+                  onCheckout={handleCheckout}
                   isSaving={isSaving}
                   isExporting={isExporting}
+                  isCheckingOut={isCheckingOut}
                 />
               </div>
             </div>

@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     `).join('');
 
     const { data, error } = await resend.emails.send({
-      from: 'Auvra <noreply@mbn-code.dk>', // Ensure mbn-code.dk is verified in Resend Dashboard
+      from: 'Auvra <noreply@auvra.eu>',
       to: [user.email!],
       subject: 'Your Auvra Style DNA Brief',
       html: `

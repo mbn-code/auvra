@@ -31,19 +31,19 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
 
   useEffect(() => {
     const checkMembership = async () => {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('membership_tier')
-          .eq('id', session.user.id)
+          .eq('id', user.id)
           .single();
         if (profile?.membership_tier === 'society') setIsMember(true);
       }
     };
     checkMembership();
     fetchBrandItems();
-  }, [decodedBrand]);
+  }, [decodedBrand, supabaseClient]);
 
   async function fetchBrandItems() {
     setLoading(true);
