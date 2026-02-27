@@ -7,6 +7,7 @@ import MobileNav from "@/components/MobileNav";
 import LiveToast from "@/components/LiveToast";
 import WelcomeModal from "@/components/WelcomeModal";
 import { Analytics } from "@vercel/analytics/react";
+import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -110,6 +111,7 @@ export default function RootLayout({
         <LiveToast />
         <WelcomeModal />
         <Analytics />
+        <AnalyticsProvider />
       </body>
     </html>
   );

@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { products as staticProducts } from "@/config/products";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { createClient } from "@/lib/supabase-server";
+import { cookies } from "next/headers";
 
 const ZONE_COUNTRIES: Record<string, string[]> = {
   "EU_ONLY": ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"],
@@ -131,6 +132,11 @@ export async function POST(req: NextRequest) {
 
     const allowedCountries = ZONE_COUNTRIES[shippingZone] || ZONE_COUNTRIES["EU_ONLY"];
 
+    // PHASE 2 CIS: Retrieve Attribution Cookies
+    const cookieStore = await cookies();
+    const sessionId = cookieStore.get('auvra_session_id')?.value || cookieStore.get('auvra_fingerprint')?.value || 'unknown_session';
+    const creativeId = cookieStore.get('auvra_creative_id')?.value || '';
+
     const stripeSession = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -138,7 +144,10 @@ export async function POST(req: NextRequest) {
       metadata: {
         productIds: productIds.join(','),
         type: 'mixed',
-        isMember: isMember ? 'true' : 'false'
+        isMember: isMember ? 'true' : 'false',
+        // PHASE 2 CIS: Pass attribution data to Stripe to close the loop
+        sessionId: sessionId,
+        creativeId: creativeId
       },
       shipping_address_collection: {
         allowed_countries: allowedCountries as any,

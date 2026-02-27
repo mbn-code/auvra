@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
     
-    const { productId, type, userId } = session.metadata || {};
+    // PHASE 2 CIS: Extract sessionId and creativeId from session.metadata
+    const { productId, type, userId, sessionId, creativeId } = session.metadata || {};
     const customerEmail = session.customer_details?.email;
     const customerName = session.customer_details?.name;
 
@@ -54,6 +55,19 @@ export async function POST(req: NextRequest) {
       let price = `€${(session.amount_total / 100).toFixed(2)}`;
       let vintedUrl = "";
       let profit = 0;
+
+      // PHASE 2 CIS: Log the purchase event to pulse_events
+      if (sessionId && creativeId) {
+        await supabase.rpc('batch_insert_pulse_events', {
+          events: [{
+            session_id: sessionId,
+            creative_id: creativeId,
+            event_type: 'purchase',
+            metadata: { revenue: (session.amount_total / 100) },
+            timestamp: new Date().toISOString()
+          }]
+        });
+      }
 
       if (type === 'archive') {
         const { data: item } = await supabase

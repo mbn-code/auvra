@@ -1,0 +1,6 @@
+sentence-transformers
+supabase
+pillow
+numpy
+python-dotenv
+tqdm
