@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
+import { cookies } from "next/headers";
 
 export async function POST(req: NextRequest) {
+  const cookieStore = await cookies();
+  const isAdmin = cookieStore.get("admin_session")?.value === "authenticated";
+
+  if (!isAdmin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { orderId } = await req.json();
 

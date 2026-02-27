@@ -39,11 +39,19 @@ def check_item_availability(item):
         return item['id'], False
 
     try:
-        # We use a HEAD request to be fast and respectful
-        response = requests.head(url, timeout=5, allow_redirects=True)
-        # If we get a 404, the item is definitely gone
+        # We use a GET request to read the page content because many marketplaces
+        # return a 200 OK but display "Sold" on the page.
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        response = requests.get(url, headers=headers, timeout=5, allow_redirects=True)
+        
         if response.status_code == 404:
             return item['id'], False
+            
+        # Check for common "sold" indicators in the HTML
+        html_content = response.text.lower()
+        if '"sold":true' in html_content or 'item is sold' in html_content or 'status":"sold"' in html_content:
+            return item['id'], False
+            
         return item['id'], True
     except Exception:
         # If we get a timeout or other error, we don't prune immediately 

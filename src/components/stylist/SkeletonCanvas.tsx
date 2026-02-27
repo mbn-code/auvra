@@ -3,11 +3,12 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { Zap, ShoppingBag, Shirt, User, Footprints, Hand, HardHat, Disc, Layers, X, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { StylistItem } from './DraggableItem';
 
 interface SlotProps {
   id: string;
   label: string;
-  items: any[];
+  items: StylistItem[];
   activeIndex: number;
   onSwitch: (id: string, index: number) => void;
   onRemove: (id: string, index: number) => void;
@@ -90,7 +91,7 @@ export function SkeletonCanvas({
   isExporting,
   isCheckingOut
 }: { 
-  outfit: Record<string, any[]>, 
+  outfit: Record<string, StylistItem[]>, 
   activeIndices: Record<string, number>,
   onSwitch: (id: string, index: number) => void,
   onRemove: (id: string, index: number) => void,
@@ -103,7 +104,7 @@ export function SkeletonCanvas({
   isCheckingOut?: boolean
 }) {
   return (
-    <div className="sticky top-32 w-full max-w-sm bg-white rounded-[4rem] border border-zinc-100 p-8 flex flex-col items-center shadow-2xl overflow-hidden">
+    <div className="sticky top-32 w-full max-w-sm bg-white rounded-[4rem] border border-zinc-100 p-8 flex flex-col items-center shadow-2xl overflow-y-auto max-h-[calc(100vh-8rem)] custom-scrollbar">
       <div className="mb-8 text-center">
         <div className="inline-flex items-center gap-2 bg-zinc-50 border border-zinc-100 px-4 py-1.5 rounded-full mb-4">
            <Layers size={12} className="text-zinc-900" />
@@ -113,7 +114,7 @@ export function SkeletonCanvas({
         <p className="text-[9px] text-zinc-400 mt-2 uppercase tracking-[0.2em] font-medium">Manifest aesthetics onto the neural skeleton</p>
       </div>
 
-      <div className="relative w-full h-[850px] flex flex-col items-center overflow-visible pt-6">
+      <div className="relative w-full min-h-[850px] flex flex-col items-center overflow-visible pt-6">
         {/* HEAD */}
         <DropSlot id="head" label="Headwear" items={outfit.head} activeIndex={activeIndices.head} onSwitch={onSwitch} onRemove={onRemove} onSearch={onSearch} size="md" icon={<HardHat size={20} />} className="z-[60]" />
         

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { products as staticProducts } from "@/config/products";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { createClient } from "@/lib/supabase-server";
 
 const ZONE_COUNTRIES: Record<string, string[]> = {

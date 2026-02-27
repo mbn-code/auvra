@@ -2,6 +2,8 @@ import { Metadata } from 'next';
 import ArchiveClient from './ArchiveClient';
 import { Suspense } from 'react';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "Curated Archives | Discover One-of-One Luxury Pieces",
   description: "Browse our live-sync collection of unique archive pieces. Sourced globally, verified by the Auvra Neural Engine. From Louis Vuitton to Arc'teryx.",

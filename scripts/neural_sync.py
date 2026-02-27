@@ -1,4 +1,5 @@
 import os
+import sys
 import io
 import logging
 import requests
@@ -85,15 +86,18 @@ def process_item(item: Dict[str, Any]):
     embedding = model.encode(img, show_progress_bar=False)
     return embedding.tolist(), image_url
 
-def sync():
+def sync(force=False):
     inventory = fetch_inventory_to_sync()
     synced_ids = get_synced_product_ids()
     
-    pending = [item for item in inventory if item['id'] not in synced_ids]
+    if force:
+        pending = inventory
+    else:
+        pending = [item for item in inventory if item['id'] not in synced_ids]
     
     total = len(pending)
     logging.info(f"🧬 Total Inventory: {len(inventory)} | Already Synced: {len(synced_ids)}")
-    logging.info(f"🔥 Starting sync for {total} new items...")
+    logging.info(f"🔥 Starting sync for {total} items (force={force})...")
 
     if total == 0:
         logging.info("✅ Neural alignment complete. All items synced.")
@@ -115,16 +119,24 @@ def sync():
                 embedding, image_url = result
                 
                 # 2. Prep Latent Space Entry
-                latent_batch.append({
-                    "product_id": product_id,
-                    "image_url": image_url,
-                    "embedding": embedding,
-                    "archetype": item.get('category', 'general'),
-                    "source": "Auvra_Internal_Archive"
-                })
+                if force and product_id in synced_ids:
+                    # Update existing in latent space
+                    supabase.table("style_latent_space").update({
+                        "embedding": embedding,
+                        "image_url": image_url,
+                        "archetype": item.get('category', 'general')
+                    }).eq("product_id", product_id).execute()
+                else:
+                    latent_batch.append({
+                        "product_id": product_id,
+                        "image_url": image_url,
+                        "embedding": embedding,
+                        "archetype": item.get('category', 'general'),
+                        "source": "Auvra_Internal_Archive"
+                    })
                 
-                # 3. Update pulse_inventory style_embedding if missing
-                if not item.get('style_embedding'):
+                # 3. Update pulse_inventory style_embedding if missing or force
+                if force or not item.get('style_embedding'):
                     supabase.table("pulse_inventory") \
                         .update({"style_embedding": embedding}) \
                         .eq("id", product_id) \
@@ -144,4 +156,5 @@ def sync():
     logging.info("🏁 Recursive Neural Sync Complete.")
 
 if __name__ == "__main__":
-    sync()
+    force_sync = '--force' in sys.argv
+    sync(force=force_sync)

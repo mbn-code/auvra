@@ -80,11 +80,9 @@ DROP POLICY IF EXISTS "Public Read Available" ON pulse_inventory;
 CREATE POLICY "Public Read Available" ON pulse_inventory
     FOR SELECT USING (status = 'available' OR status = 'sold');
 
-DROP POLICY IF EXISTS "Admin Full Access" ON pulse_inventory;
-CREATE POLICY "Admin Full Access" ON pulse_inventory
-    FOR ALL USING (true);
+-- Admin Full Access Policy removed for security. 
+-- Service role key must be used for admin operations.
 
 -- Orders Policies
-DROP POLICY IF EXISTS "Admin Orders Access" ON orders;
-CREATE POLICY "Admin Orders Access" ON orders
-    FOR ALL USING (true);
+-- Admin Orders Access Policy removed for security.
+-- Service role key must be used for admin operations.

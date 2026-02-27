@@ -3,7 +3,17 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 
-export function DraggableItem({ item, children }: { item: any, children: React.ReactNode }) {
+export interface StylistItem {
+  id: string;
+  name: string;
+  brand: string;
+  price: string;
+  image: string;
+  category: string;
+  matchScore: number;
+}
+
+export function DraggableItem({ item, children }: { item: StylistItem, children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `draggable-${item.id}`,
     data: item

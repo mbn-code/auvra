@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import Accordion from "@/components/Accordion";
 import LiveActivity from "@/components/LiveActivity";
@@ -18,7 +17,8 @@ interface ArchiveProductPageProps {
 
 export async function generateMetadata({ params }: ArchiveProductPageProps): Promise<Metadata> {
   const { id } = await params;
-  const { data: item } = await supabase
+  const supabaseServer = await createClient();
+  const { data: item } = await supabaseServer
     .from('pulse_inventory')
     .select('*')
     .eq('id', id)

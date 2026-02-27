@@ -12,6 +12,8 @@ import { SkeletonCanvas } from "@/components/stylist/SkeletonCanvas";
 import { DraggableItem } from "@/components/stylist/DraggableItem";
 import { SocietyModal } from "@/components/stylist/SocietyModal";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * AUVRA ARCHIVE BUILDER v5.3 (Neural Workspace)
  * High-fidelity workstation with outfit hydration and membership protection.

@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { Zap, ShieldAlert, Terminal as TerminalIcon } from "lucide-react";
 
 export default async function VaultPage() {
   if (process.env.NODE_ENV === 'production') return notFound();
 
+  const supabase = await createClient();
   const { data: items } = await supabase
     .from('pulse_inventory')
     .select('*')

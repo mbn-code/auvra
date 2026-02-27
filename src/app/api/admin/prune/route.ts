@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase-server';
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 import { NextResponse } from 'next/server';
 
 /**
  * ARCHIVE PRUNING ENDPOINT
- * Periodically checks source URLs and marks 404s as sold.
+ * Periodically checks source URLs and marks 404s or sold items.
  * To be called via Vercel Cron.
  */
 export async function GET(req: Request) {
@@ -14,8 +14,6 @@ export async function GET(req: Request) {
   }
 
   try {
-    const supabase = await createClient();
-    
     // 1. Fetch items to check
     const { data: items, error: fetchError } = await supabase
       .from('pulse_inventory')
@@ -30,8 +28,25 @@ export async function GET(req: Request) {
     // 2. Check each URL (Sequential to be gentle on marketplaces)
     for (const item of items) {
       try {
-        const res = await fetch(item.source_url, { method: 'HEAD', timeout: 5000 } as any);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const res = await fetch(item.source_url, { 
+          method: 'GET',
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+
         if (res.status === 404) {
+          deadItems.push(item.id);
+          continue;
+        }
+
+        const text = await res.text();
+        const lowerText = text.toLowerCase();
+        if (lowerText.includes('"sold":true') || lowerText.includes('item is sold') || lowerText.includes('status":"sold"')) {
           deadItems.push(item.id);
         }
       } catch (e) {
