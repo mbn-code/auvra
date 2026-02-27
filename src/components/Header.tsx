@@ -22,29 +22,34 @@ export default async function Header() {
     <div className="fixed top-0 left-0 right-0 z-[100]">
       <AnnouncementMarquee />
       <header className="bg-white/80 backdrop-blur-xl border-b border-zinc-100">
-        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
-          <div className="flex lg:hidden">
-            <Menu size={20} strokeWidth={2} className="text-zinc-900" />
+        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center">
+          {/* LEFT: Navigation */}
+          <div className="flex-1 flex items-center">
+            <div className="flex lg:hidden">
+              <Menu size={20} strokeWidth={2} className="text-zinc-900" />
+            </div>
+            
+            <nav className="hidden lg:flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">
+              <Link href="/archive" className="hover:text-black transition-colors text-zinc-900 italic">Archive Pulse</Link>
+              <Link href="/stylist" className="hover:text-black transition-colors">AI Stylist</Link>
+              {isSociety ? (
+                <Link href="/account" className="text-yellow-600 flex items-center gap-2">
+                  <Zap size={10} className="fill-yellow-600" /> Society Node
+                </Link>
+              ) : (
+                <Link href="/pricing" className="text-zinc-900 hover:opacity-50 transition-opacity border-b-2 border-yellow-400 pb-0.5">Society</Link>
+              )}
+              <Link href="/shipping" className="hover:text-black transition-colors">Logistics</Link>
+            </nav>
           </div>
-          
-          <nav className="hidden lg:flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">
-            <Link href="/archive" className="hover:text-black transition-colors text-zinc-900 italic">Archive Pulse</Link>
-            <Link href="/stylist" className="hover:text-black transition-colors">AI Stylist</Link>
-            {isSociety ? (
-              <Link href="/account" className="text-yellow-600 flex items-center gap-2">
-                <Zap size={10} className="fill-yellow-600" /> Society Node
-              </Link>
-            ) : (
-              <Link href="/pricing" className="text-zinc-900 hover:opacity-50 transition-opacity border-b-2 border-yellow-400 pb-0.5">Society</Link>
-            )}
-            <Link href="/shipping" className="hover:text-black transition-colors">Logistics</Link>
-          </nav>
 
-          <div className="absolute left-1/2 -translate-x-1/2">
+          {/* CENTER: Logo */}
+          <div className="flex-shrink-0 flex justify-center">
             <Logo />
           </div>
           
-          <div className="flex items-center gap-6">
+          {/* RIGHT: User & Cart */}
+          <div className="flex-1 flex items-center justify-end gap-6">
             <Link href={user ? "/account" : "/login"} className="p-2 text-zinc-900 hover:opacity-50 transition-opacity">
               <User size={20} strokeWidth={1.5} />
             </Link>
