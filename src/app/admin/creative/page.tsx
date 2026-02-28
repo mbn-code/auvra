@@ -1,13 +1,12 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { verifyAdmin } from "@/lib/admin";
 import CreativeDashboardClient from "./CreativeDashboardClient";
 
 export const dynamic = 'force-dynamic';
 
 export default async function CreativeDashboard() {
-  const cookieStore = await cookies();
-  const isAdmin = cookieStore.get("admin_session")?.value === "authenticated";
+  const isAdmin = await verifyAdmin();
 
   if (!isAdmin) {
     redirect("/admin/login");

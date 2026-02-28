@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { cookies } from "next/headers";
-
-const ALLOWED_UIDS = ["52f1626b-c411-48af-aa9d-ee9a6beaabc6"];
+import { verifyAdmin } from "@/lib/admin";
 
 export async function PATCH(req: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const isAdmin = cookieStore.get("admin_session")?.value === "authenticated";
+    const isAdmin = await verifyAdmin();
 
-    const { data: { user } } = await supabaseAdmin.auth.getUser();
-
-    if (!isAdmin || !user || !ALLOWED_UIDS.includes(user.id)) {
+    if (!isAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

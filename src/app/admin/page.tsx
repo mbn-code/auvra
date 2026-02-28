@@ -1,6 +1,7 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
+import { verifyAdmin } from "@/lib/admin";
+import AdminSystemControls from "./AdminSystemControls";
 import Link from "next/link";
 import { 
   Package, 
@@ -16,18 +17,14 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-const ALLOWED_UIDS = ["52f1626b-c411-48af-aa9d-ee9a6beaabc6"];
-
 export default async function AdminMainPage() {
-  const cookieStore = await cookies();
-  const isAdmin = cookieStore.get("admin_session")?.value === "authenticated";
+  const isAdmin = await verifyAdmin();
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!isAdmin || !user || !ALLOWED_UIDS.includes(user.id)) {
+  if (!isAdmin) {
     redirect("/admin/login");
   }
+
+  const supabase = await createClient();
 
   const adminSectors = [
     {
@@ -84,7 +81,7 @@ export default async function AdminMainPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto">
+      <main className="max-w-5xl mx-auto space-y-32">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {adminSectors.map((sector) => (
             <Link 
@@ -111,6 +108,8 @@ export default async function AdminMainPage() {
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Reserved for Neural Sub-systems</p>
           </div>
         </div>
+
+        <AdminSystemControls />
       </main>
 
       <footer className="max-w-5xl mx-auto mt-20 pt-8 border-t border-zinc-900 flex justify-between items-center text-[10px] font-black uppercase tracking-[0.3em] text-zinc-700">
@@ -123,3 +122,4 @@ export default async function AdminMainPage() {
     </div>
   );
 }
+
