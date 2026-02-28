@@ -28,35 +28,35 @@ export default async function AdminMainPage() {
 
   const adminSectors = [
     {
-      title: "Stable Nodes",
+      title: "1. Stable Nodes",
       description: "Manage permanent collection, stock levels, and ROI margins.",
       href: "/admin/stable",
       icon: Package,
       color: "text-blue-500"
     },
     {
-      title: "Creative Engine",
+      title: "2. Creative Engine",
       description: "Neural intelligence dashboard for TikTok/IG performance.",
       href: "/admin/creative",
       icon: Activity,
       color: "text-red-500"
     },
     {
-      title: "Order Fulfillment",
+      title: "3. Order Fulfillment",
       description: "Process active checkouts, update tracking, and manage refunds.",
       href: "/admin/orders",
       icon: ShoppingBag,
       color: "text-green-500"
     },
     {
-      title: "Hunt Terminal",
+      title: "4. Hunt Terminal",
       description: "Global marketplace monitoring and price-drop arbitrage.",
       href: "/personal-hunt",
       icon: Target,
       color: "text-yellow-500"
     },
     {
-      title: "Review Queue",
+      title: "5. Review Queue",
       description: "Approve or discard scraped items before they hit the archive.",
       href: "/admin/review",
       icon: Search,
