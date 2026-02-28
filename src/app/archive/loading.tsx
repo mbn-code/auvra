@@ -1,23 +1,7 @@
-import { Metadata } from 'next';
-import ArchiveClient from './ArchiveClient';
-import { Suspense } from 'react';
+import React from 'react';
 import SkeletonCard from '@/components/SkeletonCard';
 
-export const revalidate = 60;
-
-export const metadata: Metadata = {
-  title: "Curated Archives | Discover One-of-One Luxury Pieces",
-  description: "Browse our live-sync collection of unique archive pieces. Sourced globally, verified by the Auvra Neural Engine. From Louis Vuitton to Arc'teryx.",
-  alternates: {
-    canonical: "https://auvra.eu/archive",
-  },
-  openGraph: {
-    title: "Curated Archives | Auvra",
-    description: "Discover expertly curated 1-of-1 luxury and streetwear archive pieces.",
-  },
-};
-
-function ArchiveLoading() {
+export default function Loading() {
   return (
     <div className="min-h-screen bg-[#fafafa] pt-40 pb-20 px-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end gap-12 border-b border-zinc-100 pb-20 mb-6">
@@ -35,13 +19,5 @@ function ArchiveLoading() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function Page() {
-  return (
-    <Suspense fallback={<ArchiveLoading />}>
-      <ArchiveClient />
-    </Suspense>
   );
 }

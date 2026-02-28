@@ -140,6 +140,7 @@ export default async function SoldOutPage() {
                     <Image 
                       src={item.images[0]} 
                       fill
+                      unoptimized
                       sizes="(max-width: 768px) 100vw, 33vw"
                       className="object-cover transition-transform duration-1000 group-hover:scale-105" 
                       alt={item.title} 

@@ -11,7 +11,7 @@ import { getEstimatedMarketValue } from "@/lib/pricing";
 import { NeuralInjections } from "@/components/NeuralInjections";
 import StableShowcase from "@/components/StableShowcase";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function Home() {
   const supabaseServer = await createClient();

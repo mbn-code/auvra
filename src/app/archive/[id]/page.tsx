@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: ArchiveProductPageProps): Pro
   };
 }
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function ArchiveProductPage({ params }: ArchiveProductPageProps) {
   const { id } = await params;
