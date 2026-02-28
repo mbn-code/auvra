@@ -7,10 +7,15 @@ interface StickyBuyProps {
   productId: string;
   price: string;
   quantity: number;
+  isStable?: boolean;
+  stockLevel?: number;
+  preOrderStatus?: boolean;
 }
 
-export default function StickyBuy({ productId, price, quantity }: StickyBuyProps) {
+export default function StickyBuy({ productId, price, quantity, isStable, stockLevel, preOrderStatus }: StickyBuyProps) {
   const [status, setStatus] = useState<"idle" | "securing" | "redirecting">("idle");
+
+  const isPreOrder = isStable && stockLevel === 0 && preOrderStatus;
 
   const handleCheckout = async () => {
     setStatus("securing");
@@ -27,7 +32,8 @@ export default function StickyBuy({ productId, price, quantity }: StickyBuyProps
       
       if (!response.ok) {
         const error = await response.json();
-        alert(error.error || "Acquisition failed. The archive piece may have just been secured by another node.");
+        const defaultMsg = isPreOrder ? "Pre-allocation request failed." : "Acquisition failed. The archive piece may have just been secured by another node.";
+        alert(error.error || defaultMsg);
         setStatus("idle");
         return;
       }
@@ -48,7 +54,7 @@ export default function StickyBuy({ productId, price, quantity }: StickyBuyProps
       <div className="max-w-md mx-auto space-y-4">
         <div className="flex items-center justify-center gap-3 text-[10px] font-bold text-zinc-900 uppercase tracking-[0.2em] mb-2 md:hidden">
           <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-          Archive Node Online
+          {isPreOrder ? 'Allocation System Online' : 'Archive Node Online'}
         </div>
         <button
           onClick={handleCheckout}
@@ -58,7 +64,7 @@ export default function StickyBuy({ productId, price, quantity }: StickyBuyProps
           {status === "securing" ? (
             <>
               <Loader2 className="animate-spin" size={16} />
-              Securing Archive Piece...
+              {isPreOrder ? 'Allocating Neural Node...' : 'Securing Archive Piece...'}
             </>
           ) : status === "redirecting" ? (
             <>
@@ -67,7 +73,7 @@ export default function StickyBuy({ productId, price, quantity }: StickyBuyProps
             </>
           ) : (
             <>
-              Confirm Order <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              {isPreOrder ? 'SECURE PRE-ALLOCATION' : 'Confirm Order'} <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </>
           )}
         </button>

@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
     const lineItems = [];
     const unavailableItems = [];
     let shippingZone = "EU_ONLY"; // Default to stricter zone if mixing
+    let isPreOrder = false;
 
     for (const id of productIds) {
       let product: any = staticProducts[id];
@@ -53,25 +54,33 @@ export async function POST(req: NextRequest) {
           .eq('id', id)
           .single();
         
-        if (!item || error || item.status !== 'available') {
+        if (!item || error || (item.status !== 'available' && !item.is_stable)) {
           unavailableItems.push(id);
           continue;
         }
 
+        // If it's a stable pre-order item, set the flag
+        if (item.is_stable && item.pre_order_status) {
+          isPreOrder = true;
+        }
+
         // Pulse-Check: Verify item is still live (Only 404 means definitively sold)
-        try {
-          const response = await fetch(item.source_url, {
-            method: 'HEAD',
-            headers: { 'User-Agent': 'Mozilla/5.0' },
-            next: { revalidate: 0 }
-          });
-          if (response.status === 404) {
-             await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', id);
-             unavailableItems.push(id);
-             continue; // Skip sold items
+        // Skip pulse check for stable items as we control the stock
+        if (!item.is_stable) {
+          try {
+            const response = await fetch(item.source_url, {
+              method: 'HEAD',
+              headers: { 'User-Agent': 'Mozilla/5.0' },
+              next: { revalidate: 0 }
+            });
+            if (response.status === 404) {
+               await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', id);
+               unavailableItems.push(id);
+               continue; // Skip sold items
+            }
+          } catch (e) {
+            console.error("Pulse-Check Error:", e);
           }
-        } catch (e) {
-          console.error("Pulse-Check Error:", e);
         }
 
         const basePrice = item.listing_price;
@@ -149,6 +158,7 @@ export async function POST(req: NextRequest) {
         productIds: productIds.join(','),
         type: 'mixed',
         isMember: isMember ? 'true' : 'false',
+        preOrder: isPreOrder ? 'true' : 'false',
         // PHASE 2 CIS: Pass attribution data to Stripe to close the loop
         sessionId: sessionId,
         creativeId: creativeId

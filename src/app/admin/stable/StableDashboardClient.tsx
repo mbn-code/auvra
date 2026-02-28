@@ -230,14 +230,33 @@ export default function StableDashboardClient({ initialItems }: { initialItems: 
                     </div>
                   </td>
                   <td className="p-6">
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black">€{Math.round(item.listing_price)}</span>
-                        <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">Public</span>
+                        <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest w-12">Public</span>
+                        <input 
+                          type="number" 
+                          value={item.listing_price}
+                          onChange={(e) => handleUpdate(item.id, { listing_price: parseFloat(e.target.value) })}
+                          className="w-20 bg-zinc-950 border border-zinc-800 p-1.5 rounded-lg text-xs font-black outline-none focus:border-red-500"
+                        />
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-yellow-500">€{Math.round(item.member_price || item.listing_price * 0.9)}</span>
-                        <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">Society</span>
+                        <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest w-12">Society</span>
+                        <input 
+                          type="number" 
+                          value={item.member_price || 0}
+                          onChange={(e) => handleUpdate(item.id, { member_price: parseFloat(e.target.value) })}
+                          className="w-20 bg-zinc-950 border border-zinc-800 p-1.5 rounded-lg text-xs font-black outline-none focus:border-red-500 text-yellow-500"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest w-12">Cost</span>
+                        <input 
+                          type="number" 
+                          value={item.source_price}
+                          onChange={(e) => handleUpdate(item.id, { source_price: parseFloat(e.target.value) })}
+                          className="w-20 bg-zinc-950 border border-zinc-800 p-1.5 rounded-lg text-xs font-black outline-none focus:border-red-500 text-zinc-400"
+                        />
                       </div>
                       <div className="flex items-center gap-2 pt-1 border-t border-zinc-800/50">
                         <TrendingUp size={10} className="text-green-500" />

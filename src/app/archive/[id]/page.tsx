@@ -210,6 +210,9 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                   productId={item.id} 
                   price={isMember ? formattedMemberPrice : formattedListingPrice} 
                   quantity={1} 
+                  isStable={item.is_stable}
+                  stockLevel={item.stock_level}
+                  preOrderStatus={item.pre_order_status}
                 />
                 <TrustPulse />
               </div>

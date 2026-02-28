@@ -1,11 +1,10 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { verifyAdmin } from "@/lib/admin";
 import HuntTerminal from "./HuntTerminal";
 
 export default async function PersonalHuntPage() {
-  const cookieStore = await cookies();
-  const isAdmin = cookieStore.get("admin_session")?.value === "authenticated";
+  const isAdmin = await verifyAdmin();
 
   if (!isAdmin) {
     redirect("/admin/login");

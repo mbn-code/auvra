@@ -1,4 +1,26 @@
--- Migration: Robust Neural Matching with Keyword Search
+-- Migration: Stable Inventory and Pre-Order Drop Infrastructure
+ALTER TABLE pulse_inventory 
+ADD COLUMN IF NOT EXISTS is_stable BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS stock_level INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS pre_order_status BOOLEAN DEFAULT TRUE;
+
+-- Add index for stable inventory performance
+CREATE INDEX IF NOT EXISTS idx_is_stable ON pulse_inventory(is_stable);
+
+-- RPC to safely decrement stock levels
+CREATE OR REPLACE FUNCTION decrement_stock(item_id UUID)
+RETURNS void AS $$
+BEGIN
+    UPDATE pulse_inventory
+    SET stock_level = GREATEST(0, stock_level - 1)
+    WHERE id = item_id AND is_stable = TRUE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- DROP existing function to change return type
+DROP FUNCTION IF EXISTS match_inventory_to_dna(vector,double precision,integer,integer,text);
+
+-- Update Neural Matching to prioritize stable nodes
 CREATE OR REPLACE FUNCTION match_inventory_to_dna(
   user_dna vector(512),
   match_threshold float DEFAULT 0.4,
@@ -47,4 +69,5 @@ BEGIN
     match_offset;
 END;
 $$ LANGUAGE plpgsql;
+
 

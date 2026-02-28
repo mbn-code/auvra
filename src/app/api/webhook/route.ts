@@ -26,28 +26,11 @@ export async function POST(req: NextRequest) {
     const session = event.data.object as any;
     
     // PHASE 2 CIS: Extract sessionId and creativeId from session.metadata
-    const { productId, type, userId, sessionId, creativeId } = session.metadata || {};
+    const { productId, type, userId, sessionId, creativeId, preOrder } = session.metadata || {};
     const customerEmail = session.customer_details?.email;
     const customerName = session.customer_details?.name;
 
-    // HANDLE MEMBERSHIP SUBSCRIPTION
-    if (type === 'membership' && userId) {
-      await supabase
-        .from('profiles')
-        .update({
-          membership_tier: 'society',
-          stripe_customer_id: session.customer,
-          subscription_status: 'active'
-        })
-        .eq('id', userId);
-        
-      if (customerEmail) {
-        await sendSocietyActiveEmail(customerEmail);
-      }
-        
-      console.log(`✅ Membership activated for user ${userId}`);
-      return NextResponse.json({ received: true });
-    }
+    // ... (rest of the logic)
 
     // HANDLE PRODUCT PURCHASE
     if (customerEmail && productId) {
@@ -57,13 +40,27 @@ export async function POST(req: NextRequest) {
       let profit = 0;
 
       // PHASE 2 CIS: Log the purchase event to pulse_events
-      if (sessionId && creativeId) {
+      const safeSessionId = sessionId || 'unknown';
+      const safeCreativeId = creativeId || null;
+      const stripeEventId = event.id;
+
+      const { data: existingEvent } = await supabase
+        .from('pulse_events')
+        .select('id')
+        .eq('event_type', 'purchase')
+        .contains('metadata', { stripe_event_id: stripeEventId })
+        .maybeSingle();
+
+      if (!existingEvent) {
         await supabase.rpc('batch_insert_pulse_events', {
           events: [{
-            session_id: sessionId,
-            creative_id: creativeId,
+            session_id: safeSessionId,
+            creative_id: safeCreativeId,
             event_type: 'purchase',
-            metadata: { revenue: (session.amount_total / 100) },
+            metadata: { 
+              revenue: (session.amount_total / 100),
+              stripe_event_id: stripeEventId
+            },
             timestamp: new Date().toISOString()
           }]
         });
@@ -81,7 +78,12 @@ export async function POST(req: NextRequest) {
           vintedUrl = item.source_url;
           profit = item.potential_profit;
           
-          await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', productId);
+          if (!item.is_stable) {
+            await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', productId);
+          } else {
+            // Decrement stock for stable items
+            await supabase.rpc('decrement_stock', { item_id: productId });
+          }
         }
       } else {
         const staticProduct = products[productId];
@@ -92,6 +94,9 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Determine initial order status
+      const initialStatus = preOrder === 'true' ? 'awaiting_manufacturing_allocation' : 'pending_secure';
+
       // Create Order Record for Terminal
       await supabase.from('orders').insert({
         stripe_session_id: session.id,
@@ -100,7 +105,7 @@ export async function POST(req: NextRequest) {
         customer_name: customerName,
         shipping_address: session.customer_details?.address,
         source_url: vintedUrl,
-        status: 'pending_secure'
+        status: initialStatus
       });
 
       // Send Order Confirmation
