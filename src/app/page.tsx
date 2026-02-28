@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase-server";
 import LimitedIntakes from "@/components/LimitedIntakes";
 import { getEstimatedMarketValue } from "@/lib/pricing";
 import { NeuralInjections } from "@/components/NeuralInjections";
+import StableShowcase from "@/components/StableShowcase";
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +51,13 @@ export default async function Home() {
     .single();
 
   const lastSyncTime = latestItem ? new Date(latestItem.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Real-time';
+
+  const { data: stableNodes } = await supabaseServer
+    .from('pulse_inventory')
+    .select('*')
+    .eq('is_stable', true)
+    .order('created_at', { ascending: false })
+    .limit(4);
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
@@ -228,6 +236,8 @@ export default async function Home() {
           ))}
         </div>
       </section>
+      
+      <StableShowcase items={stableNodes || []} isMember={isMember} />
 
       <section className="max-w-7xl mx-auto px-6 pb-40">
         <div className="text-center mb-24">
