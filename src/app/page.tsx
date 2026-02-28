@@ -8,6 +8,7 @@ import StylistFeature from "@/components/StylistFeature";
 import { createClient } from "@/lib/supabase-server";
 import LimitedIntakes from "@/components/LimitedIntakes";
 import { getEstimatedMarketValue } from "@/lib/pricing";
+import { NeuralInjections } from "@/components/NeuralInjections";
 
 export const dynamic = 'force-dynamic';
 
@@ -52,8 +53,9 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
+      <NeuralInjections />
       {/* ARCHIVE CAROUSEL HERO */}
-      <section className="relative pt-32 pb-24 overflow-hidden">
+      <section className="relative pt-12 pb-24 overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none text-black">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             <pattern id="hero-grid" width="10" height="10" patternUnits="userSpaceOnUse">

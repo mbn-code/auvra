@@ -10,6 +10,8 @@ import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Glo
 import { createClient } from "@/lib/supabase-server";
 import { Metadata } from "next";
 import { getEstimatedMarketValue } from "@/lib/pricing";
+import { VaultButton } from "@/components/VaultButton";
+import { NeuralEchoes } from "@/components/NeuralEchoes";
 
 interface ArchiveProductPageProps {
   params: Promise<{ id: string }>;
@@ -150,9 +152,12 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                    </div>
                 </div>
                 
-                <h1 className="text-5xl md:text-6xl font-black tracking-tighter leading-[0.95] text-zinc-900 uppercase italic">
-                  {item.title}
-                </h1>
+                <div className="flex items-center justify-between gap-6">
+                  <h1 className="text-5xl md:text-6xl font-black tracking-tighter leading-[0.95] text-zinc-900 uppercase italic flex-1">
+                    {item.title}
+                  </h1>
+                  <VaultButton productId={item.id} className="scale-125" />
+                </div>
 
                 <div className="flex flex-wrap items-center gap-3">
                    <div className="bg-zinc-900 text-white px-6 py-3 rounded-full border border-zinc-800 flex items-center gap-3 shadow-xl">
@@ -214,6 +219,8 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                   <p className="mb-6 leading-relaxed text-zinc-500">{item.description || "Captured by our algorithm for brand provenance and condition."}</p>
                 </Accordion>
               </div>
+
+              <NeuralEchoes productId={item.id} />
             </div>
           </section>
         </div>

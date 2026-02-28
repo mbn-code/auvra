@@ -98,7 +98,10 @@ export default function OutfitShowcase({ id, name, slots, createdAt }: OutfitSho
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productIds: availableIds })
+        body: JSON.stringify({ 
+          productIds: availableIds,
+          cancelUrl: window.location.href 
+        })
       });
 
       const data = await res.json();

@@ -9,6 +9,7 @@ import { Zap, ArrowLeft, Filter, ChevronDown, SortAsc, SortDesc, Clock, Search, 
 import PulseHeartbeat from "@/components/PulseHeartbeat";
 import { createClient } from "@/lib/supabase-client";
 import { getEstimatedMarketValue } from "@/lib/pricing";
+import { VaultButton } from "@/components/VaultButton";
 
 export default function BrandArchivePage({ params }: { params: Promise<{ brand: string }> }) {
   const { brand: brandName } = use(params);
@@ -178,10 +179,11 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                         </div>
                       </div>
                     )}
-                    <div className="absolute top-6 right-6">
+                    <div className="absolute top-6 right-6 flex flex-col gap-2 items-end">
                       <div className={`bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm ${isSold ? 'opacity-50' : ''}`}>
                         {item.size || 'OS'}
                       </div>
+                      {!isSold && <VaultButton productId={item.id} />}
                     </div>
                   </div>
                   <div className="px-2 flex justify-between items-end">

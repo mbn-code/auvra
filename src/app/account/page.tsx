@@ -155,9 +155,9 @@ export default async function AccountPage() {
                           <h4 className="text-lg font-black tracking-tight uppercase mb-1">{outfit.name || 'Neural Pattern'}</h4>
                           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">{new Date(outfit.created_at).toLocaleDateString()}</p>
                        </div>
-                       <Link href={`/stylist?outfit=${outfit.id}`} className="p-3 bg-zinc-50 rounded-full hover:bg-black hover:text-white transition-all">
+                        <Link href={`/outfit/${outfit.id}`} className="p-3 bg-zinc-50 rounded-full hover:bg-black hover:text-white transition-all">
                           <ArrowRight size={16} />
-                       </Link>
+                        </Link>
                     </div>
                     {/* Tiny preview thumbnails would go here */}
                     <div className="flex -space-x-4">

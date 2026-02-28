@@ -13,12 +13,16 @@ const ZONE_COUNTRIES: Record<string, string[]> = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { productId, productIds: passedProductIds, quantity } = await req.json();
+    const { productId, productIds: passedProductIds, quantity, cancelUrl: passedCancelUrl } = await req.json();
     
     const productIds = passedProductIds || (productId ? [productId] : []);
     if (productIds.length === 0) {
       return NextResponse.json({ error: "No products provided" }, { status: 400 });
     }
+
+    // Determine cancel URL: body > Referer header > default
+    const referrer = req.headers.get("referer");
+    const cancelUrl = passedCancelUrl || referrer || `${req.nextUrl.origin}/stylist`;
 
     // Check Membership Status
     const authSupabase = await createClient();
@@ -157,7 +161,7 @@ export async function POST(req: NextRequest) {
         enabled: true,
       },
       success_url: `${req.nextUrl.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.nextUrl.origin}/stylist`,
+      cancel_url: cancelUrl,
     });
 
     return NextResponse.json({ url: stripeSession.url });

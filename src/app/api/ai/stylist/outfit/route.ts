@@ -45,7 +45,7 @@ export async function GET(req: Request) {
 
     const { data: products, error: prodError } = await supabase
       .from('pulse_inventory')
-      .select('id, title, brand, listing_price, images, category, potential_profit')
+      .select('id, title, brand, listing_price, images, category, potential_profit, status')
       .in('id', productIds);
 
     if (prodError) throw prodError;
@@ -63,6 +63,7 @@ export async function GET(req: Request) {
           price: `€${Math.round(product.listing_price)}`,
           image: product.images[0],
           category: product.category,
+          status: product.status,
           matchScore: 100
         }];
       } else {

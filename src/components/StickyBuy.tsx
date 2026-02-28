@@ -18,7 +18,11 @@ export default function StickyBuy({ productId, price, quantity }: StickyBuyProps
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, quantity }),
+        body: JSON.stringify({ 
+          productId, 
+          quantity,
+          cancelUrl: window.location.href
+        }),
       });
       
       if (!response.ok) {

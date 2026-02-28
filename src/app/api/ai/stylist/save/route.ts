@@ -37,22 +37,43 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Society Membership Required' }, { status: 403 });
     }
 
-    const { slots, name = 'New Look' } = await req.json();
+    const { slots, name = 'New Look', outfitId } = await req.json();
 
-    const { data, error } = await supabase
-      .from('user_outfits')
-      .insert({
-        user_id: user.id,
-        name,
-        slots,
-        is_public: false
-      })
-      .select()
-      .single();
+    let result;
+    if (outfitId) {
+      // Update existing outfit
+      const { data, error } = await supabase
+        .from('user_outfits')
+        .update({
+          slots,
+          name,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', outfitId)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      result = data;
+    } else {
+      // Insert new outfit
+      const { data, error } = await supabase
+        .from('user_outfits')
+        .insert({
+          user_id: user.id,
+          name,
+          slots,
+          is_public: false
+        })
+        .select()
+        .single();
 
-    if (error) throw error;
+      if (error) throw error;
+      result = data;
+    }
 
-    return NextResponse.json(data);
+    return NextResponse.json(result);
 
   } catch (error) {
     console.error('[SaveOutfit] Error:', error);
