@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdmin } from "@/lib/admin";
-import { spawn } from "child_process";
+import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,43 +11,27 @@ export async function POST(req: NextRequest) {
 
     const { command } = await req.json();
     
-    let shellCommand = "";
-
-    switch (command) {
-      case "pulse":
-        shellCommand = "npx tsx scripts/pulse-run.ts";
-        break;
-      case "sync":
-        shellCommand = "python3 scripts/neural_sync.py";
-        break;
-      case "sync-force":
-        shellCommand = "python3 scripts/neural_sync.py --force";
-        break;
-      case "prune":
-        shellCommand = "python3 scripts/prune_archive.py";
-        break;
-      case "content":
-        shellCommand = "npx tsx scripts/generate-daily-content.ts";
-        break;
-      default:
-        return NextResponse.json({ error: "Invalid command" }, { status: 400 });
+    // Instead of spawning locally (which fails on Vercel Serverless),
+    // we insert a command into the database for the Raspberry Pi Sentinel to pick up.
+    
+    // Validate command to ensure it's a known task
+    const validCommands = ["pulse", "sync", "sync-force", "prune", "content"];
+    if (!validCommands.includes(command)) {
+      return NextResponse.json({ error: "Invalid command" }, { status: 400 });
     }
 
-    // Execute the command in the background
-    console.log(`[System Trigger] Executing: ${shellCommand}`);
-    
-    // Use a different name to avoid conflict with global 'process'
-    const child = spawn(shellCommand, {
-      shell: true,
-      detached: true,
-      stdio: 'ignore'
-    });
-    
-    child.unref();
+    const { error } = await supabase
+      .from('system_commands')
+      .insert({ command, status: 'pending' });
+
+    if (error) {
+      console.error("[System Trigger Error]:", error);
+      return NextResponse.json({ error: "Failed to queue command" }, { status: 500 });
+    }
 
     return NextResponse.json({ 
       success: true, 
-      message: `Task '${command}' initiated in background. Check server logs or sentinel.log for details.` 
+      message: `Task '${command}' queued. The Sentinel will execute it shortly.` 
     });
 
   } catch (error: any) {

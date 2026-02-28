@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 
 /**
  * ARCHIVE PRUNING ENDPOINT
- * Periodically checks source URLs and marks 404s or sold items.
- * To be called via Vercel Cron.
+ * Triggered via Vercel Cron.
+ * Offloads the heavy work to the Sentinel (Raspberry Pi) to avoid Vercel timeouts.
  */
 export async function GET(req: Request) {
   // Simple protection: Check for a secret key in headers
@@ -14,57 +14,18 @@ export async function GET(req: Request) {
   }
 
   try {
-    // 1. Fetch items to check
-    const { data: items, error: fetchError } = await supabase
-      .from('pulse_inventory')
-      .select('id, source_url')
-      .eq('status', 'available')
-      .limit(50); // Small batches to stay within timeout
+    // Queue the prune command for the Sentinel to pick up
+    const { error } = await supabase
+      .from('system_commands')
+      .insert({ command: 'prune', status: 'pending' });
 
-    if (fetchError || !items) throw fetchError;
-
-    const deadItems: string[] = [];
-
-    // 2. Check each URL (Sequential to be gentle on marketplaces)
-    for (const item of items) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const res = await fetch(item.source_url, { 
-          method: 'GET',
-          headers: { 'User-Agent': 'Mozilla/5.0' },
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-
-        if (res.status === 404) {
-          deadItems.push(item.id);
-          continue;
-        }
-
-        const text = await res.text();
-        const lowerText = text.toLowerCase();
-        if (lowerText.includes('"sold":true') || lowerText.includes('item is sold') || lowerText.includes('status":"sold"')) {
-          deadItems.push(item.id);
-        }
-      } catch (e) {
-        // Skip on timeout/other errors
-      }
-    }
-
-    // 3. Mark as sold
-    if (deadItems.length > 0) {
-      await supabase
-        .from('pulse_inventory')
-        .update({ status: 'sold' })
-        .in('id', deadItems);
+    if (error) {
+      throw error;
     }
 
     return NextResponse.json({ 
-      processed: items.length, 
-      pruned: deadItems.length 
+      success: true,
+      message: "Prune command queued for Sentinel." 
     });
 
   } catch (error: any) {

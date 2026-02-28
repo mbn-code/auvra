@@ -32,8 +32,20 @@ export async function POST(req: NextRequest) {
 
     // ... (rest of the logic)
 
+    // HANDLE MEMBERSHIP PURCHASE
+    if (type === 'membership' && userId) {
+      try {
+        await supabase.from('profiles').update({ membership_tier: 'society' }).eq('id', userId);
+        if (customerEmail) {
+          // sendSocietyActiveEmail is already imported at the top
+          await sendSocietyActiveEmail(customerEmail);
+        }
+      } catch (e) {
+        console.error("Failed to upgrade membership:", e);
+      }
+    }
     // HANDLE PRODUCT PURCHASE
-    if (customerEmail && productId) {
+    else if (customerEmail && productId) {
       let productName = "Archive Piece";
       let price = `€${(session.amount_total / 100).toFixed(2)}`;
       let vintedUrl = "";
@@ -78,14 +90,21 @@ export async function POST(req: NextRequest) {
           vintedUrl = item.source_url;
           profit = item.potential_profit;
           
-          if (!item.is_stable) {
-            await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', productId);
-          } else {
-            // Decrement physical stock and increment sold count for stable items
-            await supabase.rpc('decrement_stock', { item_id: productId });
-            await supabase.from('pulse_inventory')
-              .update({ units_sold_count: (item.units_sold_count || 0) + 1 })
-              .eq('id', productId);
+          try {
+            if (!item.is_stable) {
+              const { error } = await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', productId);
+              if (error) throw error;
+            } else {
+              // Decrement physical stock and increment sold count for stable items
+              const { error: stockErr } = await supabase.rpc('decrement_stock', { item_id: productId });
+              if (stockErr) throw stockErr;
+              const { error: countErr } = await supabase.from('pulse_inventory')
+                .update({ units_sold_count: (item.units_sold_count || 0) + 1 })
+                .eq('id', productId);
+              if (countErr) throw countErr;
+            }
+          } catch (updateErr) {
+            console.error(`Failed to update inventory for ${productId}:`, updateErr);
           }
         }
       } else {

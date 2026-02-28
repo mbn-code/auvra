@@ -43,18 +43,30 @@ export async function POST(req: NextRequest) {
     let shippingZone = "EU_ONLY"; // Default to stricter zone if mixing
     let isPreOrder = false;
 
+    // Pre-fetch all non-static items in one go
+    const dbItemIds = productIds.filter((id: string) => !staticProducts[id]);
+    let fetchedItems: Record<string, any> = {};
+    if (dbItemIds.length > 0) {
+      const { data: items, error } = await supabase
+        .from('pulse_inventory')
+        .select('*')
+        .in('id', dbItemIds);
+      
+      if (!error && items) {
+        items.forEach(item => {
+          fetchedItems[item.id] = item;
+        });
+      }
+    }
+
     for (const id of productIds) {
       let product: any = staticProducts[id];
       let isArchive = false;
 
       if (!product) {
-        const { data: item, error } = await supabase
-          .from('pulse_inventory')
-          .select('*')
-          .eq('id', id)
-          .single();
+        const item = fetchedItems[id];
         
-        if (!item || error || (item.status !== 'available' && !item.is_stable)) {
+        if (!item || (item.status !== 'available' && !item.is_stable)) {
           unavailableItems.push(id);
           continue;
         }
@@ -62,25 +74,6 @@ export async function POST(req: NextRequest) {
         // If it's a stable pre-order item, set the flag
         if (item.is_stable && item.pre_order_status) {
           isPreOrder = true;
-        }
-
-        // Pulse-Check: Verify item is still live (Only 404 means definitively sold)
-        // Skip pulse check for stable items as we control the stock
-        if (!item.is_stable) {
-          try {
-            const response = await fetch(item.source_url, {
-              method: 'HEAD',
-              headers: { 'User-Agent': 'Mozilla/5.0' },
-              next: { revalidate: 0 }
-            });
-            if (response.status === 404) {
-               await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', id);
-               unavailableItems.push(id);
-               continue; // Skip sold items
-            }
-          } catch (e) {
-            console.error("Pulse-Check Error:", e);
-          }
         }
 
         // Determine correct base price for stable/pre-order items

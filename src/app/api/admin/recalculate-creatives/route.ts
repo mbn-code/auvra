@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { verifyAdmin } from "@/lib/admin";
 
 export async function POST(req: NextRequest) {
   try {
     const adminSecret = req.headers.get("x-admin-secret") || req.headers.get("authorization")?.replace("Bearer ", "");
     
-    if (adminSecret !== process.env.CRON_SECRET) {
+    let isAuthorized = false;
+    
+    if (adminSecret === process.env.CRON_SECRET && process.env.CRON_SECRET) {
+      isAuthorized = true;
+    } else {
+      const isAdmin = await verifyAdmin();
+      if (isAdmin) isAuthorized = true;
+    }
+
+    if (!isAuthorized) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

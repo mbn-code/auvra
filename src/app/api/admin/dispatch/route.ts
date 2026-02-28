@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { sendDispatchEmail } from "@/lib/email";
-import { cookies } from "next/headers";
+import { verifyAdmin } from "@/lib/admin";
 
 export async function POST(req: NextRequest) {
-  const cookieStore = await cookies();
-  const isAdmin = cookieStore.get("admin_session")?.value === "authenticated";
+  const isAdmin = await verifyAdmin();
 
   if (!isAdmin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -34,30 +34,34 @@ export default async function Home() {
     "CP Company", "Moncler", "A Bathing Ape", "Prada"
   ];
 
-  const { data: archiveItems } = await supabaseServer
-    .from('pulse_inventory')
-    .select('*')
-    .in('status', ['available', 'sold'])
-    .in('brand', allowedBrands)
-    .gte('listing_price', 200) 
-    .order('created_at', { ascending: false })
-    .limit(12);
+  const [archiveRes, latestItemRes, stableNodesRes] = await Promise.all([
+    supabaseServer
+      .from('pulse_inventory')
+      .select('*')
+      .in('status', ['available', 'sold'])
+      .in('brand', allowedBrands)
+      .gte('listing_price', 200) 
+      .order('created_at', { ascending: false })
+      .limit(12),
+    supabaseServer
+      .from('pulse_inventory')
+      .select('created_at')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single(),
+    supabaseServer
+      .from('pulse_inventory')
+      .select('*')
+      .eq('is_stable', true)
+      .order('created_at', { ascending: false })
+      .limit(4)
+  ]);
 
-  const { data: latestItem } = await supabaseServer
-    .from('pulse_inventory')
-    .select('created_at')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+  const archiveItems = archiveRes.data;
+  const latestItem = latestItemRes.data;
+  const stableNodes = stableNodesRes.data;
 
   const lastSyncTime = latestItem ? new Date(latestItem.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Real-time';
-
-  const { data: stableNodes } = await supabaseServer
-    .from('pulse_inventory')
-    .select('*')
-    .eq('is_stable', true)
-    .order('created_at', { ascending: false })
-    .limit(4);
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
