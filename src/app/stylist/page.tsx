@@ -515,7 +515,14 @@ function StylistContent() {
                   {outfits.map((item: any) => (
                     <DraggableItem key={item.id} item={item}>
                       <div className="group bg-white rounded-[2.5rem] p-6 border border-zinc-100 hover:shadow-2xl transition-all relative h-full">
-                        <div className="absolute top-6 right-6 z-10 flex flex-col gap-2">
+                        <div className="absolute top-6 left-6 z-10 flex flex-col gap-2 pointer-events-none">
+                           {item.is_stable && (
+                             <div className="bg-blue-600 text-white text-[7px] font-black px-2 py-1 rounded-md shadow-lg flex items-center gap-1 uppercase tracking-widest animate-in fade-in zoom-in duration-500">
+                               <Layers size={8} /> Core Match
+                             </div>
+                           )}
+                        </div>
+                        <div className="absolute top-6 right-6 z-10 flex flex-col gap-2 pointer-events-none">
                            <div className="bg-yellow-400 text-black text-[8px] font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1"><Zap size={8} fill="black" /> {item.matchScore}%</div>
                         </div>
                         <div className="aspect-[4/5] bg-white rounded-[2rem] mb-4 overflow-hidden relative border border-zinc-100 shadow-inner group-hover:scale-[1.02] transition-transform duration-500">

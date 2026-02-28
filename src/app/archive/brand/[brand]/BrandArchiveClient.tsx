@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { use } from "react";
 import { supabase } from "@/lib/supabase";
-import { Zap, ArrowLeft, Filter, ChevronDown, SortAsc, SortDesc, Clock, Search, Lock, ArrowRight } from "lucide-react";
+import { Zap, ArrowLeft, Filter, ChevronDown, SortAsc, SortDesc, Clock, Search, Lock, ArrowRight, Layers } from "lucide-react";
 import PulseHeartbeat from "@/components/PulseHeartbeat";
 import { createClient } from "@/lib/supabase-client";
 import { getEstimatedMarketValue } from "@/lib/pricing";
@@ -179,6 +179,16 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                         </div>
                       </div>
                     )}
+                    <div className="absolute top-6 left-6 z-10 flex flex-col gap-2">
+                       <div className="bg-black text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
+                          {item.brand}
+                       </div>
+                       {item.is_stable && (
+                         <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-[7px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5 border border-blue-400">
+                            <Layers size={10} /> Core Allocation
+                         </div>
+                       )}
+                    </div>
                     <div className="absolute top-6 right-6 flex flex-col gap-2 items-end">
                       <div className={`bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm ${isSold ? 'opacity-50' : ''}`}>
                         {item.size || 'OS'}

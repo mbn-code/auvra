@@ -32,6 +32,7 @@ export default async function Header() {
             <nav className="hidden lg:flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">
               <Link href="/archive" className="hover:text-black transition-colors text-zinc-900 italic">Archive Pulse</Link>
               <Link href="/stylist" className="hover:text-black transition-colors">AI Stylist</Link>
+              <Link href="/core" className="hover:text-black transition-colors text-blue-600">Core Hardware</Link>
               {isSociety ? (
                 <Link href="/account" className="text-yellow-600 flex items-center gap-2">
                   <Zap size={10} className="fill-yellow-600" /> Society Node

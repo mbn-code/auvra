@@ -66,6 +66,7 @@ export async function POST(req: Request) {
       price: `€${Math.round(item.listing_price)}`,
       image: item.images && item.images.length > 0 ? item.images[0] : null,
       url: `https://auvra.eu/archive/${item.id}`,
+      is_stable: item.is_stable,
       // Convert cosine similarity to a human-friendly match percentage
       matchScore: Math.round(item.similarity * 100)
     }));

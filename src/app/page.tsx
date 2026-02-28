@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { products } from "@/config/products";
-import { ArrowRight, Sparkles, Flame, Zap, Lock, Cpu, Globe, Fingerprint, Hexagon } from "lucide-react";
+import { ArrowRight, Sparkles, Flame, Zap, Lock, Cpu, Globe, Fingerprint, Hexagon, Layers } from "lucide-react";
 import NeuralFeed from "@/components/NeuralFeed";
 import TikTokEmbeds from "@/components/TikTokEmbeds";
 import StylistFeature from "@/components/StylistFeature";
@@ -130,10 +130,16 @@ export default async function Home() {
                         </div>
                       )}
 
-                      <div className="absolute top-8 left-8 z-10">
+                      <div className="absolute top-8 left-8 z-10 flex flex-col gap-2">
                          <div className="bg-black text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest">
                             {item.brand}
                          </div>
+                         {item.is_stable && (
+                           <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-[7px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5 border border-blue-400 animate-in fade-in zoom-in duration-500">
+                              <Layers size={10} className="text-white" />
+                              Core Allocation
+                           </div>
+                         )}
                       </div>
                       
                       <div className="absolute top-8 right-8 z-10 flex flex-col gap-2 items-end">

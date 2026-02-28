@@ -6,7 +6,7 @@ import LiveActivity from "@/components/LiveActivity";
 import StickyBuy from "@/components/StickyBuy";
 import TrustPulse from "@/components/TrustPulse";
 import NeuralDecrypt from "@/components/NeuralDecrypt";
-import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle, Clock, Lock, ExternalLink, Cpu } from "lucide-react";
+import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle, Clock, Lock, ExternalLink, Cpu, Layers } from "lucide-react";
 import { createClient } from "@/lib/supabase-server";
 import { Metadata } from "next";
 import { getEstimatedMarketValue } from "@/lib/pricing";
@@ -121,6 +121,12 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                           <Zap size={10} className="text-yellow-400" />
                           Auvra Pulse Selection
                        </div>
+                       {item.is_stable && (
+                         <div className="bg-blue-600/90 backdrop-blur-md text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2 shadow-sm border border-blue-400">
+                            <Layers size={10} className="text-white" />
+                            Core Allocation Node
+                         </div>
+                       )}
                     </div>
                   )}
                </div>
