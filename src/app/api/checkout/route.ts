@@ -83,12 +83,21 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        const basePrice = item.listing_price;
+        // Determine correct base price for stable/pre-order items
+        let basePrice = item.listing_price;
+        if (item.is_stable) {
+          if (item.units_sold_count < item.early_bird_limit && item.early_bird_price) {
+            basePrice = item.early_bird_price;
+          } else if (item.pre_order_status && item.preorder_price) {
+            basePrice = item.preorder_price;
+          }
+        }
+
         const finalPrice = isMember ? (item.member_price || Math.round(basePrice * 0.9)) : basePrice;
 
         product = {
           name: item.title,
-          price: finalPrice * 100, // Convert to cents
+          price: Math.round(finalPrice * 100), // Convert to cents
           currency: item.currency.toLowerCase(),
           images: item.images,
           description: item.description || `Archive piece: ${item.brand}`,

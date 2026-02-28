@@ -81,8 +81,11 @@ export async function POST(req: NextRequest) {
           if (!item.is_stable) {
             await supabase.from('pulse_inventory').update({ status: 'sold' }).eq('id', productId);
           } else {
-            // Decrement stock for stable items
+            // Decrement physical stock and increment sold count for stable items
             await supabase.rpc('decrement_stock', { item_id: productId });
+            await supabase.from('pulse_inventory')
+              .update({ units_sold_count: (item.units_sold_count || 0) + 1 })
+              .eq('id', productId);
           }
         }
       } else {

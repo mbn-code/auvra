@@ -24,8 +24,12 @@ interface StableItem {
   brand: string;
   listing_price: number;
   member_price: number | null;
+  early_bird_price: number | null;
+  early_bird_limit: number;
+  preorder_price: number | null;
   source_price: number; // Mapping source_cost to source_price from schema
   stock_level: number;
+  units_sold_count: number;
   images: string[];
   style_embedding: any;
   created_at: string;
@@ -42,6 +46,9 @@ export default function StableDashboardClient({ initialItems }: { initialItems: 
     brand: "",
     listing_price: "",
     member_price: "",
+    early_bird_price: "",
+    early_bird_limit: "20",
+    preorder_price: "",
     source_cost: "",
     stock_level: "0",
     category: "Archive"
@@ -111,6 +118,9 @@ export default function StableDashboardClient({ initialItems }: { initialItems: 
         brand: "",
         listing_price: "",
         member_price: "",
+        early_bird_price: "",
+        early_bird_limit: "20",
+        preorder_price: "",
         source_cost: "",
         stock_level: "0",
         category: "Archive"
@@ -232,7 +242,7 @@ export default function StableDashboardClient({ initialItems }: { initialItems: 
                   <td className="p-6">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest w-12">Public</span>
+                        <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest w-12">Launch</span>
                         <input 
                           type="number" 
                           value={item.listing_price}
@@ -241,7 +251,7 @@ export default function StableDashboardClient({ initialItems }: { initialItems: 
                         />
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest w-12">Society</span>
+                        <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest w-12">Member</span>
                         <input 
                           type="number" 
                           value={item.member_price || 0}
@@ -249,13 +259,29 @@ export default function StableDashboardClient({ initialItems }: { initialItems: 
                           className="w-20 bg-zinc-950 border border-zinc-800 p-1.5 rounded-lg text-xs font-black outline-none focus:border-red-500 text-yellow-500"
                         />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest w-12">Cost</span>
+                      <div className="flex items-center gap-2 border-t border-zinc-800/50 pt-2">
+                        <span className="text-[9px] text-red-500 font-bold uppercase tracking-widest w-12">Early</span>
                         <input 
                           type="number" 
-                          value={item.source_price}
-                          onChange={(e) => handleUpdate(item.id, { source_price: parseFloat(e.target.value) })}
-                          className="w-20 bg-zinc-950 border border-zinc-800 p-1.5 rounded-lg text-xs font-black outline-none focus:border-red-500 text-zinc-400"
+                          value={item.early_bird_price || 0}
+                          onChange={(e) => handleUpdate(item.id, { early_bird_price: parseFloat(e.target.value) })}
+                          className="w-20 bg-zinc-950 border border-zinc-800 p-1.5 rounded-lg text-xs font-black outline-none focus:border-red-500 text-red-400"
+                        />
+                        <span className="text-[8px] text-zinc-600 font-bold">Limit:</span>
+                        <input 
+                          type="number" 
+                          value={item.early_bird_limit}
+                          onChange={(e) => handleUpdate(item.id, { early_bird_limit: parseInt(e.target.value) })}
+                          className="w-12 bg-zinc-950 border border-zinc-800 p-1.5 rounded-lg text-xs font-black outline-none focus:border-red-500"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest w-12">Preorder</span>
+                        <input 
+                          type="number" 
+                          value={item.preorder_price || 0}
+                          onChange={(e) => handleUpdate(item.id, { preorder_price: parseFloat(e.target.value) })}
+                          className="w-20 bg-zinc-950 border border-zinc-800 p-1.5 rounded-lg text-xs font-black outline-none focus:border-red-500"
                         />
                       </div>
                       <div className="flex items-center gap-2 pt-1 border-t border-zinc-800/50">
@@ -263,20 +289,38 @@ export default function StableDashboardClient({ initialItems }: { initialItems: 
                         <span className="text-[10px] font-black text-green-500">
                           +{Math.round((item.listing_price - item.source_price) * 7.45)} kr. profit
                         </span>
+                        <div className="ml-auto bg-white/5 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest text-zinc-400">
+                          Active: €{
+                            item.units_sold_count < item.early_bird_limit && item.early_bird_price
+                            ? item.early_bird_price
+                            : (item.preorder_price || item.listing_price)
+                          }
+                        </div>
                       </div>
                     </div>
                   </td>
                   <td className="p-6">
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="number" 
-                        value={item.stock_level}
-                        onChange={(e) => handleUpdate(item.id, { stock_level: parseInt(e.target.value) })}
-                        className="w-16 bg-zinc-950 border border-zinc-800 p-2 rounded-lg text-xs font-black outline-none focus:border-red-500"
-                      />
-                      {item.stock_level <= 3 && (
-                        <span className="text-[8px] font-black text-red-500 uppercase animate-pulse">Low Stock</span>
-                      )}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="number" 
+                          value={item.stock_level}
+                          onChange={(e) => handleUpdate(item.id, { stock_level: parseInt(e.target.value) })}
+                          className="w-16 bg-zinc-950 border border-zinc-800 p-2 rounded-lg text-xs font-black outline-none focus:border-red-500"
+                        />
+                        {item.stock_level <= 3 && (
+                          <span className="text-[8px] font-black text-red-500 uppercase animate-pulse">Low Stock</span>
+                        )}
+                      </div>
+                      <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800">
+                        <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-1">Total Sales</p>
+                        <p className="text-sm font-black text-white">{item.units_sold_count || 0}</p>
+                        {item.units_sold_count < item.early_bird_limit && (
+                          <p className="text-[7px] font-bold text-red-500 uppercase mt-1">
+                            {item.early_bird_limit - item.units_sold_count} left for Early Bird
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="p-6 text-right">
@@ -350,7 +394,7 @@ export default function StableDashboardClient({ initialItems }: { initialItems: 
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Public Price (€)</label>
+                    <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Public Launch Price (€)</label>
                     <input type="number" required value={formData.listing_price} onChange={e => setFormData({...formData, listing_price: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 p-4 rounded-2xl text-sm font-bold outline-none focus:border-red-500" placeholder="120" />
                   </div>
                   <div>
@@ -358,6 +402,23 @@ export default function StableDashboardClient({ initialItems }: { initialItems: 
                     <input type="number" required value={formData.member_price} onChange={e => setFormData({...formData, member_price: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 p-4 rounded-2xl text-sm font-bold outline-none focus:border-red-500" placeholder="95" />
                   </div>
                 </div>
+                
+                <div className="grid grid-cols-2 gap-4 border-t border-zinc-800 pt-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-red-500 uppercase tracking-widest mb-2">Early Bird Price (€)</label>
+                    <input type="number" value={formData.early_bird_price} onChange={e => setFormData({...formData, early_bird_price: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 p-4 rounded-2xl text-sm font-bold outline-none focus:border-red-500" placeholder="60" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Early Bird Limit (Units)</label>
+                    <input type="number" value={formData.early_bird_limit} onChange={e => setFormData({...formData, early_bird_limit: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 p-4 rounded-2xl text-sm font-bold outline-none focus:border-red-500" placeholder="20" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Standard Preorder Price (€)</label>
+                  <input type="number" value={formData.preorder_price} onChange={e => setFormData({...formData, preorder_price: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 p-4 rounded-2xl text-sm font-bold outline-none focus:border-red-500" placeholder="75" />
+                </div>
+
                 <div>
                   <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Source Cost (€)</label>
                   <input type="number" required value={formData.source_cost} onChange={e => setFormData({...formData, source_cost: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 p-4 rounded-2xl text-sm font-bold outline-none focus:border-red-500" placeholder="20" />
