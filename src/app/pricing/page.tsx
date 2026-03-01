@@ -9,7 +9,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-black text-white py-32 px-6 overflow-hidden relative selection:bg-yellow-400 selection:text-black">
-      
+
       {/* 1. LAYER: NEURAL MESH BACKGROUND */}
       <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -26,19 +26,19 @@ export default function PricingPage() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-yellow-500/5 rounded-full blur-[120px] animate-pulse pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        
+
         {/* HEADER: MISSION STATEMENT */}
         <header className="flex flex-col items-center text-center mb-24">
           <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-zinc-800 bg-black mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <Fingerprint size={14} className="text-yellow-400" />
             <span className="text-[10px] font-black uppercase tracking-[0.6em] text-zinc-400">Node Authentication Required</span>
           </div>
-          
+
           <h1 className="text-7xl md:text-[10rem] font-black tracking-[ -0.08em] leading-[0.8] mb-12 uppercase italic animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            The <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-800">Archive</span> <br /> 
+            The <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-800">Archive</span> <br />
             Is Yours.
           </h1>
-          
+
           <p className="text-zinc-500 text-xl md:text-2xl font-medium max-w-3xl mx-auto leading-relaxed tracking-tight animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-200">
             Auvra Society is not a subscription. It is a key to the neural creative mesh. Access the workstation, bypass the retail markup, and secure artifacts.
           </p>
@@ -47,21 +47,21 @@ export default function PricingPage() {
         {/* PRICING TOGGLE */}
         <div className="flex justify-center mb-16 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
           <div className="bg-zinc-900 border border-zinc-800 p-1.5 rounded-full flex items-center relative">
-             <button 
+             <button
                onClick={() => setIsAnnual(false)}
                className={`relative z-10 px-8 py-3 rounded-full text-xs font-black uppercase tracking-[0.2em] transition-colors ${!isAnnual ? 'text-black' : 'text-zinc-400 hover:text-white'}`}
              >
                Monthly
              </button>
-             <button 
+             <button
                onClick={() => setIsAnnual(true)}
                className={`relative z-10 px-8 py-3 rounded-full text-xs font-black uppercase tracking-[0.2em] transition-colors flex items-center gap-2 ${isAnnual ? 'text-black' : 'text-zinc-400 hover:text-white'}`}
              >
                Annual <span className={`text-[8px] px-2 py-0.5 rounded-full ${isAnnual ? 'bg-black text-yellow-400' : 'bg-yellow-400/20 text-yellow-400'}`}>Save 20%</span>
              </button>
-             
+
              {/* Toggle Background Pill */}
-             <div 
+             <div
                className={`absolute top-1.5 bottom-1.5 w-[50%] bg-white rounded-full transition-transform duration-500 ease-out`}
                style={{ transform: isAnnual ? 'translateX(95%)' : 'translateX(0)' }}
              ></div>
@@ -70,7 +70,7 @@ export default function PricingPage() {
 
         {/* TIERS: ARCHITECTURAL GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch mb-40">
-          
+
           {/* GUEST: THE EXTERNAL NODE */}
           <div className="lg:col-span-5 relative group">
             <div className="h-full bg-zinc-950/50 backdrop-blur-xl border border-zinc-900 rounded-[4rem] p-12 flex flex-col transition-all duration-700 hover:border-zinc-700">
@@ -109,7 +109,7 @@ export default function PricingPage() {
                 </div>
               </div>
 
-              <Link 
+              <Link
                 href="/archive"
                 className="w-full py-6 rounded-full bg-zinc-900 border border-zinc-800 text-center font-black text-[10px] uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all duration-500"
               >
@@ -122,9 +122,9 @@ export default function PricingPage() {
           <div className="lg:col-span-7 relative">
             {/* High-Impact Glow Container */}
             <div className="absolute inset-0 bg-yellow-400/10 blur-[100px] rounded-full animate-pulse"></div>
-            
+
             <div className="relative h-full bg-white text-black rounded-[4rem] p-12 md:p-16 flex flex-col shadow-[0_0_100px_rgba(255,255,255,0.1)] overflow-hidden">
-              
+
               {/* Animated Label */}
               <div className="absolute top-12 right-12">
                  <div className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-full">
@@ -137,7 +137,7 @@ export default function PricingPage() {
                 <h3 className="text-6xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">Society</h3>
                 <div className="flex items-baseline gap-4">
                    <span className="text-4xl font-black">€{isAnnual ? '15' : '19'}</span>
-                   <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest">/ Membership Access {isAnnual && '(Billed Annually)'}</span>
+                   <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest">/ monthly for Membership Access {isAnnual && '(Billed Annually)'}</span>
                 </div>
               </div>
 
@@ -177,7 +177,7 @@ export default function PricingPage() {
                 </div>
               </div>
 
-              <Link 
+              <Link
                 href="/api/checkout/subscribe"
                 className="w-full bg-black text-white py-8 rounded-full text-center font-black text-sm uppercase tracking-[0.5em] hover:bg-zinc-800 transition-all shadow-2xl flex items-center justify-center gap-6"
               >
@@ -207,7 +207,7 @@ export default function PricingPage() {
                  <p className="text-xs font-bold">Society Concierge</p>
               </div>
            </div>
-           
+
            <p className="text-[10px] text-zinc-700 font-black uppercase tracking-[0.8em]">Auvra • Neural Archive Network • 2026</p>
         </div>
       </div>
