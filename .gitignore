@@ -52,3 +52,4 @@ __pycache__/
 upload_registry.db
 data/
 
+.env*.local

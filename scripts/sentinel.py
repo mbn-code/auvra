@@ -61,22 +61,45 @@ def run_command(command: str, description: str, manual: bool = False):
     start_time = time.time()
     
     try:
-        # Use shell=True to handle npx/pip etc easily
-        process = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+        # Run the command and stream output in real-time
+        process = subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            universal_newlines=True
+        )
+        
+        output_lines = []
+        if process.stdout:
+            for line in process.stdout:
+                # Print to console/log immediately
+                clean_line = line.strip()
+                if clean_line:
+                    logging.info(f"[{description}] {clean_line}")
+                    output_lines.append(clean_line)
+                
+        # Wait for the process to finish
+        process.wait()
+        
         duration = round(time.time() - start_time, 2)
         
-        # Log the output for verbosity (last 500 chars to avoid log bloat)
-        output = process.stdout.strip()
-        if output:
-            logging.info(f"Output for {description}:\n{output[-500:]}")
+        if process.returncode == 0:
+            logging.info(f"✅ Completed: {description} ({duration}s)")
+            if manual:
+                notify_telegram(f"✅ Manual Override Complete: {description} finished in {duration}s.")
+            return True
+        else:
+            error_output = "\n".join(output_lines[-10:]) if output_lines else "No output"
+            error_msg = f"❌ FAILED: {description}\nExit Code: {process.returncode}\nLast Output: {error_output}"
+            logging.error(error_msg)
+            notify_telegram(error_msg)
+            return False
             
-        logging.info(f"✅ Completed: {description} ({duration}s)")
-        if manual:
-            notify_telegram(f"✅ Manual Override Complete: {description} finished in {duration}s.")
-            
-        return True
-    except subprocess.CalledProcessError as e:
-        error_msg = f"❌ FAILED: {description}\nError: {e.stderr[:200]}"
+    except Exception as e:
+        error_msg = f"❌ FAILED TO EXECUTE: {description}\nError: {str(e)}"
         logging.error(error_msg)
         notify_telegram(error_msg)
         return False

@@ -1,5 +1,5 @@
-sentence-transformers
-supabase
+onnxruntime
+transformers
 pillow
 numpy
 python-dotenv

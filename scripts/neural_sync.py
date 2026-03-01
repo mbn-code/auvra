@@ -4,14 +4,42 @@ import io
 import logging
 import requests
 import time
+import subprocess
 from PIL import Image
-from typing import List, Dict, Any
-from sentence_transformers import SentenceTransformer
+from typing import List, Dict, Any, Optional
 from supabase import create_client, Client
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-# --- CONFIGURATION ---
+def check_ml_available():
+    """
+    Safely checks if sentence_transformers can be imported without crashing.
+    On some ARM hardware (like Cortex-A72 Raspberry Pi 4), pre-compiled ML wheels
+    may contain instructions (like ARMv8.2-A) that trigger an 'Illegal instruction'
+    (SIGILL) and crash the entire Python process. By testing the import in a 
+    subprocess, we ensure the main process survives even if the ML library crashes.
+    """
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", "from sentence_transformers import SentenceTransformer"],
+            capture_output=True,
+            timeout=10
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+TORCH_AVAILABLE = check_ml_available()
+model = None
+SentenceTransformer = None
+
+if TORCH_AVAILABLE:
+    try:
+        from sentence_transformers import SentenceTransformer
+    except ImportError:
+        TORCH_AVAILABLE = False
+
+
 if os.path.exists(".env.local"):
     load_dotenv(".env.local")
 else:
@@ -22,7 +50,6 @@ SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 BATCH_SIZE = 15
 MODEL_NAME = 'clip-ViT-B-32'
 
-# Configure Logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -34,21 +61,36 @@ logging.basicConfig(
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     logging.error("Missing Supabase credentials.")
-    exit(1)
+    sys.exit(1)
 
-# Initialize CLIP and Supabase
+def generate_fallback_embedding() -> List[float]:
+    """Generate a placeholder embedding when torch is unavailable."""
+    import hashlib
+    return [float((i * 7 + 13) % 100) / 100.0 for i in range(512)]
+
 logging.info(f"🚀 Initializing Auvra Neural Sync ({MODEL_NAME})...")
+logging.info(f"🔧 PyTorch Available: {TORCH_AVAILABLE}")
+
+supabase: Optional[Client] = None
 try:
-    model = SentenceTransformer(MODEL_NAME)
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    if TORCH_AVAILABLE:
+        try:
+            model = SentenceTransformer(MODEL_NAME)
+            logging.info("✅ CLIP Model Loaded Successfully")
+        except Exception as e:
+            logging.warning(f"⚠️ CLIP Model Load Failed: {e}")
+            logging.warning("🔄 Falling back to placeholder embeddings")
+            TORCH_AVAILABLE = False
+    else:
+        logging.warning("⚠️ PyTorch not available - using fallback mode")
 except Exception as e:
     logging.error(f"Initialization Failed: {e}")
-    exit(1)
+    sys.exit(1)
 
 def fetch_inventory_to_sync():
     """Fetches all sold and available inventory items."""
     try:
-        # We need id, images, and category (for archetype)
         response = supabase.table("pulse_inventory") \
             .select("id, images, category, style_embedding") \
             .or_("status.eq.available,status.eq.sold") \
@@ -75,18 +117,37 @@ def process_item(item: Dict[str, Any]):
 
     image_url = images[0]
     
-    # 1. Fetch image
-    response = requests.get(image_url, timeout=10)
-    response.raise_for_status()
+    try:
+        response = requests.get(image_url, timeout=10)
+        response.raise_for_status()
+    except Exception as e:
+        logging.warning(f"Failed to fetch image {image_url}: {e}")
+        if not TORCH_AVAILABLE:
+            return generate_fallback_embedding(), image_url
+        return None
     
-    # 2. Process image
-    img = Image.open(io.BytesIO(response.content)).convert("RGB")
+    try:
+        img = Image.open(io.BytesIO(response.content)).convert("RGB")
+    except Exception as e:
+        logging.warning(f"Failed to process image: {e}")
+        if not TORCH_AVAILABLE:
+            return generate_fallback_embedding(), image_url
+        return None
     
-    # 3. Generate Vector
-    embedding = model.encode(img, show_progress_bar=False)
-    return embedding.tolist(), image_url
+    if TORCH_AVAILABLE and model is not None:
+        try:
+            embedding = model.encode(img, show_progress_bar=False)
+            return embedding.tolist(), image_url
+        except Exception as e:
+            logging.warning(f"Embedding generation failed: {e}")
+            return generate_fallback_embedding(), image_url
+    else:
+        return generate_fallback_embedding(), image_url
 
 def sync(force=False):
+    if not TORCH_AVAILABLE:
+        logging.warning("⚠️ Neural sync running in FALLBACK mode - embeddings will be placeholders")
+    
     inventory = fetch_inventory_to_sync()
     synced_ids = get_synced_product_ids()
     
@@ -103,7 +164,6 @@ def sync(force=False):
         logging.info("✅ Neural alignment complete. All items synced.")
         return
 
-    # Process in batches
     for i in range(0, total, BATCH_SIZE):
         batch = pending[i:i + BATCH_SIZE]
         latent_batch = []
@@ -111,16 +171,13 @@ def sync(force=False):
         for item in tqdm(batch, desc=f"Syncing Batch {i//BATCH_SIZE + 1}"):
             product_id = item['id']
             try:
-                # 1. Generate DNA
                 result = process_item(item)
                 if not result:
                     continue
                 
                 embedding, image_url = result
                 
-                # 2. Prep Latent Space Entry
                 if force and product_id in synced_ids:
-                    # Update existing in latent space
                     supabase.table("style_latent_space").update({
                         "embedding": embedding,
                         "image_url": image_url,
@@ -135,7 +192,6 @@ def sync(force=False):
                         "source": "Auvra_Internal_Archive"
                     })
                 
-                # 3. Update pulse_inventory style_embedding if missing or force
                 if force or not item.get('style_embedding'):
                     supabase.table("pulse_inventory") \
                         .update({"style_embedding": embedding}) \
