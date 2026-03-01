@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { ExternalLink, Package, Truck, CheckCircle, Copy, AlertCircle } from "lucide-react";
 
 export default function AdminOrdersPage() {
@@ -14,31 +13,22 @@ export default function AdminOrdersPage() {
 
   async function fetchOrders() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        pulse_inventory (
-          title,
-          brand,
-          source_url,
-          source_price,
-          listing_price
-        )
-      `)
-      .order('created_at', { ascending: false });
-
-    if (!error) setOrders(data || []);
+    const res = await fetch("/api/admin/orders");
+    if (res.ok) {
+      const data = await res.json();
+      setOrders(data || []);
+    }
     setLoading(false);
   }
 
   async function updateOrderStatus(id: string, status: string) {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', id);
+    const res = await fetch("/api/admin/orders/status", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
 
-    if (!error) {
+    if (res.ok) {
       setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
     }
   }
