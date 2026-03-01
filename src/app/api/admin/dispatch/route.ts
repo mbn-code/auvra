@@ -23,17 +23,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Send email via Resend
+    // Update DB first. If this fails, return an error to the admin UI
+    // and do NOT send the customer email — preventing a dispatch notification
+    // for an order whose status was never actually updated.
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({ status: 'dispatched', tracking_number: trackingNumber })
+      .eq('id', orderId);
+
+    if (updateError) {
+      console.error('[Dispatch] DB update failed for order', orderId, ':', updateError.message);
+      return NextResponse.json({ error: "Failed to update order status" }, { status: 500 });
+    }
+
+    // DB committed — now safe to notify the customer.
     await sendDispatchEmail(order.customer_email, {
       productName: order.pulse_inventory?.title || "Archive Piece",
       trackingNumber: trackingNumber
     });
-
-    // Update status in Supabase
-    await supabase
-      .from('orders')
-      .update({ status: 'dispatched', tracking_number: trackingNumber })
-      .eq('id', orderId);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { Check, X, ExternalLink, ShieldCheck, AlertTriangle, TrendingUp, Star, Edit3, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -28,13 +27,13 @@ export default function AdminReviewPage() {
   async function fetchItems() {
     setLoading(true);
     setActionedIds(new Set());
-    const { data, error } = await supabase
-      .from('pulse_inventory')
-      .select('*')
-      .eq('status', viewMode)
-      .order('potential_profit', { ascending: false });
 
-    if (!error) setItems(data || []);
+    const params = new URLSearchParams({ status: viewMode });
+    const res = await fetch(`/api/admin/inventory?${params}`);
+    if (res.ok) {
+      const data = await res.json();
+      setItems(data || []);
+    }
     setLoading(false);
   }
 
@@ -43,19 +42,21 @@ export default function AdminReviewPage() {
     // Optimistic Update
     setActionedIds(prev => new Set(prev).add(id));
 
-    const { error } = await supabase
-      .from('pulse_inventory')
-      .update({ status: newStatus })
-      .eq('id', id);
+    const res = await fetch("/api/admin/inventory/status", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status: newStatus }),
+    });
 
-    if (error) {
+    if (!res.ok) {
       // Rollback
       setActionedIds(prev => {
         const next = new Set(prev);
         next.delete(id);
         return next;
       });
-      alert("Failed to update status: " + error.message);
+      const data = await res.json().catch(() => ({}));
+      alert("Failed to update status: " + (data.error ?? "Unknown error"));
     }
   }
 
@@ -69,33 +70,40 @@ export default function AdminReviewPage() {
 
     const newProfit = newPrice - item.source_price - 20;
 
-    const { error } = await supabase
-      .from('pulse_inventory')
-      .update({ 
+    const res = await fetch("/api/admin/stable/update", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id,
         listing_price: newPrice,
         member_price: newMemberPrice,
-        potential_profit: newProfit
-      })
-      .eq('id', id);
+        potential_profit: newProfit,
+      }),
+    });
 
-    if (!error) {
+    if (res.ok) {
       setItems(items.map(i => i.id === id ? { ...i, listing_price: newPrice, member_price: newMemberPrice, potential_profit: newProfit } : i));
       setEditingId(null);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert("Failed to save price: " + (data.error ?? "Unknown error"));
     }
   }
 
   async function approveAll() {
     if (items.length === 0) return;
     if (!confirm(`Are you sure you want to approve ALL ${items.length} pending items?`)) return;
-    
-    setLoading(true);
-    const { error } = await supabase
-      .from('pulse_inventory')
-      .update({ status: 'available' })
-      .eq('status', 'pending_review');
 
-    if (!error) {
+    setLoading(true);
+    const res = await fetch("/api/admin/inventory/status", {
+      method: "POST",
+    });
+
+    if (res.ok) {
       setItems([]);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert("Approve all failed: " + (data.error ?? "Unknown error"));
     }
     setLoading(false);
   }
