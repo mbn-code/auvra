@@ -2,14 +2,17 @@ import os
 import sys
 import io
 import logging
+from logging.handlers import RotatingFileHandler
 import requests
 import time
 import subprocess
 from PIL import Image
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 from supabase import create_client, Client
 from dotenv import load_dotenv
 from tqdm import tqdm
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 def check_ml_available():
     """
@@ -46,7 +49,7 @@ else:
     load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 BATCH_SIZE = 15
 MODEL_NAME = 'clip-ViT-B-32'
 
@@ -54,7 +57,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[
-        logging.FileHandler("neural_sync.log"),
+        RotatingFileHandler("logs/neural_sync.log", maxBytes=5*1024*1024, backupCount=3),
         logging.StreamHandler()
     ]
 )
@@ -68,10 +71,21 @@ def generate_fallback_embedding() -> List[float]:
     import hashlib
     return [float((i * 7 + 13) % 100) / 100.0 for i in range(512)]
 
+# Configure Robust Requests Session
+session = requests.Session()
+retries = Retry(
+    total=3,
+    backoff_factor=1.5,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET"]
+)
+session.mount('http://', HTTPAdapter(max_retries=retries))
+session.mount('https://', HTTPAdapter(max_retries=retries))
+
 logging.info(f"🚀 Initializing Auvra Neural Sync ({MODEL_NAME})...")
 logging.info(f"🔧 PyTorch Available: {TORCH_AVAILABLE}")
 
-supabase: Optional[Client] = None
+supabase: Client
 try:
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
     if TORCH_AVAILABLE:
@@ -88,37 +102,41 @@ except Exception as e:
     logging.error(f"Initialization Failed: {e}")
     sys.exit(1)
 
-def fetch_inventory_to_sync():
+def fetch_inventory_to_sync() -> List[Any]:
     """Fetches all sold and available inventory items."""
     try:
         response = supabase.table("pulse_inventory") \
             .select("id, images, category, style_embedding") \
             .or_("status.eq.available,status.eq.sold") \
             .execute()
-        return response.data
+        if response and response.data:
+            return response.data
+        return []
     except Exception as e:
         logging.error(f"Failed to fetch inventory: {e}")
         return []
 
-def get_synced_product_ids():
+def get_synced_product_ids() -> Set[str]:
     """Fetches already synced product IDs from latent space."""
     try:
         response = supabase.table("style_latent_space").select("product_id").execute()
-        return {item['product_id'] for item in response.data}
+        if response and response.data:
+            return {str(item['product_id']) for item in response.data if isinstance(item, dict) and 'product_id' in item}
+        return set()
     except Exception as e:
         logging.warning(f"Could not fetch synced IDs: {e}")
         return set()
 
-def process_item(item: Dict[str, Any]):
+def process_item(item: Dict[str, Any]) -> Optional[tuple[List[float], str]]:
     """Downloads image and generates embedding."""
     images = item.get("images", [])
-    if not images or not isinstance(images, list):
+    if not images or not isinstance(images, list) or len(images) == 0:
         return None
 
-    image_url = images[0]
+    image_url = str(images[0])
     
     try:
-        response = requests.get(image_url, timeout=10)
+        response = session.get(image_url, timeout=15)
         response.raise_for_status()
     except Exception as e:
         logging.warning(f"Failed to fetch image {image_url}: {e}")
@@ -136,15 +154,17 @@ def process_item(item: Dict[str, Any]):
     
     if TORCH_AVAILABLE and model is not None:
         try:
-            embedding = model.encode(img, show_progress_bar=False)
-            return embedding.tolist(), image_url
+            embedding = model.encode(img, show_progress_bar=False) # type: ignore
+            if hasattr(embedding, "tolist"):
+                return embedding.tolist(), image_url # type: ignore
+            return list(embedding), image_url # type: ignore
         except Exception as e:
             logging.warning(f"Embedding generation failed: {e}")
             return generate_fallback_embedding(), image_url
     else:
         return generate_fallback_embedding(), image_url
 
-def sync(force=False):
+def sync(force: bool = False):
     if not TORCH_AVAILABLE:
         logging.warning("⚠️ Neural sync running in FALLBACK mode - embeddings will be placeholders")
     
@@ -154,7 +174,7 @@ def sync(force=False):
     if force:
         pending = inventory
     else:
-        pending = [item for item in inventory if item['id'] not in synced_ids]
+        pending = [item for item in inventory if str(item.get('id', '')) not in synced_ids]
     
     total = len(pending)
     logging.info(f"🧬 Total Inventory: {len(inventory)} | Already Synced: {len(synced_ids)}")
@@ -169,7 +189,10 @@ def sync(force=False):
         latent_batch = []
         
         for item in tqdm(batch, desc=f"Syncing Batch {i//BATCH_SIZE + 1}"):
-            product_id = item['id']
+            product_id = str(item.get('id', ''))
+            if not product_id:
+                continue
+                
             try:
                 result = process_item(item)
                 if not result:
@@ -207,7 +230,12 @@ def sync(force=False):
                 supabase.table("style_latent_space").insert(latent_batch).execute()
             except Exception as e:
                 logging.error(f"🔥 Batch Insert Failed: {e}")
-                time.sleep(2)
+                time.sleep(5)
+                try:
+                    supabase.table("style_latent_space").insert(latent_batch).execute()
+                    logging.info("✅ Batch Insert Recovered.")
+                except Exception as retry_e:
+                    logging.error(f"💥 Batch Insert Failed permanently: {retry_e}")
 
     logging.info("🏁 Recursive Neural Sync Complete.")
 

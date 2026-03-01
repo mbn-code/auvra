@@ -34,7 +34,9 @@
     "resend": "^6.9.2",
     "sharp": "^0.34.5",
     "sonner": "^2.0.7",
-    "stripe": "^20.3.1"
+    "stripe": "^20.3.1",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

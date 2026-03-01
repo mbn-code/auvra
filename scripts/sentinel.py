@@ -3,18 +3,21 @@ import time
 import subprocess
 import logging
 import requests
+import threading
+import signal
+import sys
+import random
+import shlex
 from datetime import datetime
 from dotenv import load_dotenv
 from supabase import create_client, Client
+from logging.handlers import RotatingFileHandler
+from typing import Optional
 
 # --- CONFIGURATION ---
 # Load env from the same directory as the script or project root
 ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env.local")
 load_dotenv(ENV_PATH)
-
-from typing import Optional
-
-# ...
 
 # Supabase Client
 SUPABASE_URL = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
@@ -27,17 +30,17 @@ else:
     print("Warning: Supabase credentials not found. System command polling will be disabled.")
 
 # Sentinel Settings
-LOOP_INTERVAL_SECONDS = 3600  # 1 Hour
+BASE_LOOP_INTERVAL = 3600  # 1 Hour base interval
 COMMAND_POLL_INTERVAL = 60    # 1 Minute
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-# Logging Setup
+# Logging Setup (Optimized for Raspberry Pi SD Card with Rotation)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [SENTINEL] %(levelname)s: %(message)s',
     handlers=[
-        logging.FileHandler("sentinel.log"),
+        RotatingFileHandler("sentinel.log", maxBytes=5*1024*1024, backupCount=2),
         logging.StreamHandler()
     ]
 )
@@ -48,7 +51,7 @@ def notify_telegram(message: str):
         return
     try:
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": f"🛡️ Auvra Sentinel: {message}"})
+        requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": f"🛡️ Auvra Sentinel: {message}"}, timeout=10)
     except Exception as e:
         logging.error(f"Telegram Notify Failed: {e}")
 
@@ -140,7 +143,7 @@ def check_system_commands():
                 supabase.table("system_commands").update({"status": "failed"}).eq("id", cmd_id).execute()
                 return
                 
-            success = run_command(shell_command, f"System Command: {cmd}")
+            success = run_command(shell_command, f"System Command: {cmd}", manual=True)
             
             final_status = "completed" if success else "failed"
             supabase.table("system_commands").update({"status": final_status}).eq("id", cmd_id).execute()
@@ -152,21 +155,6 @@ def sentinel_cycle():
     """One full execution loop of the Auvra automated pipeline."""
     logging.info("--- STARTING NEW SENTINEL CYCLE ---")
     
-    # SECURITY NOTE: Automatic `git pull` and `npm install` have been removed.
-    #
-    # Running `git pull` automatically on a production machine is a supply-chain
-    # risk: any commit pushed to the default branch (including a compromised one)
-    # would be executed without human review within the next cycle.
-    #
-    # Running `npm install` automatically is similarly dangerous: it executes
-    # install scripts from npm packages and can introduce malicious code if a
-    # dependency is compromised (see: event-stream, ua-parser-js incidents).
-    #
-    # Code updates must be deployed deliberately (e.g. via a signed Vercel
-    # deployment or a manual, reviewed `git pull` + `npm ci` on this machine).
-    # `npm ci` (not `npm install`) should be used when installing dependencies
-    # manually, as it uses the lockfile exactly and does not update it.
-
     # 1. Scrape Marketplace (Pulse Hunt)
     run_command("npx tsx scripts/pulse-run.ts", "Marketplace Pulse Hunt")
     
@@ -182,20 +170,52 @@ def sentinel_cycle():
     logging.info("--- CYCLE COMPLETE. SLEEPING... ---")
     notify_telegram("Cycle Complete. Archive is healthy and synced.")
 
+# Prevent overlapping automated cycles
+cycle_lock = threading.Lock()
+
+def background_sentinel_cycle():
+    if not cycle_lock.acquire(blocking=False):
+        logging.warning("⏳ Previous cycle still running. Skipping this scheduled trigger.")
+        return
+    try:
+        sentinel_cycle()
+    finally:
+        cycle_lock.release()
+
+def graceful_shutdown(signum, frame):
+    """Handles SIGINT/SIGTERM to cleanly exit and reset database states."""
+    logging.warning("🛑 Received shutdown signal. Cleaning up Auvra Mesh...")
+    if supabase:
+        try:
+            # Revert any stuck running commands to failed so they don't block the UI forever
+            supabase.table("system_commands").update({"status": "failed"}).eq("status", "running").execute()
+            logging.info("Cleaned up Supabase system command statuses.")
+        except Exception as e:
+            logging.error(f"Failed to reset system commands on shutdown: {e}")
+    sys.exit(0)
+
 if __name__ == "__main__":
+    # Register termination signals for graceful shutdown (handles Ctrl+C or systemctl stop)
+    signal.signal(signal.SIGINT, graceful_shutdown)
+    signal.signal(signal.SIGTERM, graceful_shutdown)
+
     notify_telegram("System Online. Monitoring Auvra Mesh.")
     
-    # Force an immediate cycle on startup, or just wait for the loop. We will wait for the loop logic.
-    # We will pretend last cycle was a long time ago.
     last_cycle_time = 0
+    current_interval = 0  # Force immediate run on startup
     
     while True:
         current_time = time.time()
         try:
             # 1. Run the hourly cycle if it's time
-            if current_time - last_cycle_time >= LOOP_INTERVAL_SECONDS:
-                sentinel_cycle()
+            if current_time - last_cycle_time >= current_interval:
+                # Use threading so the 1-hour cycle doesn't block the 1-minute UI command polling
+                threading.Thread(target=background_sentinel_cycle, daemon=True).start()
                 last_cycle_time = time.time()
+                
+                # Calculate next interval with jitter (+/- 15 minutes) to avoid detection/bans
+                current_interval = BASE_LOOP_INTERVAL + random.randint(-900, 900)
+                logging.info(f"Next cycle scheduled in {current_interval} seconds.")
             
             # 2. Check for manual commands triggered from the UI
             check_system_commands()
