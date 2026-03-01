@@ -113,6 +113,7 @@ export default async function Home() {
                   <Link 
                     key={item.id} 
                     href={isSold ? "#" : `/archive/${item.id}`} 
+                    prefetch={true}
                     className={`min-w-[320px] md:min-w-[450px] group ${isSold ? 'cursor-not-allowed' : ''}`}
                   >
                     <div className={`aspect-[4/5] rounded-[3.5rem] overflow-hidden bg-white border border-zinc-100 mb-8 relative transition-all duration-700 shadow-[0_8px_30px_rgb(0,0,0,0.02)] group-hover:shadow-[0_30px_60px_rgb(0,0,0,0.06)] group-hover:-translate-y-2 ${isSold ? 'grayscale' : ''} ${isLocked ? 'bg-zinc-950' : ''}`}>

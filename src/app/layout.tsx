@@ -8,6 +8,7 @@ import LiveToast from "@/components/LiveToast";
 import WelcomeModal from "@/components/WelcomeModal";
 import { Analytics } from "@vercel/analytics/react";
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: {
@@ -103,6 +104,21 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased selection:bg-black selection:text-white pt-28 pb-20 lg:pb-0">
+        <Toaster 
+          position="top-center" 
+          toastOptions={{
+            style: {
+              background: 'rgba(0, 0, 0, 0.8)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              borderRadius: '9999px',
+              padding: '12px 24px',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
+            },
+            className: 'font-black uppercase tracking-widest text-[10px]'
+          }} 
+        />
         <Header />
         {children}
         <Footer />

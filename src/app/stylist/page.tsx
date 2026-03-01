@@ -7,6 +7,7 @@ import { DndContext, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSenso
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-client";
+import { toast } from "sonner";
 
 import { SkeletonCanvas } from "@/components/stylist/SkeletonCanvas";
 import { DraggableItem } from "@/components/stylist/DraggableItem";
@@ -344,9 +345,10 @@ function StylistContent() {
       });
 
       if (!response.ok) throw new Error("Failed to save");
-      alert("Lookbook Locked to your Archive.");
+      toast.success("Lookbook Archived", { description: "Your manifestation has been locked to the neural network." });
     } catch (err) {
       console.error(err);
+      toast.error("Archive Failed", { description: "An error occurred while saving to the cloud." });
     } finally {
       setIsSaving(false);
     }
@@ -378,9 +380,10 @@ function StylistContent() {
       });
 
       if (!response.ok) throw new Error("Failed to export");
-      alert("Style DNA Brief sent to your email.");
+      toast.success("DNA Brief Dispatched", { description: "Your style profile has been sent to your email." });
     } catch (err) {
       console.error(err);
+      toast.error("Dispatch Failed", { description: "Could not send the DNA brief. Try again later." });
     } finally {
       setIsExporting(false);
     }
@@ -401,7 +404,7 @@ function StylistContent() {
       });
 
       if (productIds.length === 0) {
-        alert("Add some items to your lookbook first!");
+        toast.info("Empty Canvas", { description: "Add artifacts to your lookbook before attempting checkout." });
         setIsCheckingOut(false);
         return;
       }
@@ -427,7 +430,7 @@ function StylistContent() {
           });
           return next;
         });
-        alert("Some items in your lookbook were just secured and are no longer available. We have removed them from your canvas.");
+        toast.error("Artifacts Unavailable", { description: "Some items were just secured by another node. We've removed them from your canvas." });
         return;
       }
 
@@ -435,7 +438,7 @@ function StylistContent() {
       if (data.url) window.location.href = data.url;
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "Failed to initialize checkout.");
+      toast.error("Checkout Failed", { description: err.message || "Failed to initialize secure checkout." });
     } finally {
       setIsCheckingOut(false);
     }

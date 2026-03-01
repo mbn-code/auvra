@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { createClient } from "@/lib/supabase-client";
+import { triggerHaptic } from "@/lib/haptics";
+import { toast } from "sonner";
 
 export function VaultButton({ productId, className = "" }: { productId: string, className?: string }) {
   const [inVault, setInVault] = useState(false);
@@ -41,6 +43,7 @@ export function VaultButton({ productId, className = "" }: { productId: string, 
       return;
     }
 
+    triggerHaptic('light');
     setIsLoading(true);
     // Optimistic UI update
     const previousState = inVault;
@@ -61,9 +64,15 @@ export function VaultButton({ productId, className = "" }: { productId: string, 
         setInVault(previousState);
         const errData = await res.json().catch(() => ({ error: "Server Error" }));
         console.error("Vault API Error:", errData.error);
+        toast.error("Vault Error", { description: "Could not update vault status." });
       } else {
         const data = await res.json();
         setInVault(data.action === "added");
+        if (data.action === "added") {
+          toast.success("Added to Vault", { description: "Artifact secured in your personal collection." });
+        } else {
+          toast.info("Removed from Vault", { description: "Artifact removed from your collection." });
+        }
       }
     } catch (err) {
       console.error("Fetch Exception:", err);

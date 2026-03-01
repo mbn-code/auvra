@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, ShieldCheck, Zap, Mail, Crown, ArrowRight, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface SocietyModalProps {
   isOpen: boolean;
@@ -28,7 +29,7 @@ export function SocietyModal({ isOpen, onClose, title, description, feature, onF
 
   const handleFreeAction = async () => {
     if (!email || !email.includes('@')) {
-      alert("Please enter a valid email address.");
+      toast.error("Invalid Configuration", { description: "Please enter a valid email address." });
       return;
     }
     setLoading(true);
@@ -38,7 +39,7 @@ export function SocietyModal({ isOpen, onClose, title, description, feature, onF
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Something went wrong. Please try again.");
+      toast.error("Network Error", { description: "Failed to connect to the archive network." });
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Loader2, ArrowRight, Shield } from "lucide-react";
+import { triggerHaptic } from "@/lib/haptics";
+import { toast } from "sonner";
 
 interface StickyBuyProps {
   productId: string;
@@ -18,6 +20,7 @@ export default function StickyBuy({ productId, price, quantity, isStable, stockL
   const isPreOrder = isStable && stockLevel === 0 && preOrderStatus;
 
   const handleCheckout = async () => {
+    triggerHaptic('medium');
     setStatus("securing");
     try {
       const response = await fetch("/api/checkout", {
@@ -33,7 +36,8 @@ export default function StickyBuy({ productId, price, quantity, isStable, stockL
       if (!response.ok) {
         const error = await response.json();
         const defaultMsg = isPreOrder ? "Pre-allocation request failed." : "Acquisition failed. The archive piece may have just been secured by another node.";
-        alert(error.error || defaultMsg);
+        triggerHaptic('heavy');
+        toast.error("Transaction Failed", { description: error.error || defaultMsg });
         setStatus("idle");
         return;
       }
@@ -45,6 +49,8 @@ export default function StickyBuy({ productId, price, quantity, isStable, stockL
       }
     } catch (error) {
       console.error("Checkout failed:", error);
+      triggerHaptic('heavy');
+      toast.error("System Error", { description: "Could not communicate with the checkout node." });
       setStatus("idle");
     }
   };

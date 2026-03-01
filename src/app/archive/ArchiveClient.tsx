@@ -131,7 +131,7 @@ export default function ArchivePage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredBrands.map((brand) => (
-              <Link key={brand.name} href={`/archive/brand/${encodeURIComponent(brand.name)}`} className="group block relative">
+              <Link key={brand.name} href={`/archive/brand/${encodeURIComponent(brand.name)}`} prefetch={true} className="group block relative">
                 <div className="aspect-[4/3] bg-white rounded-[3.5rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 shadow-[0_8px_30px_rgb(0,0,0,0.02)] group-hover:shadow-[0_30px_60px_rgb(0,0,0,0.06)] group-hover:-translate-y-2 relative">
                   <img src={brand.preview} className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100" alt={brand.name} />
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />

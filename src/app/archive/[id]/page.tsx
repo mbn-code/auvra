@@ -131,9 +131,9 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                   )}
                </div>
                
-               <div className="grid grid-cols-2 gap-6">
+               <div className="flex md:grid md:grid-cols-2 gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide md:overflow-visible">
                   {item.images.slice(1).map((img: string, i: number) => (
-                    <div key={i} className="aspect-[4/5] bg-zinc-50 rounded-[2.5rem] overflow-hidden border border-zinc-100 relative">
+                    <div key={i} className="aspect-[4/5] bg-zinc-50 rounded-[2.5rem] overflow-hidden border border-zinc-100 relative snap-center w-[85vw] md:w-full shrink-0">
                       <NeuralDecrypt 
                         imageUrl={img} 
                         isLocked={showLockedVisual} 

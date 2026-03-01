@@ -4,6 +4,7 @@ import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { Zap, ShoppingBag, Shirt, User, Footprints, Hand, HardHat, Disc, Layers, X, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { StylistItem } from './DraggableItem';
+import { triggerHaptic } from '@/lib/haptics';
 
 interface SlotProps {
   id: string;
@@ -43,16 +44,16 @@ const DropSlot = ({ id, label, items, activeIndex, onSwitch, onRemove, onSearch,
           <img src={item.image} alt="" className="w-full h-full object-cover rounded-[1.8rem]" />
           
           <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-[110]">
-            <button onClick={(e) => { e.stopPropagation(); onRemove(id, activeIndex); }} className="bg-black text-white p-3 rounded-full hover:bg-red-500 shadow-lg">
+            <button onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); onRemove(id, activeIndex); }} className="bg-black text-white p-3 rounded-full hover:bg-red-500 shadow-lg">
               <X size={12} />
             </button>
           </div>
 
           {items.length > 1 && (
             <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center z-[110]">
-               <button onClick={(e) => { e.stopPropagation(); onSwitch(id, (activeIndex - 1 + items.length) % items.length); }} className="bg-black/80 text-white rounded-full p-2 hover:bg-black transition-colors"><ChevronLeft size={12}/></button>
+               <button onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); onSwitch(id, (activeIndex - 1 + items.length) % items.length); }} className="bg-black/80 text-white rounded-full p-2 hover:bg-black transition-colors"><ChevronLeft size={12}/></button>
                <span className="text-[8px] font-black text-white bg-black/80 px-2 py-0.5 rounded-full tabular-nums">{activeIndex + 1}/{items.length}</span>
-               <button onClick={(e) => { e.stopPropagation(); onSwitch(id, (activeIndex + 1) % items.length); }} className="bg-black/80 text-white rounded-full p-2 hover:bg-black transition-colors"><ChevronRight size={12}/></button>
+               <button onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); onSwitch(id, (activeIndex + 1) % items.length); }} className="bg-black/80 text-white rounded-full p-2 hover:bg-black transition-colors"><ChevronRight size={12}/></button>
             </div>
           )}
 
