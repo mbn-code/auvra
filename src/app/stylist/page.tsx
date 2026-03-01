@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { SkeletonCanvas } from "@/components/stylist/SkeletonCanvas";
 import { DraggableItem } from "@/components/stylist/DraggableItem";
 import { SocietyModal } from "@/components/stylist/SocietyModal";
+import { useArchiveState } from "@/hooks/useArchiveState";
 
 export const dynamic = 'force-dynamic';
 
@@ -58,10 +59,9 @@ function StylistContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [isMember, setIsMember] = useState(false);
 
   // Archive Builder State
-  const [canvasOutfit, setCanvasOutfit] = useState<Record<string, any[]>>({
+  const { canvasOutfit, setCanvasOutfit, isMember, isSyncing, outfitId: currentOutfitId } = useArchiveState({
     head: [], neck: [], inner_upper: [], mid_upper: [], outer_upper: [],
     hands: [], waist: [], lower: [], legwear: [], footwear: [], accessory: []
   });
@@ -94,25 +94,10 @@ function StylistContent() {
 
   useEffect(() => {
     fetchVibes();
-    checkMembership();
     if (outfitId) {
       loadOutfit(outfitId);
     }
   }, [outfitId]);
-
-  const checkMembership = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('membership_tier')
-        .eq('id', user.id)
-        .single();
-      if (profile?.membership_tier === 'society') {
-        setIsMember(true);
-      }
-    }
-  };
 
   const loadOutfit = async (id: string) => {
     setLoading(true);
@@ -221,10 +206,15 @@ function StylistContent() {
       if (!response.ok) throw new Error(data.error || 'Curation failed');
       
       if (isLoadMore) {
-        setOutfits(prev => [...(prev || []), ...data]);
+        setOutfits(prev => {
+          const current = prev || [];
+          const newData = data.filter((d: any) => !current.some((c: any) => c.id === d.id));
+          return [...current, ...newData];
+        });
         setOffset(currentOffset);
       } else {
-        setOutfits(data);
+        const uniqueData = Array.from(new Map(data.map((item: any) => [item.id, item])).values());
+        setOutfits(uniqueData as any[]);
       }
 
       if (data.length < 20) setHasMore(false);
@@ -299,24 +289,27 @@ function StylistContent() {
   };
 
   const handleFreeAction = async (email: string) => {
-    // 1. Capture the email as a lead
-    const res = await fetch("/api/newsletter/subscribe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email })
-    });
-    
-    if (!res.ok) throw new Error("Failed to capture email");
-
-    // 2. Save locally
     const slots: any = {};
     Object.keys(canvasOutfit).forEach(slot => {
       const activeItem = canvasOutfit[slot][activeIndices[slot]];
       slots[slot] = activeItem ? activeItem.id : null;
     });
 
+    // Send the specific free lookbook email with the items
+    const res = await fetch("/api/ai/stylist/email-free", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, slots })
+    });
+    
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Failed to send free lookbook");
+    }
+
+    // Save locally
     localStorage.setItem("auvra_free_saved_lookbook", JSON.stringify(slots));
-    alert(`Success! Lookbook saved locally for ${email}. To enable permanent cloud sync and PDF exports across all devices, upgrade to The Society.`);
+    toast.success("Lookbook Sent", { description: "Your aesthetic manifest has been dispatched to your email." });
   };
 
   const handleSave = async () => {
@@ -330,28 +323,12 @@ function StylistContent() {
       return;
     }
 
-    setIsSaving(true);
-    try {
-      const slots: any = {};
-      Object.keys(canvasOutfit).forEach(slot => {
-        const activeItem = canvasOutfit[slot][activeIndices[slot]];
-        slots[slot] = activeItem ? activeItem.id : null;
-      });
-
-      const response = await fetch("/api/ai/stylist/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slots })
-      });
-
-      if (!response.ok) throw new Error("Failed to save");
-      toast.success("Lookbook Archived", { description: "Your manifestation has been locked to the neural network." });
-    } catch (err) {
-      console.error(err);
-      toast.error("Archive Failed", { description: "An error occurred while saving to the cloud." });
-    } finally {
-      setIsSaving(false);
+    if (isSyncing) {
+      toast.info("Syncing in progress", { description: "Your changes are being saved to the neural network." });
+      return;
     }
+
+    toast.success("Lookbook Archived", { description: "Your manifestation is locked to the neural network." });
   };
 
   const handleExport = async () => {

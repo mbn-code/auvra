@@ -51,7 +51,7 @@ export async function POST(req: Request) {
         <img src="${p.images[0]}" style="width: 100px; border-radius: 5px;" />
         <div style="display: inline-block; vertical-align: top; margin-left: 15px;">
           <h3 style="margin: 0;">${p.brand} - ${p.title}</h3>
-          <p style="color: #666;">€${Math.round(p.listing_price)}</p>
+          <p style="color: #666;">Curation Fee: €${Math.max(Math.floor(p.listing_price * 0.05), 5)}</p>
           <a href="https://auvra.eu/archive/${p.id}" style="color: black; font-weight: bold;">View in Archive</a>
         </div>
       </div>

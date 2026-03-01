@@ -111,7 +111,7 @@ export default function WelcomeModal() {
             </h2>
             
             <p className="text-zinc-500 font-medium mb-8 leading-relaxed">
-              Join the Auvra Pulse network to get <span className="text-white font-bold">10% off</span> your first Concierge Acquisition and 1-hour early access to daily drops.
+              Join the Auvra Pulse network to get <span className="text-white font-bold">10% off</span> your first Curation Fee and 1-hour early access to daily drops.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">

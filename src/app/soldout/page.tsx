@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { Zap, Lock, AlertTriangle, ArrowRight } from "lucide-react";
-import { getEstimatedMarketValue } from "@/lib/pricing";
+import { getEstimatedMarketValue, getCurationFee } from "@/lib/pricing";
 
 export const dynamic = 'force-dynamic';
 
@@ -128,7 +128,7 @@ export default async function SoldOutPage() {
             {remainingItems && remainingItems.map((item) => {
               // Create a massive fake discount just for this page to make them look like crazy final steals
               const originalMarketValue = getEstimatedMarketValue(item.listing_price, item.brand, item.category) || (item.listing_price * 1.8);
-              const clearancePrice = Math.round(item.listing_price * 0.7); // 30% off the already curated price!
+              const clearancePrice = getCurationFee(item.listing_price); // Standard link curation fee
 
               return (
                 <Link 

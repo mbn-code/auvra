@@ -1,6 +1,22 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase-middleware';
+import { jwtVerify } from 'jose';
+
+// Verify the admin session JWT in middleware.
+// The cookie value is now a signed HS256 JWT (see src/lib/admin.ts).
+// We verify it here instead of using the static "authenticated" string check,
+// preventing session forgery.
+async function verifyAdminJwt(token: string): Promise<boolean> {
+  const secret = process.env.ADMIN_JWT_SECRET;
+  if (!secret) return false;
+  try {
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret));
+    return payload.role === 'admin';
+  } catch {
+    return false;
+  }
+}
 
 async function getFingerprint(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
@@ -26,8 +42,15 @@ export async function middleware(request: NextRequest) {
   const { supabase, response } = await createClient(request);
 
   // 1. Creative Intelligence System (CIS) Attribution
+  // Only set non-essential tracking cookies if the user has granted consent.
+  // GDPR Art. 6(1)(a) — explicit consent required for analytics/attribution cookies.
+  // The 'auvra_consent' cookie is set by CookieConsent.tsx (client-side) and is
+  // readable here because it is NOT HttpOnly.
+  const consentCookie = request.cookies.get('auvra_consent')?.value;
+  const hasConsent = consentCookie === 'granted';
+
   const utmCreativeId = searchParams.get('utm_creative_id') || searchParams.get('ref');
-  if (utmCreativeId) {
+  if (utmCreativeId && hasConsent) {
     response.cookies.set('auvra_creative_id', utmCreativeId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -36,7 +59,8 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // Session ID Management
+  // Session ID Management — essential for order/auth flow, set unconditionally.
+  // This is a functional cookie required for checkout; lawful basis: contractual necessity.
   let sessionId = request.cookies.get('auvra_session_id')?.value;
   if (!sessionId) {
     sessionId = crypto.randomUUID();
@@ -48,19 +72,24 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // Fingerprint Fallback
-  const fingerprint = await getFingerprint(request);
-  response.cookies.set('auvra_fingerprint', fingerprint, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 30,
-  });
+  // Fingerprint — analytics/fraud-detection use only. Requires consent.
+  // Without consent, fingerprinting is suppressed entirely.
+  if (hasConsent) {
+    const fingerprint = await getFingerprint(request);
+    response.cookies.set('auvra_fingerprint', fingerprint, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30,
+    });
+  }
 
   // 2. Admin Terminal Protection
+  // Verify the signed JWT instead of comparing a static cookie value.
   if (pathname.startsWith('/admin/review') || pathname.startsWith('/admin/orders')) {
-    const session = request.cookies.get('admin_session');
-    if (!session || session.value !== 'authenticated') {
+    const sessionToken = request.cookies.get('admin_session')?.value;
+    const isValid = sessionToken ? await verifyAdminJwt(sessionToken) : false;
+    if (!isValid) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
   }
@@ -70,6 +99,29 @@ export async function middleware(request: NextRequest) {
 
   if (pathname.startsWith('/account') && !user) {
     return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  // 4. Society Member Gating (CaaS Pivot)
+  if (pathname.startsWith('/vault') || pathname.startsWith('/api/stylist/sync') || pathname.startsWith('/api/pdf/generate')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/pricing', request.url));
+    }
+    
+    let isSociety = request.cookies.get('auvra_tier')?.value === 'society';
+    
+    if (!isSociety) {
+      const { data } = await supabase.from('profiles').select('membership_tier').eq('id', user.id).single();
+      if (data?.membership_tier === 'society') {
+         response.cookies.set('auvra_tier', 'society', { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 60 * 60 * 24 * 7 });
+         isSociety = true;
+      } else {
+         response.cookies.set('auvra_tier', 'free', { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 60 * 60 * 24 * 7 });
+      }
+    }
+    
+    if (!isSociety) {
+      return NextResponse.redirect(new URL('/pricing', request.url));
+    }
   }
 
   return response;

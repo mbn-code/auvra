@@ -7,7 +7,7 @@ import TikTokEmbeds from "@/components/TikTokEmbeds";
 import StylistFeature from "@/components/StylistFeature";
 import { createClient } from "@/lib/supabase-server";
 import LimitedIntakes from "@/components/LimitedIntakes";
-import { getEstimatedMarketValue } from "@/lib/pricing";
+import { getEstimatedMarketValue, getCurationFee } from "@/lib/pricing";
 import { NeuralInjections } from "@/components/NeuralInjections";
 import StableShowcase from "@/components/StableShowcase";
 
@@ -165,10 +165,10 @@ export default async function Home() {
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="text-2xl font-black text-zinc-900 tracking-tighter leading-none uppercase italic">{item.title}</h3>
                         <div className="bg-zinc-100 text-zinc-900 px-4 py-2 rounded-full text-lg font-black italic">
-                          €{Math.round(item.listing_price)}
+                          €{getCurationFee(item.listing_price)}
                         </div>
                       </div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Authenticated Asset</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Link Unlock Fee</p>
                     </div>
                   </Link>
                 );
@@ -221,7 +221,7 @@ export default async function Home() {
            Modern <br /> <span className="text-transparent bg-clip-text bg-gradient-to-b from-black to-zinc-300">Artifacts.</span>
          </h2>
          <p className="text-zinc-500 text-2xl font-medium leading-relaxed max-w-3xl mx-auto tracking-tight mb-16">
-           We manage the discovery and acquisition of global archives. Our neural network monitors unlisted grails, ensuring you possess what others simply browse.
+           We manage the discovery and discovery and link unlocking of global archives. Our neural network monitors unlisted grails, ensuring you possess what others simply browse.
          </p>
          <div className="flex flex-wrap justify-center gap-12 text-zinc-300">
             <span className="text-[11px] font-black uppercase tracking-[0.6em]">Global Sourcing Mesh</span>

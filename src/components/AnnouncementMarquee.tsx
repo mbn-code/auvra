@@ -20,7 +20,7 @@ export default function AnnouncementMarquee() {
   }, []);
 
   const messages = [
-    "AUTHENTICITY GUARANTEED ON ALL ARCHIVE PIECES",
+    "ALGORITHMIC AUTHENTICITY SCORING",
     `NEXT ARCHIVE INJECTION IN ${timeLeft || "00:00"}`,
     "COMPLIMENTARY EU SHIPPING ON ORDERS OVER $150",
     "ONE-OF-ONE CURATED SELECTIONS",

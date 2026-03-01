@@ -67,7 +67,7 @@ export async function POST(req: Request) {
       id: item.id,
       name: item.title,
       brand: item.brand,
-      price: `€${Math.round(item.listing_price)}`,
+      price: `€${Math.max(Math.floor(item.listing_price * 0.05), 5)}`,
       image: item.images && item.images.length > 0 ? item.images[0] : null,
       url: `https://auvra.eu/archive/${item.id}`,
       is_stable: item.is_stable,

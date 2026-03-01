@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { sendNewsletterWelcomeEmail } from '@/lib/email';
+import { supabaseAdmin } from '@/lib/supabase-admin';
+import { createHash } from 'crypto';
 
 // Simple in-memory rate limiter: max 3 requests per IP per hour.
 // Resets on cold start — sufficient to block casual spam without external infra.
@@ -43,6 +45,32 @@ export async function POST(req: Request) {
     if (!email || !EMAIL_REGEX.test(email)) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
     }
+
+    // ── GDPR Consent Record ──────────────────────────────────────────────────
+    // Store a consent record to demonstrate lawful basis for email marketing.
+    // GDPR Art. 6(1)(a) — explicit consent; Art. 7 — demonstrable consent.
+    //
+    // We store a SHA-256 hash of the email (not the plaintext) to minimise PII
+    // exposure in the consent log, while still being able to prove that a
+    // specific subscriber gave consent (by hashing the email at query time).
+    // The IP address is stored as-is for audit purposes; it is considered PII
+    // and is disclosed in the privacy policy under "Newsletter & Consent Records".
+    // ────────────────────────────────────────────────────────────────────────
+    const emailHash = createHash('sha256').update(email).digest('hex');
+    await supabaseAdmin
+      .from('newsletter_consent')
+      .upsert(
+        {
+          email_hash: emailHash,
+          consented_at: new Date().toISOString(),
+          ip_address: ip,
+          source: 'website_signup',
+        },
+        { onConflict: 'email_hash' }
+      );
+    // Note: we intentionally swallow upsert errors here — failure to write
+    // the consent record must not block the user's signup. The error will
+    // surface in Supabase logs. Consider adding alerting if this matters.
 
     // Send the welcome email
     await sendNewsletterWelcomeEmail(email);

@@ -86,16 +86,22 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        const finalPrice = isMember ? (item.member_price || Math.round(basePrice * 0.9)) : basePrice;
+        const isDbArchive = !item.is_stable;
+        let finalPrice = basePrice;
+        
+        if (isDbArchive) {
+          const curationFee = Math.max(Math.floor(basePrice * 0.05), 5);
+          finalPrice = isMember ? 0 : curationFee; // Although members bypass checkout, kept for safety
+        }
 
         product = {
-          name: item.title,
+          name: isDbArchive ? `${item.title} (Source Link)` : item.title,
           price: Math.round(finalPrice * 100), // Convert to cents
           currency: item.currency.toLowerCase(),
           images: item.images,
-          description: item.description || `Archive piece: ${item.brand}`,
+          description: isDbArchive ? `Digital Source Link Curation Fee for: ${item.brand}` : item.description || '',
         };
-        isArchive = true;
+        isArchive = isDbArchive;
         // Most-restrictive zone wins across all items in the cart
         if (item.shipping_zone === "EU_ONLY") shippingZone = "EU_ONLY";
         else if (item.shipping_zone === "SCANDINAVIA_ONLY" && shippingZone !== "EU_ONLY") shippingZone = "SCANDINAVIA_ONLY";
@@ -160,40 +166,46 @@ export async function POST(req: NextRequest) {
     const creativeId = cookieStore.get('auvra_creative_id')?.value || '';
 
     // Determine the cart type so the webhook can branch correctly.
-    // 'archive' = all items are from pulse_inventory (1-of-1 pieces)
+    // 'archive' = all items are from pulse_inventory (digital source links)
     // 'static'  = all items are from config/products (physical utility goods)
     // 'mixed'   = combination of both (rare but possible from the stylist canvas)
     const allArchive = productIds.every((id: string) => !staticProducts[id]);
     const allStatic  = productIds.every((id: string) => !!staticProducts[id]);
     const cartType   = allArchive ? 'archive' : allStatic ? 'static' : 'mixed';
 
-    const stripeSession = await stripe.checkout.sessions.create({
+    const checkoutConfig: any = {
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
       metadata: {
-        // productIds (plural, comma-joined) — full cart list for the webhook.
         productIds: productIds.join(','),
-        // productId (singular) — first item; kept for webhook branch compatibility.
         productId: productIds[0] ?? '',
         type: cartType,
         userId: user?.id ?? '',
         isMember: isMember ? 'true' : 'false',
         preOrder: isPreOrder ? 'true' : 'false',
-        // PHASE 2 CIS: Pass attribution data to Stripe to close the loop
         sessionId: sessionId,
         creativeId: creativeId
       },
-      shipping_address_collection: {
-        allowed_countries: allowedCountries as any,
-      },
-      billing_address_collection: "required",
-      phone_number_collection: {
-        enabled: true,
-      },
       success_url: `${req.nextUrl.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl,
-    });
+    };
+
+    // Only collect shipping for physical products
+    if (cartType !== 'archive') {
+      checkoutConfig.shipping_address_collection = {
+        allowed_countries: allowedCountries as any,
+      };
+      checkoutConfig.phone_number_collection = {
+        enabled: true,
+      };
+    } else {
+      // Digital only, collect email
+      checkoutConfig.customer_email = user?.email || undefined;
+      // We can't rely on customer_email being set if user is not logged in, but Stripe will prompt for email by default in checkout.
+    }
+
+    const stripeSession = await stripe.checkout.sessions.create(checkoutConfig);
 
     return NextResponse.json({ url: stripeSession.url });
   } catch (error: any) {

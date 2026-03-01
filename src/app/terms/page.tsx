@@ -6,37 +6,44 @@ export default function TermsOfService() {
       <div className="space-y-8">
         <section>
           <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Acceptance of Terms</h2>
-          <p>By accessing and using Auvra, you agree to be bound by these Terms of Service. Auvra is a premium sourcing concierge that facilitates the acquisition of unique, pre-owned archival items sourced globally.</p>
+          <p>By accessing and using Auvra, you agree to be bound by these Terms of Service. Auvra is a premium digital curation service that discovers and provides source links to unique, pre-owned archival items globally.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Concierge Sourcing Agreement</h2>
-          <p>When you purchase an item through Auvra, you are commissioning us to act as your agent. We use our proprietary technology to secure the item from an international private seller within our global sourcing network and facilitate its transfer to you. We are responsible for managing the logistics and authentication, but the initial transfer relies on our private partners fulfilling their dispatches.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Digital Curation Model</h2>
+          <p>When you pay a curation fee or use a Society membership on Auvra, you are purchasing a digital source link to a third-party marketplace or private seller. Auvra does not sell the physical item itself, nor do we facilitate its purchase, logistics, or authentication. All physical purchases are strictly between you and the third-party seller.</p>
         </section>
 
         <section>
           <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Non-Affiliation</h2>
-          <p>Auvra is an independent curation platform. We are not an authorized dealer, nor are we affiliated, associated, or officially connected with any of the brands featured in our archive. All trademarks, logos, and brand names are the property of their respective owners.</p>
+          <p>Auvra is an independent curation platform. We are not an authorized dealer, nor are we affiliated, associated, or officially connected with any of the brands featured in our archive or the third-party platforms we link to. All trademarks, logos, and brand names are the property of their respective owners.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Authenticity & Money-Back Guarantee</h2>
-          <p>We guarantee the authenticity of every item secured through our concierge. If an item is proven inauthentic by a certified third-party authenticator within 30 days of purchase, Auvra will issue a full 100% refund.</p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">The 48-Hour Inspection Period</h2>
-          <p>All archive acquisitions are final after a 48-hour inspection period starting from the timestamp of delivery. Any condition discrepancies must be reported within this window to be eligible for resolution.</p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Logistics & Availability</h2>
-          <p>The Auvra Archive Pulse is a real-time sync engine. In the event that an item becomes unavailable at the source before acquisition can be finalized, Auvra will issue an immediate full refund and notify the client.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Availability Constraints</h2>
+          <p>The Auvra Archive Pulse is a real-time sync engine. However, since the items are hosted on third-party platforms and are generally 1-of-1, Auvra cannot guarantee that an item will remain available for purchase after you unlock the source link.</p>
         </section>
 
         <section>
           <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Governing Law</h2>
-          <p>These terms are governed by the laws of Denmark. Any disputes shall be handled within the jurisdiction of the Danish courts.</p>
+          <p>These terms are governed by the laws of Denmark and applicable EU consumer protection legislation. Any disputes shall be handled within the jurisdiction of the Danish courts. Nothing in these Terms limits your statutory rights as a consumer under EU law.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Dispute Resolution & EU ODR</h2>
+          <p>If you have a complaint or dispute, please contact us first at <strong>malthe@mbn-code.dk</strong> so we can attempt to resolve it directly.</p>
+          <p className="mt-4">As required by EU Regulation 524/2013, consumers in the European Union may also use the <strong>EU Online Dispute Resolution (ODR) platform</strong> to resolve disputes with traders. The ODR platform is available at:</p>
+          <p className="mt-2">
+            <a
+              href="https://ec.europa.eu/consumers/odr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-bold text-zinc-900 hover:opacity-70 transition-opacity"
+            >
+              https://ec.europa.eu/consumers/odr
+            </a>
+          </p>
+          <p className="mt-4">Our contact email for dispute resolution purposes: <strong>malthe@mbn-code.dk</strong></p>
         </section>
       </div>
     </PolicyLayout>

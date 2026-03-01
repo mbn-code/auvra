@@ -129,22 +129,31 @@ def sentinel_cycle():
     """One full execution loop of the Auvra automated pipeline."""
     logging.info("--- STARTING NEW SENTINEL CYCLE ---")
     
-    # 1. Update Codebase
-    run_command("git pull", "Git Auto-Update")
-    
-    # 2. Sync Node dependencies (if package.json changed)
-    run_command("npm install", "NPM Dependencies Sync")
-    
-    # 3. Scrape Marketplace (Pulse Hunt)
+    # SECURITY NOTE: Automatic `git pull` and `npm install` have been removed.
+    #
+    # Running `git pull` automatically on a production machine is a supply-chain
+    # risk: any commit pushed to the default branch (including a compromised one)
+    # would be executed without human review within the next cycle.
+    #
+    # Running `npm install` automatically is similarly dangerous: it executes
+    # install scripts from npm packages and can introduce malicious code if a
+    # dependency is compromised (see: event-stream, ua-parser-js incidents).
+    #
+    # Code updates must be deployed deliberately (e.g. via a signed Vercel
+    # deployment or a manual, reviewed `git pull` + `npm ci` on this machine).
+    # `npm ci` (not `npm install`) should be used when installing dependencies
+    # manually, as it uses the lockfile exactly and does not update it.
+
+    # 1. Scrape Marketplace (Pulse Hunt)
     run_command("npx tsx scripts/pulse-run.ts", "Marketplace Pulse Hunt")
     
-    # 4. Neural DNA Sync
+    # 2. Neural DNA Sync
     run_command("python3 scripts/neural_sync.py", "Neural Latent Space Sync")
     
-    # 5. Prune Dead Links
+    # 3. Prune Dead Links
     run_command("python3 scripts/prune_archive.py", "Mesh Integrity Pruning")
     
-    # 6. Content Generation
+    # 4. Content Generation
     run_command("npx tsx scripts/generate-daily-content.ts", "Social Asset Generation")
     
     logging.info("--- CYCLE COMPLETE. SLEEPING... ---")

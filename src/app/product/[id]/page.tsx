@@ -4,7 +4,8 @@ import { products } from "@/config/products";
 import ProductVideo from "@/components/ProductVideo";
 import BenefitBullets from "@/components/BenefitBullets";
 import Accordion from "@/components/Accordion";
-import LiveActivity from "@/components/LiveActivity";
+// LiveActivity removed — was displaying fabricated user activity notifications.
+// Prohibited under EU Omnibus Directive 2019/2161.
 import ProductInteraction from "@/components/ProductInteraction";
 import TrustPulse from "@/components/TrustPulse";
 import { Star, ShieldCheck, Truck, RotateCcw, Share2, Heart, Eye, PackageCheck, Sparkles } from "lucide-react";
@@ -78,8 +79,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
-      <LiveActivity productName={product.name} />
-      
+      {/* LiveActivity removed — was displaying fabricated user activity */}
+
       <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-20 xl:gap-32">
           

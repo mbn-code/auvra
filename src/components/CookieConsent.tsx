@@ -15,11 +15,22 @@ export default function CookieConsent() {
 
   const accept = () => {
     localStorage.setItem("cookie-consent", "true");
+    // Also set a server-readable cookie so middleware can gate non-essential cookies.
+    // SameSite=Lax; no HttpOnly so JS can write it. Expires in 1 year.
+    // GDPR Art. 6(1)(a) — consent-based analytics/fingerprinting only after this is set.
+    document.cookie = "auvra_consent=granted; path=/; max-age=31536000; SameSite=Lax";
+    // Dispatch a StorageEvent so AnalyticsProvider's listener can check e.key / e.newValue
+    // and activate analytics immediately in the same tab without a page reload.
+    // A plain Event("storage") lacks these properties, which would silently break same-tab activation.
+    window.dispatchEvent(new StorageEvent("storage", { key: "cookie-consent", newValue: "true" }));
     setIsVisible(false);
   };
 
   const reject = () => {
     localStorage.setItem("cookie-consent", "false");
+    // Set denied server-readable cookie; also clears any previously granted cookie.
+    document.cookie = "auvra_consent=denied; path=/; max-age=31536000; SameSite=Lax";
+    window.dispatchEvent(new StorageEvent("storage", { key: "cookie-consent", newValue: "false" }));
     setIsVisible(false);
   };
 

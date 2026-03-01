@@ -155,7 +155,7 @@ export default function PricingPage() {
                          <Mail size={18} />
                          <span className="text-[11px] font-black uppercase tracking-widest">DNA Briefs</span>
                       </div>
-                      <p className="text-sm font-medium leading-relaxed">Every lookbook you build is exported as a high-fidelity PDF dossier with direct acquisition paths.</p>
+                      <p className="text-sm font-medium leading-relaxed">Every lookbook you build is exported as a high-fidelity PDF dossier with direct link access paths.</p>
                    </div>
                 </div>
 
@@ -165,7 +165,7 @@ export default function PricingPage() {
                          <Sparkles size={18} />
                          <span className="text-[11px] font-black uppercase tracking-widest">Member Pricing</span>
                       </div>
-                      <p className="text-sm font-medium leading-relaxed">Automatic 10% reduction on all archive acquisitions. No retail markup, just the artifact at cost + service fee.</p>
+                      <p className="text-sm font-medium leading-relaxed">Automatic 10% reduction on all curation fees. No retail markup, just the artifact at cost + service fee.</p>
                    </div>
                    <div className="group">
                       <div className="flex items-center gap-3 mb-3 text-zinc-900">
@@ -204,7 +204,7 @@ export default function PricingPage() {
               </div>
               <div>
                  <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600 mb-2">Support</p>
-                 <p className="text-xs font-bold">Society Concierge</p>
+                 <p className="text-xs font-bold">Society Sourcing</p>
               </div>
            </div>
 

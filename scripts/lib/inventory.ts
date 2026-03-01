@@ -209,50 +209,27 @@ export function detectSubCategory(title: string): string {
 
 export async function saveToSupabase(item: ScrapedItem) {
   const priceEUR = convertToEUR(item.source_price, item.currency || item.locale || 'EUR');
-  const confidence = calculateConfidence(item);
   const listingPrice = calculateListingPrice(priceEUR, item.brand, item.condition, item.title);
-  const memberPrice = calculateMemberPrice(listingPrice);
-  const profit = listingPrice - priceEUR - 20;
-  
-  let status = 'pending_review';
-  let displayImage = item.image;
   const subCategory = detectSubCategory(item.title);
 
-  // LESS STRICT AUTO-APPROVE:
-  const isHighValue = listingPrice > 1000;
-  const isAutoBrand = autoApproveBrands.includes(item.brand);
-  
-  if (confidence >= 90 || (confidence >= 70 && isHighValue) || (confidence >= 75 && isAutoBrand && profit > 20)) {
-    status = 'available';
-    const processed = await processImage(item.image, item.brand);
-    displayImage = processed.url;
-  }
-
-  const { error } = await supabase.from('pulse_inventory').upsert({
+  // Push directly to unverified_assets staging table for aesthetic filtering
+  const { error } = await supabase.from('unverified_assets').upsert({
     vinted_id: item.source_id,
     brand: item.brand,
     title: item.title,
+    condition: item.condition,
     source_url: item.source_url,
     source_price: priceEUR,
     listing_price: listingPrice,
-    member_price: memberPrice,
-    potential_profit: profit,
-    images: [displayImage],
+    images: [item.image],
     category: subCategory,
-    size: item.size || 'OS',
-    confidence_score: confidence,
-    seller_rating: item.seller_rating || 5.0,
-    seller_reviews_count: item.seller_reviews || 50,
     locale: item.locale || 'US',
     shipping_zone: item.platform === 'grailed' ? 'GLOBAL' : 'EU_ONLY',
-    status: status,
-    currency: 'EUR',
-    is_auto_approved: status === 'available',
-    last_pulse_check: new Date().toISOString()
+    status: 'pending'
   }, { onConflict: 'vinted_id' });
 
   if (error) {
-    console.error(`❌ [Inventory] Error saving ${item.source_id}:`, error.message);
+    console.error(`❌ [Inventory] Error saving to staging ${item.source_id}:`, error.message);
   }
 }
 

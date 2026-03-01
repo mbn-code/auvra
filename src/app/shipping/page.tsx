@@ -1,36 +1,27 @@
 import PolicyLayout from "@/components/PolicyLayout";
 
-export default function ShippingPolicy() {
+export default function DigitalDeliveryPolicy() {
   return (
-    <PolicyLayout title="Shipping & Logistics">
+    <PolicyLayout title="Digital Delivery & Access">
       <div className="space-y-8">
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Global Logistics Network</h2>
-          <p>Auvra operates a distributed logistics network across Northern Europe and the EU. Our archive pieces are sourced from various regional centers to ensure authenticity and speed.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Source Link Unlocking</h2>
+          <p>Auvra operates as a Curation-as-a-Service (CaaS) platform. We do not sell or ship physical products. Instead, we sell access to digital source links for exclusive archive pieces we have discovered.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Processing Times</h2>
-          <p>Orders are processed within 24-48 business hours. For archive pieces, this includes a final secondary inspection to verify the item meets our integrity standards before dispatch.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Instant Access</h2>
+          <p>Upon completing your curation fee payment or as part of your Society membership, the digital source link is provided immediately. You will also receive an email containing the source link(s) you have unlocked.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Transit Estimates</h2>
-          <p className="mb-4">Because Auvra operates as a sourcing concierge, your item is acquired directly from private collections and exclusive global sourcing networks upon your order. These private partners have an initial window of up to 5 business days to dispatch the item to our authentication hubs.</p>
-          <ul className="list-disc pl-5 space-y-2">
-            <li><strong>Standard Delivery (EU):</strong> 7-12 business days total.</li>
-            <li><strong>International Delivery:</strong> 10-14 business days total.</li>
-          </ul>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Purchasing the Physical Item</h2>
+          <p className="mb-4">Once you have the digital source link, it is your responsibility to click the link, visit the third-party marketplace or private seller's page, and complete the purchase of the physical item there. Auvra is not responsible for the transaction, shipping, or fulfillment of the physical item.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Tracking & Verification</h2>
-          <p>Every Auvra transfer is assigned a unique logistics ID. You will receive an automated dispatch notice with live tracking details as soon as your item clears the regional archive hub.</p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Customs & Duties</h2>
-          <p>For orders within the EU cluster (Denmark, Germany, Poland, Sweden, Finland), no customs or import duties will apply. International orders may be subject to local import taxes which are the responsibility of the recipient.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Availability Constraints</h2>
+          <p>Archive pieces are generally 1-of-1. While Auvra removes links from our public database once unlocked, there is a possibility that the item may be purchased by someone else on the third-party platform before you complete the transaction. We recommend purchasing the physical item immediately after unlocking the source link.</p>
         </section>
       </div>
     </PolicyLayout>

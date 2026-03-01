@@ -194,3 +194,7 @@ export function calculateListingPriceEngine(sourcePriceEUR: number, brand: strin
 
   return Math.max(finalPrice, sourcePriceEUR + 10); // Ultimate failsafe
 }
+
+export function getCurationFee(listingPrice: number): number {
+  return Math.max(Math.floor(listingPrice * 0.05), 5);
+}

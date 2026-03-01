@@ -21,9 +21,9 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
             <Zap className="absolute -top-2 -right-2 text-yellow-400 fill-yellow-400" size={24} />
           </div>
         </div>
-        <h1 className="text-4xl font-black mb-4 tracking-tighter uppercase">Acquisition Initiated.</h1>
+        <h1 className="text-4xl font-black mb-4 tracking-tighter uppercase">Source Link Unlocked.</h1>
         <p className="text-zinc-500 mb-8 leading-relaxed font-medium px-6 text-sm">
-          Your request to secure this piece has been received. Our concierge is initiating the acquisition and authentication process. You will receive a confirmation email and tracking details within 24–48 hours.
+          Your curation fee has been processed. We have just sent an email containing your exclusive digital source link(s). 
         </p>
         <Link
           href="/"

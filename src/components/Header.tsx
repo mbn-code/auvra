@@ -37,7 +37,7 @@ export default async function Header() {
               ) : (
                 <Link href="/pricing" className="text-zinc-900 hover:opacity-50 active:scale-95 transition-all border-b-2 border-yellow-400 pb-0.5">Society</Link>
               )}
-              <Link href="/shipping" className="relative after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[1px] after:bg-black after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-300 hover:text-black transition-colors">Logistics</Link>
+              <Link href="/shipping" className="relative after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[1px] after:bg-black after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-300 hover:text-black transition-colors">Delivery</Link>
             </nav>
           </div>
 

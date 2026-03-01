@@ -62,7 +62,7 @@ export async function GET(req: Request) {
           id: product.id,
           name: product.title,
           brand: product.brand,
-          price: `€${Math.round(product.listing_price)}`,
+          price: `€${Math.max(Math.floor(product.listing_price * 0.05), 5)}`,
           image: product.images[0],
           category: product.category,
           status: product.status,

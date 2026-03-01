@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { getCurationFee } from "@/lib/pricing";
 
 interface Product {
   id: string;
@@ -203,7 +204,7 @@ export default function OutfitShowcase({ id, name, slots, createdAt }: OutfitSho
                         <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">{product.brand}</p>
                         <h3 className="text-2xl font-black tracking-tight leading-none uppercase italic">{product.title}</h3>
                       </div>
-                      <div className="text-xl font-black italic">€{Math.round(product.listing_price)}</div>
+                      <div className="text-xl font-black italic">€{getCurationFee(product.listing_price)}</div>
                     </div>
                     
                     <div className="flex gap-3 pt-4">
@@ -256,7 +257,7 @@ export default function OutfitShowcase({ id, name, slots, createdAt }: OutfitSho
                   <div className="flex justify-between items-center text-[11px] font-bold uppercase tracking-widest border-b border-white/5 pb-4">
                     <span className="text-zinc-500">Manifest Value</span>
                     <span className="text-xl font-black italic text-white">
-                      €{Math.round(filledSlots.reduce((acc, [_, p]) => acc + (p?.listing_price || 0), 0))}
+                      €{filledSlots.reduce((acc, [_, p]) => acc + getCurationFee(p?.listing_price || 0), 0)}
                     </span>
                   </div>
                 </div>

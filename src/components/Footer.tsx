@@ -14,7 +14,7 @@ export default function Footer() {
             <Logo />
           </div>
           <p className="text-xl text-zinc-500 max-w-md leading-relaxed font-medium mb-12 tracking-tight italic">
-            "We manage the discovery and acquisition of global archives. Our neural network monitors unlisted grails, ensuring you possess what others simply browse."
+            "We manage the discovery and curation of global archives. Our neural network monitors unlisted grails, giving you the direct source to what others simply browse."
           </p>
           <div className="flex gap-6">
              <Link href="https://www.instagram.com/auvra.eu/" target="_blank" rel="noopener noreferrer" className="p-4 bg-white border border-zinc-100 rounded-full hover:bg-black hover:text-white hover:scale-110 transition-all shadow-sm"><Instagram size={20} strokeWidth={1.5} /></Link>
@@ -34,7 +34,7 @@ export default function Footer() {
         <div className="md:col-span-2">
           <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-900 mb-10">Protocol</h4>
           <ul className="space-y-5 text-sm font-bold text-zinc-400">
-            <li><Link href="/shipping" className="hover:text-black transition-colors hover:italic">Logistics</Link></li>
+            <li><Link href="/shipping" className="hover:text-black transition-colors hover:italic">Delivery</Link></li>
             <li><Link href="/refunds" className="hover:text-black transition-colors hover:italic">Integrity</Link></li>
             <li><Link href="/privacy" className="hover:text-black transition-colors hover:italic">Neural Privacy</Link></li>
             <li><Link href="/terms" className="hover:text-black transition-colors hover:italic">Legal Mesh</Link></li>

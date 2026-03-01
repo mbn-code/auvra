@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Zap, ArrowRight } from "lucide-react";
-import LiveActivity from "@/components/LiveActivity";
+// LiveActivity removed — was displaying fabricated user activity notifications.
 
 export default async function DemoPage() {
   // SAFETY LOCK: Only allow in development
@@ -24,8 +24,7 @@ export default async function DemoPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hyper-Active Notifications */}
-      <LiveActivity productName="Moncler Maya" />
+      {/* LiveActivity removed — was displaying fabricated user activity */}
       
       <section className="pt-24 pb-12 px-6">
         <div className="max-w-7xl mx-auto">

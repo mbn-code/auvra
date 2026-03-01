@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Cpu } from "lucide-react";
+import { getCurationFee } from "@/lib/pricing";
 
 export function NeuralEchoes({ productId }: { productId: string }) {
   const [echoes, setEchoes] = useState<any[]>([]);
@@ -65,7 +66,7 @@ export function NeuralEchoes({ productId }: { productId: string }) {
               />
               <div className="absolute top-4 right-4">
                 <div className="bg-white/90 backdrop-blur-md px-2 py-1 rounded-full text-[7px] font-black uppercase tracking-widest border border-zinc-100 shadow-sm">
-                  €{Math.round(item.listing_price)}
+                  €{getCurationFee(item.listing_price)}
                 </div>
               </div>
             </div>

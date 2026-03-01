@@ -4,9 +4,11 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CookieConsent from "@/components/CookieConsent";
 import MobileNav from "@/components/MobileNav";
-import LiveToast from "@/components/LiveToast";
+// LiveToast removed — was displaying fabricated purchase notifications (fake social proof).
+// Prohibited under EU Omnibus Directive 2019/2161. See components/LiveToast.tsx.
 import WelcomeModal from "@/components/WelcomeModal";
-import { Analytics } from "@vercel/analytics/react";
+// Analytics import removed here — AnalyticsProvider below handles Vercel Analytics
+// and auvraAnalytics, both gated behind cookie consent. See AnalyticsProvider.tsx.
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { Toaster } from "sonner";
 
@@ -15,7 +17,7 @@ export const metadata: Metadata = {
     default: "Auvra | Premium Archive Sourcing & Curation",
     template: "%s | Auvra"
   },
-  description: "Auvra is a premium sourcing concierge. Discover unique archive pieces and one-of-one curated finds from global private collections. Verified quality and authenticity guaranteed.",
+  description: "Auvra uses advanced neural algorithms to discover rare, unlisted archive pieces. Access direct source links to unique, pre-owned archival items globally with our AI Sourcing.",
   keywords: ["archive fashion", "luxury sourcing", "curated fashion", "vintage designer", "streetwear archive", "Louis Vuitton archive", "Chrome Hearts vintage", "Corteiz", "Arc'teryx", "premium curation"],
   authors: [{ name: "Auvra" }],
   creator: "Auvra",
@@ -124,9 +126,10 @@ export default function RootLayout({
         <Footer />
         <CookieConsent />
         <MobileNav />
-        <LiveToast />
+        {/* LiveToast removed — fake social proof, EU Omnibus Directive 2019/2161 */}
         <WelcomeModal />
-        <Analytics />
+        {/* Analytics and auvraAnalytics are loaded inside AnalyticsProvider,
+            gated behind cookie consent (GDPR Art. 6(1)(a)). */}
         <AnalyticsProvider />
       </body>
     </html>

@@ -1,15 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import Accordion from "@/components/Accordion";
-import LiveActivity from "@/components/LiveActivity";
+// LiveActivity removed — was displaying fabricated user activity. See components/LiveActivity.tsx.
 import StickyBuy from "@/components/StickyBuy";
 import TrustPulse from "@/components/TrustPulse";
 import NeuralDecrypt from "@/components/NeuralDecrypt";
-import { Star, ShieldCheck, Truck, RotateCcw, Heart, Eye, PackageCheck, Zap, Globe, CheckCircle, Clock, Lock, ExternalLink, Cpu, Layers } from "lucide-react";
+import { Star, ShieldCheck, Zap, Lock, ExternalLink, Layers } from "lucide-react";
 import { createClient } from "@/lib/supabase-server";
 import { Metadata } from "next";
-import { getEstimatedMarketValue } from "@/lib/pricing";
 import { VaultButton } from "@/components/VaultButton";
 import { NeuralEchoes } from "@/components/NeuralEchoes";
 
@@ -30,7 +28,7 @@ export async function generateMetadata({ params }: ArchiveProductPageProps): Pro
 
   return {
     title: `${item.title} | ${item.brand} Archive`,
-    description: `Secure this unique ${item.brand} ${item.category} from the Auvra Archive. Sourced and verified quality archive piece in ${item.condition} condition.`,
+    description: `Unlock the source link for this unique ${item.brand} ${item.category} from the Auvra Archive. Discovered by our neural network in ${item.condition} condition.`,
     alternates: {
       canonical: `https://auvra.eu/archive/${item.id}`,
     },
@@ -76,27 +74,24 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
   // If user is member, we NEVER show locked visual
   const showLockedVisual = isVault && !isMember;
 
-  const charSum = item.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-  const viewingCount = (charSum % 17) + 1;
+  // viewingCount removed — was a deterministic hash of the product ID presented
+  // as a live "X people viewing" count. This is fabricated social proof, prohibited
+  // under EU Omnibus Directive 2019/2161.
 
   const listingPrice = item.listing_price;
-  const memberPrice = item.member_price || Math.round(listingPrice * 0.9);
+  const curationFee = Math.max(Math.floor(listingPrice * 0.05), 5);
   
+  const formattedCurationFee = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(curationFee);
   const formattedListingPrice = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(listingPrice);
-  const formattedMemberPrice = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(memberPrice);
 
-  const estimatedRetail = getEstimatedMarketValue(listingPrice, item.brand, item.category);
-  const formattedEstimatedRetail = estimatedRetail 
-    ? new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(estimatedRetail)
-    : null;
-
-  const deliveryDate = new Date();
-  deliveryDate.setDate(deliveryDate.getDate() + 7);
-  const deliveryString = deliveryDate.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+  // For sticky buy, stable items cost full price, archive items cost the curation fee
+  const displayPrice = item.is_stable 
+    ? formattedListingPrice 
+    : (isMember ? "Included" : formattedCurationFee);
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
-      <LiveActivity productName={item.title} />
+      {/* LiveActivity removed — was displaying fabricated user notifications */}
       
       <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">
         <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-12">
@@ -165,19 +160,12 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                   <VaultButton productId={item.id} className="scale-125" />
                 </div>
                 
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-green-600">
-                     <ShieldCheck size={14} />
-                     Authenticity Guaranteed • 1-of-1 Piece
-                  </div>
-
-                  <div className="flex items-center gap-2 bg-red-50/80 border border-red-100 px-3 py-2 rounded-lg w-fit shadow-sm">
-                     <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                     <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest">
-                       🔥 {viewingCount} people viewing this artifact
-                     </span>
-                  </div>
-                </div>
+                 <div className="flex flex-col gap-4">
+                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-green-600">
+                      <ShieldCheck size={14} />
+                      High Confidence Score • 1-of-1 Piece
+                   </div>
+                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
                    <div className="bg-zinc-900 text-white px-6 py-3 rounded-full border border-zinc-800 flex items-center gap-3 shadow-xl">
@@ -186,40 +174,64 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                    </div>
                 </div>
                 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 rounded-3xl border border-zinc-100 bg-white shadow-sm">
-                     <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-zinc-900 uppercase tracking-widest">Concierge Price</span>
-                        <span className={`text-2xl font-black tracking-tighter ${isMember ? 'text-zinc-500 line-through decoration-zinc-900/20' : 'text-zinc-900'}`}>
-                           {formattedListingPrice}
-                        </span>
-                     </div>
-                     {!isMember && (
-                       <Link href="/pricing" className="px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:opacity-80 transition-opacity">
-                          Unlock Society Price
-                       </Link>
-                     )}
+                {item.is_stable ? (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-4xl font-black tracking-tighter">{formattedListingPrice}</span>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Physical Product Allocation</span>
                   </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-2 text-zinc-500 p-3.5 bg-zinc-50/80 rounded-2xl border border-zinc-100">
+                      <Lock size={14} className="mt-0.5 shrink-0 opacity-40" />
+                      <p className="text-[11px] leading-relaxed">
+                        <strong className="text-zinc-700">Digital Access Link:</strong> You are paying a curation fee to unlock the direct source link. You are not buying the physical item from Auvra. The images depict the physical product you will be able to purchase yourself at the source.
+                      </p>
+                    </div>
 
-                  <div className={`flex items-center justify-between p-4 rounded-3xl border-2 ${isMember ? 'border-yellow-400 bg-yellow-50/10' : 'border-zinc-100 bg-white opacity-60'}`}>
-                     <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-yellow-600 uppercase tracking-widest flex items-center gap-2">
-                           <Zap size={10} className="fill-yellow-600" /> Society Direct Source
-                        </span>
-                        <span className="text-3xl font-black tracking-tighter text-zinc-900">
-                           {formattedMemberPrice}
-                        </span>
-                     </div>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                       <div className="flex-1 flex flex-col p-4 rounded-3xl border border-zinc-100 bg-white shadow-sm">
+                          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
+                            <ExternalLink size={10} /> Item Source Price
+                          </span>
+                          <span className="text-2xl font-black tracking-tighter text-zinc-900">
+                             {formattedListingPrice}
+                          </span>
+                          <span className="text-[10px] font-medium text-zinc-400 mt-1">Paid later to the seller</span>
+                       </div>
+
+                       <div className="flex-1 flex flex-col p-4 rounded-3xl border border-zinc-100 bg-white shadow-sm relative overflow-hidden">
+                          {isMember && <div className="absolute inset-0 bg-yellow-50/50" />}
+                          <div className="relative z-10">
+                            <span className="text-[10px] font-bold text-zinc-900 uppercase tracking-widest">Auvra Curation Fee</span>
+                            <div className="flex items-baseline gap-2">
+                              <span className={`text-2xl font-black tracking-tighter ${isMember ? 'text-zinc-500 line-through decoration-zinc-900/20' : 'text-zinc-900'}`}>
+                                 {formattedCurationFee}
+                              </span>
+                              {isMember && <span className="text-sm font-black text-yellow-600 uppercase">Included</span>}
+                            </div>
+                            <span className="text-[10px] font-medium text-zinc-400 mt-1">Current unlock fee</span>
+                          </div>
+                       </div>
+                    </div>
+                    
+                    {!isMember && (
+                      <div className="flex justify-center mt-2">
+                         <Link href="/pricing" className="px-6 py-3 bg-yellow-400 text-black text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-yellow-500 transition-colors flex items-center gap-2">
+                            <Zap size={12} className="fill-black" />
+                            Join Society to Unlock Links for Free
+                         </Link>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
 
                 <div className="bg-zinc-900 text-white p-8 rounded-[2.5rem] relative overflow-hidden">
                    <div className="relative z-10">
                       <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-4 opacity-50">Archive Integrity</p>
-                      <p className="text-lg font-medium leading-relaxed mb-6">Sourced from a verified archive with high confidence scoring.</p>
+                      <p className="text-lg font-medium leading-relaxed mb-6">Discovered by our neural network with high confidence scoring for brand provenance.</p>
                       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-green-400">
                          <ShieldCheck size={14} />
-                         Authenticity Guaranteed
+                         Algorithmic Verification
                       </div>
                    </div>
                 </div>
@@ -228,11 +240,13 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
               <div className="space-y-8">
                 <StickyBuy 
                   productId={item.id} 
-                  price={isMember ? formattedMemberPrice : formattedListingPrice} 
+                  price={displayPrice} 
                   quantity={1} 
                   isStable={item.is_stable}
                   stockLevel={item.stock_level}
                   preOrderStatus={item.pre_order_status}
+                  isMember={isMember}
+                  sourceUrl={item.source_url}
                 />
                 <TrustPulse />
               </div>
@@ -240,6 +254,11 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
               <div className="pt-8 border-t border-zinc-100">
                 <Accordion title="Pulse Report" defaultOpen={true}>
                   <p className="mb-6 leading-relaxed text-zinc-500">{item.description || "Captured by our algorithm for brand provenance and condition."}</p>
+                </Accordion>
+                <Accordion title="Curation Protocol">
+                  <p className="leading-relaxed text-zinc-500">
+                    Auvra uses advanced neural algorithms to discover rare, unlisted archive pieces across the global secondary market. By paying the curation fee, you instantly unlock the direct source link to purchase the item yourself. We recommend securing the physical piece immediately after unlocking, as these are unique 1-of-1 items.
+                  </p>
                 </Accordion>
               </div>
 

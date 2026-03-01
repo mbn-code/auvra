@@ -12,15 +12,24 @@ interface StickyBuyProps {
   isStable?: boolean;
   stockLevel?: number;
   preOrderStatus?: boolean;
+  isMember?: boolean;
+  sourceUrl?: string;
 }
 
-export default function StickyBuy({ productId, price, quantity, isStable, stockLevel, preOrderStatus }: StickyBuyProps) {
+export default function StickyBuy({ productId, price, quantity, isStable, stockLevel, preOrderStatus, isMember, sourceUrl }: StickyBuyProps) {
   const [status, setStatus] = useState<"idle" | "securing" | "redirecting">("idle");
 
   const isPreOrder = isStable && stockLevel === 0 && preOrderStatus;
 
   const handleCheckout = async () => {
     triggerHaptic('medium');
+    
+    if (isMember && sourceUrl) {
+      window.open(sourceUrl, "_blank", "noopener,noreferrer");
+      toast.success("Source Link Revealed");
+      return;
+    }
+
     setStatus("securing");
     try {
       const response = await fetch("/api/checkout", {
@@ -35,7 +44,7 @@ export default function StickyBuy({ productId, price, quantity, isStable, stockL
       
       if (!response.ok) {
         const error = await response.json();
-        const defaultMsg = isPreOrder ? "Pre-allocation request failed." : "Acquisition failed. The archive piece may have just been secured by another node.";
+        const defaultMsg = isPreOrder ? "Pre-allocation request failed." : "Link unlock failed. The archive piece may have just been secured by another node.";
         triggerHaptic('heavy');
         toast.error("Transaction Failed", { description: error.error || defaultMsg });
         setStatus("idle");
@@ -76,7 +85,7 @@ export default function StickyBuy({ productId, price, quantity, isStable, stockL
           {status === "securing" ? (
             <>
               <Loader2 className="animate-spin" size={16} />
-              {isPreOrder ? 'Allocating Neural Node...' : 'Securing Archive Piece...'}
+              Generating Source Link...
             </>
           ) : status === "redirecting" ? (
             <>
@@ -85,7 +94,7 @@ export default function StickyBuy({ productId, price, quantity, isStable, stockL
             </>
           ) : (
             <>
-              {isPreOrder ? 'SECURE PRE-ALLOCATION' : 'Confirm Order'} <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              {isMember ? 'REVEAL SOURCE LINK' : 'Secure Source Link'} <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </>
           )}
         </button>

@@ -2,37 +2,34 @@ import PolicyLayout from "@/components/PolicyLayout";
 
 export default function RefundPolicy() {
   return (
-    <PolicyLayout title="Returns & Transfers">
+    <PolicyLayout title="Returns & Refunds">
       <div className="space-y-8">
+
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">The Concierge Model & Returns</h2>
-          <p>Auvra operates as a premium sourcing concierge, meaning we acquire items from international private collectors specifically on your behalf when you place an order. Because we do not hold physical inventory, <strong>we cannot accept returns for "change of mind" or sizing issues</strong>. All acquisitions are final unless the item is proven inauthentic or significantly not as described.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Digital Access Model</h2>
+          <p>Auvra provides access to digital source links (Curation-as-a-Service). When you pay a curation fee or use your Society membership to unlock a link, you receive immediate access to the digital content.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Authenticity Guarantee</h2>
-          <p>We stand behind the absolute authenticity of every archive piece. If an item is proven inauthentic by a certified third-party authenticator within <strong>30 days</strong> of purchase, Auvra will issue a full 100% refund, including all logistics fees.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Right of Withdrawal</h2>
+          <p>Because you are purchasing immediate access to digital content (a source link), you agree that you lose your 14-day right of withdrawal as soon as the link is unlocked or emailed to you, in accordance with EU consumer protection laws for digital goods.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">48-Hour Integrity Window</h2>
-          <p>Due to the unique, one-of-one nature of archive pieces sourced from global private collections, we operate a strict 48-hour inspection window. Upon delivery, you have <strong>48 hours</strong> to report any discrepancies in condition or description. After this period, the acquisition is considered final.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Refund Eligibility</h2>
+          <p>Curation fees are generally <strong>non-refundable</strong> once a link is unlocked. However, if you unlock a link and the item is already sold on the third-party platform at the exact moment of unlocking, please contact us immediately with photographic evidence (screenshots). We will review the claim and issue a refund or provide an alternative curation credit at our discretion.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Non-Returnable Items</h2>
-          <p>Items marked as "Museum Grade" or "Final Sale" are not eligible for returns. Additionally, any item where the Auvra Archive Security Tag has been removed or tampered with is ineligible for return under the integrity window.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Third-Party Transactions</h2>
+          <p>Auvra is not responsible for the physical item, its condition, shipping, or authenticity once you proceed to purchase it from the third-party seller. Any disputes regarding the physical purchase must be resolved directly with the third-party platform or seller according to their respective return and refund policies.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Initiating a Report</h2>
-          <p>To report a condition discrepancy, please email <strong>malthe@mbn-code.dk</strong> within the 48-hour window with your order ID and high-resolution photographic evidence of the issue.</p>
+          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Governing Law</h2>
+          <p>These terms are governed by the laws of Denmark and applicable EU legislation. Nothing in this policy limits any statutory consumer rights that cannot be waived by agreement under applicable law.</p>
         </section>
 
-        <section>
-          <h2 className="text-xl font-bold text-zinc-900 mb-4 tracking-tight uppercase text-sm">Refund Processing</h2>
-          <p>Once a return is authorized and received at our regional hub, your refund will be processed back to your original payment method within 3-5 business days.</p>
-        </section>
       </div>
     </PolicyLayout>
   );

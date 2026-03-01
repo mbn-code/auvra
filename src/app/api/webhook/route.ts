@@ -150,7 +150,6 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Parse the full cart — productIds is comma-joined in metadata
       const allProductIds: string[] = (session.metadata?.productIds || session.metadata?.productId || "")
         .split(",")
         .map((s: string) => s.trim())
@@ -160,6 +159,9 @@ export async function POST(req: NextRequest) {
         preOrder === "true"
           ? "awaiting_manufacturing_allocation"
           : "pending_secure";
+
+      const sourceUrls: string[] = [];
+      let firstProductName = "Archive Piece";
 
       for (const pid of allProductIds) {
         let productName = "Archive Piece";
@@ -209,6 +211,9 @@ export async function POST(req: NextRequest) {
           }
         }
 
+        if (vintedUrl) sourceUrls.push(vintedUrl);
+        if (pid === allProductIds[0]) firstProductName = productName;
+
         // Write order record to Supabase (visible in admin dashboard)
         const { error: orderInsertError } = await supabase.from("orders").insert({
           stripe_session_id: session.id,
@@ -228,35 +233,36 @@ export async function POST(req: NextRequest) {
             "| product:", pid,
             "| error:", orderInsertError.message
           );
+          // Notify operator — PII (name, address) intentionally excluded.
+          // Full order details are in the admin dashboard (Supabase orders table).
+          // GDPR Art. 5(1)(c) — data minimisation.
           await sendSecureNotification({
             productName: `ORDER RECORD FAILED — ${productName}`,
             vintedUrl: vintedUrl || "n/a",
             profit: 0,
-            customerName: customerName || "Unknown",
-            customerAddress: `DB insert error: ${orderInsertError.message} | Stripe session: ${session.id}`,
           }).catch(() => {});
         }
 
-        // Send operator notification (Telegram + Pushover) for every item sold
+        // Send operator notification (Telegram + Pushover) for every item sold.
+        // PII (customer name, address) intentionally excluded — GDPR Art. 5(1)(c).
         if (vintedUrl) {
           await sendSecureNotification({
             productName,
             vintedUrl,
             profit,
-            customerName: customerName || "Customer",
-            customerAddress: `${session.customer_details?.address?.line1 ?? ""}, ${session.customer_details?.address?.city ?? ""}`.trim().replace(/^,\s*/, ""),
           });
         }
+      }
 
-        // Send customer confirmation email (once per cart, keyed on first item)
-        if (pid === allProductIds[0]) {
-          await sendOrderEmail(customerEmail, {
-            productName: allProductIds.length > 1 ? `${productName} + ${allProductIds.length - 1} more` : productName,
-            price: `€${(session.amount_total / 100).toFixed(2)}`,
-            type: (type as any) || "archive",
-            stripeSessionId: session.id,
-          });
-        }
+      // Send customer confirmation email once all items are processed
+      if (customerEmail && allProductIds.length > 0) {
+        await sendOrderEmail(customerEmail, {
+          productName: allProductIds.length > 1 ? `${firstProductName} + ${allProductIds.length - 1} more` : firstProductName,
+          price: `€${(session.amount_total / 100).toFixed(2)}`,
+          type: (type as any) || "archive",
+          stripeSessionId: session.id,
+          sourceUrls: sourceUrls
+        });
       }
     }
   }

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { ExternalLink, Search, Zap, Filter, SortAsc, Clock, Target, TrendingUp, Star, ShoppingBag, CheckCircle } from "lucide-react";
+import { getCurationFee } from "@/lib/pricing";
 
 export default function HuntTerminal({ initialItems }: { initialItems: any[] }) {
   const [items, setItems] = useState<any[]>(initialItems);
@@ -225,8 +226,8 @@ export default function HuntTerminal({ initialItems }: { initialItems: any[] }) 
                       <p className="text-2xl font-black text-white">€{Math.round(item.source_price)}</p>
                     </div>
                     <div className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 text-center">
-                      <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-1">Auvra Listing</p>
-                      <p className="text-2xl font-black text-zinc-500">€{Math.round(item.listing_price)}</p>
+                      <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-1">Curation Fee</p>
+                      <p className="text-2xl font-black text-zinc-500">€{getCurationFee(item.listing_price)}</p>
                     </div>
                   </div>
 

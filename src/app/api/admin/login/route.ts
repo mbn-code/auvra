@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { timingSafeEqual } from "crypto";
+import { issueAdminSession } from "@/lib/admin";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // In-memory rate limiter (per IP, module-level Map).
@@ -83,14 +83,10 @@ export async function POST(req: NextRequest) {
     // Successful login — reset the rate-limit counter for this IP.
     rateLimitMap.delete(ip);
 
-    const cookieStore = await cookies();
-    cookieStore.set("admin_session", "authenticated", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      path: "/",
-    });
+    // Issue a signed JWT session cookie instead of the static "authenticated"
+    // string. This prevents session forgery even if the cookie value is leaked.
+    // The JWT is signed with ADMIN_JWT_SECRET (HS256) and expires in 7 days.
+    await issueAdminSession();
 
     return NextResponse.json({ success: true });
   }

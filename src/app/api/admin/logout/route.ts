@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { clearAdminSession } from "@/lib/admin";
 
 export async function POST(req: NextRequest) {
-  const cookieStore = await cookies();
-  cookieStore.delete("admin_session");
+  // Clear the signed JWT admin session cookie.
+  await clearAdminSession();
   return NextResponse.json({ success: true });
 }
