@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-server';
 
 export async function POST(req: Request) {
   try {
+    // Auth guard: hunt_queue inserts must be tied to an authenticated session.
+    // createClient() reads the Supabase session from request cookies via next/headers.
+    // Return 401 early if no valid session exists — prevents anonymous queue poisoning.
+    const serverClient = await createClient();
+    const { data: { session } } = await serverClient.auth.getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const { brands, occasion } = await req.json();
 
     if (!brands || brands.length === 0) {
