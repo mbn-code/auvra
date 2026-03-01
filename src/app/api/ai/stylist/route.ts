@@ -30,8 +30,12 @@ export async function POST(req: Request) {
     const embeddings = vibes.map(v => {
       // Handle potential string vs array return from Supabase client
       return typeof v.embedding === 'string' ? JSON.parse(v.embedding) : v.embedding;
-    });
-    
+    }).filter((e): e is number[] => Array.isArray(e) && e.length > 0); // guard: skip null/empty embeddings
+
+    if (embeddings.length === 0) {
+      return NextResponse.json({ error: 'No valid embeddings for selected vibes' }, { status: 500 });
+    }
+
     const dim = embeddings[0].length;
     const centroid = Array(dim).fill(0);
 

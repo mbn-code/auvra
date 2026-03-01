@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       .select('id, title, brand, listing_price, images')
       .in('id', productIds);
 
-    const productsHtml = (products || []).map(p => `
+    const productsHtml = (products || []).filter(p => p.images && p.images.length > 0).map(p => `
       <div style="margin-bottom: 20px; padding: 10px; border: 1px solid #eee; border-radius: 10px;">
         <img src="${p.images[0]}" style="width: 100px; border-radius: 5px;" />
         <div style="display: inline-block; vertical-align: top; margin-left: 15px;">

@@ -37,7 +37,9 @@ export async function GET(req: Request) {
     if (outfitError || !outfitData) throw new Error('Outfit not found');
 
     // 2. Hydrate slots (fetch product details for IDs)
-    const productIds = Object.values(outfitData.slots).filter(v => v !== null) as string[];
+    // Guard: slots may be null or non-object JSONB — default to {} to prevent Object.values crash.
+    const slots = (outfitData.slots && typeof outfitData.slots === 'object') ? outfitData.slots : {};
+    const productIds = Object.values(slots).filter(v => v !== null) as string[];
     
     if (productIds.length === 0) {
       return NextResponse.json({ outfit: outfitData.slots });
