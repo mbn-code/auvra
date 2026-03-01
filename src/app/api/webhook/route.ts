@@ -174,14 +174,14 @@ export async function POST(req: NextRequest) {
                 .eq("id", productId);
               if (error) throw error;
             } else {
+              // Both operations are atomic RPCs — no read-then-write race condition.
               const { error: stockErr } = await supabase.rpc("decrement_stock", {
                 item_id: productId,
               });
               if (stockErr) throw stockErr;
-              const { error: countErr } = await supabase
-                .from("pulse_inventory")
-                .update({ units_sold_count: (item.units_sold_count || 0) + 1 })
-                .eq("id", productId);
+              const { error: countErr } = await supabase.rpc("increment_units_sold", {
+                item_id: productId,
+              });
               if (countErr) throw countErr;
             }
           } catch (updateErr) {
@@ -205,7 +205,7 @@ export async function POST(req: NextRequest) {
           ? "awaiting_manufacturing_allocation"
           : "pending_secure";
 
-      await supabase.from("orders").insert({
+      const { error: orderInsertError } = await supabase.from("orders").insert({
         stripe_session_id: session.id,
         product_id: type === "archive" ? productId : null,
         customer_email: customerEmail,
@@ -214,6 +214,26 @@ export async function POST(req: NextRequest) {
         source_url: vintedUrl,
         status: initialStatus,
       });
+
+      if (orderInsertError) {
+        // Do NOT return non-200 — Stripe would retry and re-run inventory + emails.
+        // Log prominently and fire an alert for manual reconciliation.
+        console.error(
+          "[Webhook] CRITICAL: orders.insert failed for Stripe session",
+          session.id,
+          "| customer:", customerEmail,
+          "| product:", productId,
+          "| error:", orderInsertError.message
+        );
+        // Reuse the existing notification channel so the alert reaches the operator.
+        await sendSecureNotification({
+          productName: `ORDER RECORD FAILED — ${productName}`,
+          vintedUrl: vintedUrl || "n/a",
+          profit: 0,
+          customerName: customerName || "Unknown",
+          customerAddress: `DB insert error: ${orderInsertError.message} | Stripe session: ${session.id}`,
+        }).catch(() => {}); // Swallow notification errors — original error already logged above
+      }
 
       await sendOrderEmail(customerEmail, {
         productName,

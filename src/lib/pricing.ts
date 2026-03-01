@@ -1,3 +1,19 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Deterministic pseudo-random float in [0, 1) derived from a string seed.
+// Uses djb2 hash so the same title always produces the same discount factor.
+// This makes calculateListingPriceEngine a pure function: identical inputs →
+// identical output, safe for retries, re-renders, and admin recalculation.
+// ─────────────────────────────────────────────────────────────────────────────
+function seededRandom(seed: string): number {
+  let hash = 5381;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) + hash) ^ seed.charCodeAt(i);
+    hash = hash >>> 0; // keep 32-bit unsigned
+  }
+  return hash / 0xffffffff;
+}
+
+
 export function getBrandTier(brand: string): number {
   const b = brand || "";
   if (["Louis Vuitton", "Hermès", "Chanel", "Prada", "Chrome Hearts", "Moncler"].includes(b)) return 1;
@@ -126,8 +142,9 @@ export function calculateListingPriceEngine(sourcePriceEUR: number, brand: strin
 
   // 3. Apply Controlled Discount based on Tier
   let baseDiscount = 0;
-  // Seed random deterministically for testing predictability, though Math.random() is fine for live pulse
-  const r = Math.random();
+  // Deterministic per-item value derived from title — same inputs always produce
+  // the same price. Replaces Math.random() which made pricing non-reproducible.
+  const r = seededRandom(title);
   if (tier === 1) baseDiscount = 0.10 + (r * 0.10); // 10-20%
   else if (tier === 2) baseDiscount = 0.15 + (r * 0.15); // 15-30%
   else if (tier === 3) baseDiscount = 0.20 + (r * 0.20); // 20-40%
