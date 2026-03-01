@@ -164,6 +164,20 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                   </h1>
                   <VaultButton productId={item.id} className="scale-125" />
                 </div>
+                
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-green-600">
+                     <ShieldCheck size={14} />
+                     Authenticity Guaranteed • 1-of-1 Piece
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-red-50/80 border border-red-100 px-3 py-2 rounded-lg w-fit shadow-sm">
+                     <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                     <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest">
+                       🔥 {viewingCount} people viewing this artifact
+                     </span>
+                  </div>
+                </div>
 
                 <div className="flex flex-wrap items-center gap-3">
                    <div className="bg-zinc-900 text-white px-6 py-3 rounded-full border border-zinc-800 flex items-center gap-3 shadow-xl">

@@ -297,6 +297,27 @@ function StylistContent() {
     }
   };
 
+  const handleFreeAction = async (email: string) => {
+    // 1. Capture the email as a lead
+    const res = await fetch("/api/newsletter/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+    
+    if (!res.ok) throw new Error("Failed to capture email");
+
+    // 2. Save locally
+    const slots: any = {};
+    Object.keys(canvasOutfit).forEach(slot => {
+      const activeItem = canvasOutfit[slot][activeIndices[slot]];
+      slots[slot] = activeItem ? activeItem.id : null;
+    });
+
+    localStorage.setItem("auvra_free_saved_lookbook", JSON.stringify(slots));
+    alert(`Success! Lookbook saved locally for ${email}. To enable permanent cloud sync and PDF exports across all devices, upgrade to The Society.`);
+  };
+
   const handleSave = async () => {
     if (!isMember) {
       setModalConfig({
@@ -579,6 +600,7 @@ function StylistContent() {
         title={modalConfig.title}
         description={modalConfig.description}
         feature={modalConfig.feature}
+        onFreeAction={handleFreeAction}
       />
     </DndContext>
   );

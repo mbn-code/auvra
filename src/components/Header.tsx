@@ -29,32 +29,32 @@ export default async function Header() {
               <Menu size={20} strokeWidth={2} className="text-zinc-900" />
             </div>
             
-            <nav className="hidden lg:flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">
-              <Link href="/archive" className="hover:text-black transition-colors text-zinc-900 italic">Archive Pulse</Link>
-              <Link href="/stylist" className="hover:text-black transition-colors">AI Stylist</Link>
-              <Link href="/core" className="hover:text-black transition-colors text-blue-600">Core Hardware</Link>
+            <nav className="hidden lg:flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">
+              <Link href="/archive" className="relative after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[1px] after:bg-black after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-300 text-zinc-900 italic hover:text-black transition-colors">Archive Pulse</Link>
+              <Link href="/stylist" className="relative after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[1px] after:bg-black after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-300 hover:text-black transition-colors">AI Stylist</Link>
+              <Link href="/core" className="relative after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[1px] after:bg-blue-600 after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-300 hover:text-blue-600 transition-colors text-blue-600">Core Hardware</Link>
               {isSociety ? (
-                <Link href="/account" className="text-yellow-600 flex items-center gap-2">
+                <Link href="/account" className="text-yellow-600 flex items-center gap-2 hover:opacity-80 active:scale-95 transition-all">
                   <Zap size={10} className="fill-yellow-600" /> Society Node
                 </Link>
               ) : (
-                <Link href="/pricing" className="text-zinc-900 hover:opacity-50 transition-opacity border-b-2 border-yellow-400 pb-0.5">Society</Link>
+                <Link href="/pricing" className="text-zinc-900 hover:opacity-50 active:scale-95 transition-all border-b-2 border-yellow-400 pb-0.5">Society</Link>
               )}
-              <Link href="/shipping" className="hover:text-black transition-colors">Logistics</Link>
+              <Link href="/shipping" className="relative after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[1px] after:bg-black after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-300 hover:text-black transition-colors">Logistics</Link>
             </nav>
           </div>
 
           {/* CENTER: Logo */}
-          <div className="flex-shrink-0 flex justify-center">
+          <div className="flex-shrink-0 flex justify-center active:scale-95 transition-transform">
             <Logo />
           </div>
           
           {/* RIGHT: User & Cart */}
           <div className="flex-1 flex items-center justify-end gap-6">
-            <Link href={user ? "/account" : "/login"} className="p-2 text-zinc-900 hover:opacity-50 transition-opacity">
+            <Link href={user ? "/account" : "/login"} className="p-2 text-zinc-900 hover:opacity-50 active:scale-95 transition-all">
               <User size={20} strokeWidth={1.5} />
             </Link>
-            <button className="relative p-2 text-zinc-900">
+            <button className="relative p-2 text-zinc-900 active:scale-90 transition-transform">
               <ShoppingBag size={20} strokeWidth={1.5} />
               <span className="absolute top-1 right-1 bg-black text-white text-[8px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-bold">0</span>
             </button>

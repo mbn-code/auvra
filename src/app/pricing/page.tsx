@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import { Check, Zap, Lock, Cpu, Layers, ShieldCheck, Mail, Sparkles, ArrowRight, Hexagon, Globe, Database, Fingerprint } from "lucide-react";
 
 export default function PricingPage() {
+  const [isAnnual, setIsAnnual] = useState(false);
+
   return (
     <div className="min-h-screen bg-black text-white py-32 px-6 overflow-hidden relative selection:bg-yellow-400 selection:text-black">
       
@@ -23,7 +28,7 @@ export default function PricingPage() {
       <div className="max-w-7xl mx-auto relative z-10">
         
         {/* HEADER: MISSION STATEMENT */}
-        <header className="flex flex-col items-center text-center mb-32">
+        <header className="flex flex-col items-center text-center mb-24">
           <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-zinc-800 bg-black mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <Fingerprint size={14} className="text-yellow-400" />
             <span className="text-[10px] font-black uppercase tracking-[0.6em] text-zinc-400">Node Authentication Required</span>
@@ -38,6 +43,30 @@ export default function PricingPage() {
             Auvra Society is not a subscription. It is a key to the neural creative mesh. Access the workstation, bypass the retail markup, and secure artifacts.
           </p>
         </header>
+
+        {/* PRICING TOGGLE */}
+        <div className="flex justify-center mb-16 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
+          <div className="bg-zinc-900 border border-zinc-800 p-1.5 rounded-full flex items-center relative">
+             <button 
+               onClick={() => setIsAnnual(false)}
+               className={`relative z-10 px-8 py-3 rounded-full text-xs font-black uppercase tracking-[0.2em] transition-colors ${!isAnnual ? 'text-black' : 'text-zinc-400 hover:text-white'}`}
+             >
+               Monthly
+             </button>
+             <button 
+               onClick={() => setIsAnnual(true)}
+               className={`relative z-10 px-8 py-3 rounded-full text-xs font-black uppercase tracking-[0.2em] transition-colors flex items-center gap-2 ${isAnnual ? 'text-black' : 'text-zinc-400 hover:text-white'}`}
+             >
+               Annual <span className={`text-[8px] px-2 py-0.5 rounded-full ${isAnnual ? 'bg-black text-yellow-400' : 'bg-yellow-400/20 text-yellow-400'}`}>Save 20%</span>
+             </button>
+             
+             {/* Toggle Background Pill */}
+             <div 
+               className={`absolute top-1.5 bottom-1.5 w-[50%] bg-white rounded-full transition-transform duration-500 ease-out`}
+               style={{ transform: isAnnual ? 'translateX(95%)' : 'translateX(0)' }}
+             ></div>
+          </div>
+        </div>
 
         {/* TIERS: ARCHITECTURAL GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch mb-40">
@@ -107,8 +136,8 @@ export default function PricingPage() {
               <div className="mb-16">
                 <h3 className="text-6xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">Society</h3>
                 <div className="flex items-baseline gap-4">
-                   <span className="text-4xl font-black">€19</span>
-                   <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest">/ Membership Access</span>
+                   <span className="text-4xl font-black">€{isAnnual ? '15' : '19'}</span>
+                   <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest">/ Membership Access {isAnnual && '(Billed Annually)'}</span>
                 </div>
               </div>
 

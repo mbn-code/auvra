@@ -78,18 +78,18 @@ export default async function Home() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <header className="flex flex-col items-start mb-24 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-200 bg-white mb-8 shadow-sm">
+          <header className="flex flex-col items-start mb-24">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-200 bg-white mb-8 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-1000">
               <Fingerprint size={12} className="text-zinc-400" />
               <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Neural Sync Active</span>
             </div>
             
-            <h1 className="text-7xl md:text-[9rem] font-black tracking-[-0.06em] text-zinc-900 leading-[0.8] uppercase italic mb-12">
+            <h1 className="text-7xl md:text-[9rem] font-black tracking-[-0.06em] text-zinc-900 leading-[0.8] uppercase italic mb-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150 fill-mode-both">
               Recent <br /> 
               <span className="text-transparent bg-clip-text bg-gradient-to-b from-black to-zinc-400">Secured.</span>
             </h1>
             
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full gap-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full gap-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-both">
               <p className="text-zinc-500 text-xl font-medium max-w-lg leading-tight tracking-tight">
                 Monitoring global private archives in real-time. Verified quality. Mathematical precision.
               </p>
@@ -99,7 +99,7 @@ export default async function Home() {
             </div>
           </header>
 
-          <div className="flex gap-8 overflow-x-auto pb-12 scrollbar-hide -mx-6 px-6 mask-fade-right">
+          <div className="flex gap-8 overflow-x-auto pb-12 scrollbar-hide -mx-6 px-6 mask-fade-right animate-in fade-in duration-1000 delay-500 fill-mode-both">
             {archiveItems && archiveItems.length > 0 ? (
               archiveItems.map((item) => {
                 const isSold = item.status === 'sold';
