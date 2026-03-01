@@ -22,12 +22,9 @@ export default async function Header() {
     <div className="fixed top-0 left-0 right-0 z-[100]">
       <AnnouncementMarquee />
       <header className="bg-white/80 backdrop-blur-xl border-b border-zinc-100">
-        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center">
+        <div className="max-w-7xl mx-auto px-6 h-16 md:h-24 flex items-center">
           {/* LEFT: Navigation */}
           <div className="flex-1 flex items-center">
-            <div className="flex lg:hidden">
-              <Menu size={20} strokeWidth={2} className="text-zinc-900" />
-            </div>
             
             <nav className="hidden lg:flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">
               <Link href="/archive" className="relative after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[1px] after:bg-black after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-300 text-zinc-900 italic hover:text-black transition-colors">Archive Pulse</Link>

@@ -107,7 +107,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
           <span className="text-zinc-900 truncate max-w-[150px]">{item.title}</span>
         </nav>
 
-        <div className="flex flex-col lg:flex-row gap-20 xl:gap-32">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-20 xl:gap-32">
           <section className="lg:w-[55%] space-y-6">
             <div className="sticky top-32 space-y-6">
                <div className="rounded-[3.5rem] overflow-hidden bg-zinc-50 border border-zinc-100 relative group transition-all duration-1000 aspect-[4/5]">
@@ -159,7 +159,7 @@ export default async function ArchiveProductPage({ params }: ArchiveProductPageP
                 </div>
                 
                 <div className="flex items-center justify-between gap-6">
-                  <h1 className="text-5xl md:text-6xl font-black tracking-tighter leading-[0.95] text-zinc-900 uppercase italic flex-1">
+                  <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.95] text-zinc-900 uppercase italic flex-1">
                     {item.title}
                   </h1>
                   <VaultButton productId={item.id} className="scale-125" />

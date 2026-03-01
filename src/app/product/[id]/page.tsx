@@ -81,7 +81,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <LiveActivity productName={product.name} />
       
       <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">
-        <div className="flex flex-col lg:flex-row gap-20 xl:gap-32">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-20 xl:gap-32">
           
           {/* Gallery Section - More whitespace, very clean */}
           <section className="lg:w-[55%] space-y-6">
@@ -129,7 +129,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                      </div>
                      <span className="text-[10px] font-black text-zinc-500 ml-2 tracking-widest uppercase">Verified Quality</span>
                    </div>
-                   <button className="text-zinc-200 hover:text-zinc-900 transition-colors">
+                   <button className="text-zinc-200 hover:text-zinc-900 transition-colors p-3 -m-3">
                       <Heart size={20} strokeWidth={1.5} />
                    </button>
                 </div>
@@ -138,7 +138,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   {product.name}
                 </h1>
                 
-                <div className="flex items-center gap-6">
+                <div className="flex flex-wrap items-center gap-4 md:gap-6">
                    <p className="text-4xl font-black text-zinc-900">
                      {formattedPrice}
                    </p>
@@ -177,7 +177,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 <Accordion title="Technical Specifications">
                    <dl className="space-y-4">
                      {product.features.map((f: { label: string; value: string }, i: number) => (
-                       <div key={i} className="flex justify-between items-center text-[13px] py-1 border-b border-zinc-50 last:border-0">
+                       <div key={i} className="flex justify-between items-start md:items-center flex-wrap md:flex-nowrap gap-2 text-[13px] py-1 border-b border-zinc-50 last:border-0">
                          <dt className="text-zinc-500 font-medium uppercase tracking-widest">{f.label}</dt>
                          <dd className="font-bold text-zinc-900">{f.value}</dd>
                        </div>
@@ -198,7 +198,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       {/* Social Experience - Minimal & Authentic */}
       <section className="bg-zinc-50/50 py-32 px-6">
         <div className="max-w-7xl mx-auto">
-          <header className="mb-24 flex flex-col md:flex-row justify-between items-end gap-8">
+          <header className="mb-24 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
             <div className="max-w-xl">
                <p className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.4em] mb-4">The Community</p>
                <h2 className="text-4xl font-black tracking-tighter">Verified Experiences.</h2>
@@ -217,7 +217,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                { name: "Elena R.", text: "Minimalist design at its best. It simply works without any unnecessary complexity.", city: "London" },
                { name: "Satoshi T.", text: "The curation here is unmatched. Finally, a shop that values quality over volume.", city: "Tokyo" }
              ].map((review, i) => (
-               <div key={i} className="bg-[#fafafa] p-12 rounded-[3rem] border border-zinc-100 shadow-sm relative group hover:shadow-xl transition-all duration-700">
+               <div key={i} className="bg-[#fafafa] p-6 md:p-12 rounded-[3rem] border border-zinc-100 shadow-sm relative group hover:shadow-xl transition-all duration-700">
                   <div className="flex gap-1 mb-8">
                     {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-zinc-900 text-zinc-900" />)}
                   </div>

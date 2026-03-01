@@ -84,7 +84,7 @@ function StylistContent() {
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
   );
 
   const searchParams = useSearchParams();
@@ -457,7 +457,7 @@ function StylistContent() {
                 <Cpu size={10} className="text-zinc-400" />
                 <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Neural Archive Builder v5.3</span>
               </div>
-              <h1 className="text-7xl md:text-[9rem] font-black tracking-[-0.06em] leading-[0.8] mb-12 uppercase italic">Manifest <br /> <span className="text-transparent bg-clip-text bg-gradient-to-b from-black to-zinc-400">Aesthetics.</span></h1>
+              <h1 className="text-5xl md:text-7xl lg:text-[9rem] font-black tracking-[-0.06em] leading-[0.8] mb-12 uppercase italic break-words">Manifest <br /> <span className="text-transparent bg-clip-text bg-gradient-to-b from-black to-zinc-400">Aesthetics.</span></h1>
               <p className="text-zinc-500 text-xl font-medium leading-tight tracking-tight max-w-lg">
                 Tune your DNA, curate your archive, and build your lookbook in the neural latent space. Drag items from the grid onto the builder skeleton.
               </p>

@@ -43,16 +43,16 @@ const DropSlot = ({ id, label, items, activeIndex, onSwitch, onRemove, onSearch,
           <img src={item.image} alt="" className="w-full h-full object-cover rounded-[1.8rem]" />
           
           <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-[110]">
-            <button onClick={(e) => { e.stopPropagation(); onRemove(id, activeIndex); }} className="bg-black text-white p-1.5 rounded-full hover:bg-red-500 shadow-lg">
+            <button onClick={(e) => { e.stopPropagation(); onRemove(id, activeIndex); }} className="bg-black text-white p-3 rounded-full hover:bg-red-500 shadow-lg">
               <X size={12} />
             </button>
           </div>
 
           {items.length > 1 && (
             <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center z-[110]">
-               <button onClick={(e) => { e.stopPropagation(); onSwitch(id, (activeIndex - 1 + items.length) % items.length); }} className="bg-black/80 text-white rounded-full p-1 hover:bg-black transition-colors"><ChevronLeft size={12}/></button>
+               <button onClick={(e) => { e.stopPropagation(); onSwitch(id, (activeIndex - 1 + items.length) % items.length); }} className="bg-black/80 text-white rounded-full p-2 hover:bg-black transition-colors"><ChevronLeft size={12}/></button>
                <span className="text-[8px] font-black text-white bg-black/80 px-2 py-0.5 rounded-full tabular-nums">{activeIndex + 1}/{items.length}</span>
-               <button onClick={(e) => { e.stopPropagation(); onSwitch(id, (activeIndex + 1) % items.length); }} className="bg-black/80 text-white rounded-full p-1 hover:bg-black transition-colors"><ChevronRight size={12}/></button>
+               <button onClick={(e) => { e.stopPropagation(); onSwitch(id, (activeIndex + 1) % items.length); }} className="bg-black/80 text-white rounded-full p-2 hover:bg-black transition-colors"><ChevronRight size={12}/></button>
             </div>
           )}
 
@@ -68,7 +68,7 @@ const DropSlot = ({ id, label, items, activeIndex, onSwitch, onRemove, onSearch,
           <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest text-center px-2 leading-tight">{label}</span>
           <button 
             onClick={() => onSearch(id, label)}
-            className={`mt-2 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${isOver ? 'border-yellow-400 bg-yellow-400 text-black' : 'border-zinc-100 bg-white text-zinc-300 hover:border-black hover:text-black shadow-sm'}`}
+            className={`mt-2 w-11 h-11 rounded-full border-2 flex items-center justify-center transition-all ${isOver ? 'border-yellow-400 bg-yellow-400 text-black' : 'border-zinc-100 bg-white text-zinc-300 hover:border-black hover:text-black shadow-sm'}`}
           >
             <Search size={12} />
           </button>
@@ -104,7 +104,7 @@ export function SkeletonCanvas({
   isCheckingOut?: boolean
 }) {
   return (
-    <div className="sticky top-32 w-full max-w-sm bg-white rounded-[4rem] border border-zinc-100 p-8 flex flex-col items-center shadow-2xl overflow-y-auto max-h-[calc(100vh-8rem)] custom-scrollbar">
+    <div className="sticky top-32 w-full max-w-sm bg-white rounded-[4rem] border border-zinc-100 p-4 md:p-8 flex flex-col items-center shadow-2xl overflow-y-auto overflow-x-hidden max-h-[calc(100vh-8rem)] custom-scrollbar">
       <div className="mb-8 text-center">
         <div className="inline-flex items-center gap-2 bg-zinc-50 border border-zinc-100 px-4 py-1.5 rounded-full mb-4">
            <Layers size={12} className="text-zinc-900" />
@@ -132,7 +132,7 @@ export function SkeletonCanvas({
         </div>
 
         {/* HANDS */}
-        <div className="absolute left-0 top-[280px] -ml-10 z-[80]">
+        <div className="absolute left-0 top-[280px] -ml-2 md:-ml-10 z-[80]">
            <DropSlot id="hands" label="Gloves" items={outfit.hands} activeIndex={activeIndices.hands} onSwitch={onSwitch} onRemove={onRemove} onSearch={onSearch} size="sm" icon={<Hand size={16} />} />
         </div>
 
@@ -149,7 +149,7 @@ export function SkeletonCanvas({
         <DropSlot id="footwear" label="Footwear" items={outfit.footwear} activeIndex={activeIndices.footwear} onSwitch={onSwitch} onRemove={onRemove} onSearch={onSearch} size="md" icon={<Footprints size={22} />} className="-mt-6 z-[30]" />
 
         {/* ACCESSORY */}
-        <div className="absolute right-0 top-[450px] -mr-10 z-[80]">
+        <div className="absolute right-0 top-[450px] -mr-2 md:-mr-10 z-[80]">
            <DropSlot id="accessory" label="Bag/Acc." items={outfit.accessory} activeIndex={activeIndices.accessory} onSwitch={onSwitch} onRemove={onRemove} onSearch={onSearch} size="sm" icon={<ShoppingBag size={16} />} />
         </div>
 
@@ -165,10 +165,10 @@ export function SkeletonCanvas({
          <button onClick={onSave} disabled={isSaving || isCheckingOut || isExporting} className="w-full py-6 rounded-full bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
             {isSaving ? "Archiving..." : "Lock Archive Look"}
          </button>
-         <button onClick={onCheckout} disabled={isSaving || isCheckingOut || isExporting} className="w-full py-4 rounded-full bg-zinc-900 text-white text-[8px] font-black uppercase tracking-[0.4em] hover:bg-black transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+         <button onClick={onCheckout} disabled={isSaving || isCheckingOut || isExporting} className="w-full py-4 rounded-full bg-zinc-900 text-white text-[10px] md:text-[8px] font-black uppercase tracking-[0.4em] hover:bg-black transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
             {isCheckingOut ? "Preparing Cart..." : <><ShoppingBag size={12} /> Checkout Look</>}
          </button>
-         <button onClick={onExport} disabled={isSaving || isCheckingOut || isExporting} className="w-full py-4 rounded-full border border-zinc-200 text-zinc-400 text-[8px] font-black uppercase tracking-[0.4em] hover:text-black transition-colors disabled:opacity-50">
+         <button onClick={onExport} disabled={isSaving || isCheckingOut || isExporting} className="w-full py-4 rounded-full border border-zinc-200 text-zinc-400 text-[10px] md:text-[8px] font-black uppercase tracking-[0.4em] hover:text-black transition-colors disabled:opacity-50">
             {isExporting ? "Sending DNA..." : "Export Style DNA"}
          </button>
       </div>
