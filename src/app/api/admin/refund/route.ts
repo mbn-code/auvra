@@ -46,12 +46,39 @@ export async function POST(req: NextRequest) {
       .update({ status: 'refunded' })
       .eq('id', orderId);
 
-    // If it's an archive piece, we should probably mark it as sold or archived in inventory too
+    // Restore inventory on refund.
+    // - Regular archive items (is_stable=false): were marked 'sold' on purchase → restore to 'available'
+    // - Stable items (is_stable=true): stock_level was decremented on purchase → increment it back
     if (order.product_id) {
-      await supabase
+      const { data: item, error: itemError } = await supabase
         .from('pulse_inventory')
-        .update({ status: 'archived' })
-        .eq('id', order.product_id);
+        .select('id, is_stable, stock_level')
+        .eq('id', order.product_id)
+        .maybeSingle();
+
+      if (itemError) {
+        console.error('[Refund] Failed to fetch inventory item:', itemError.message);
+      } else if (item) {
+        if (item.is_stable) {
+          // Restore one unit of stock
+          const { error: stockErr } = await supabase
+            .from('pulse_inventory')
+            .update({ stock_level: (item.stock_level ?? 0) + 1 })
+            .eq('id', order.product_id);
+          if (stockErr) {
+            console.error('[Refund] Failed to restore stable stock:', stockErr.message);
+          }
+        } else {
+          // Return the one-of-a-kind item to available
+          const { error: statusErr } = await supabase
+            .from('pulse_inventory')
+            .update({ status: 'available' })
+            .eq('id', order.product_id);
+          if (statusErr) {
+            console.error('[Refund] Failed to restore inventory status:', statusErr.message);
+          }
+        }
+      }
     }
 
     return NextResponse.json({ success: true });
