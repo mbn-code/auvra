@@ -16,7 +16,6 @@ import {
   Image as ImageIcon,
   Loader2
 } from "lucide-react";
-import { createClient } from "@/lib/supabase-client";
 
 interface StableItem {
   id: string;
@@ -54,8 +53,6 @@ export default function StableDashboardClient({ initialItems }: { initialItems: 
     category: "Archive"
   });
 
-  const supabase = createClient();
-
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'image/*': [] },
     onDrop: acceptedFiles => {
@@ -76,24 +73,26 @@ export default function StableDashboardClient({ initialItems }: { initialItems: 
 
     setIsSubmitting(true);
     try {
-      // 1. Upload images
+      // 1. Upload images via the secure server-side admin upload endpoint.
+      //    The browser never touches the storage bucket directly — the service-role
+      //    key on the server handles the actual upload after verifying admin session.
       const imageUrls = [];
       for (const file of files) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `stable/${fileName}`;
+        const fd = new FormData();
+        fd.append("file", file);
 
-        const { data, error: uploadError } = await supabase.storage
-          .from('pulse-inventory')
-          .upload(filePath, file);
+        const uploadRes = await fetch("/api/admin/upload", {
+          method: "POST",
+          body: fd,
+        });
 
-        if (uploadError) throw uploadError;
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json();
+          throw new Error(err.error ?? "Image upload failed");
+        }
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('pulse-inventory')
-          .getPublicUrl(filePath);
-        
-        imageUrls.push(publicUrl);
+        const { url } = await uploadRes.json();
+        imageUrls.push(url);
       }
 
       // 2. Create product
