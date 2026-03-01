@@ -110,7 +110,29 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- 5. Trigger to update User DNA based on Vault activity
+-- 5a. User Aesthetic DNA table
+-- This table was missing, causing the trigger below to throw a relation-not-found
+-- error at runtime on every vault insert/delete. The schema is derived directly
+-- from the ON CONFLICT (user_id) DO UPDATE clause in update_user_dna_from_vault().
+CREATE TABLE IF NOT EXISTS user_aesthetic_dna (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    centroid vector(512),
+    interaction_count integer NOT NULL DEFAULT 0,
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    UNIQUE(user_id)
+);
+
+ALTER TABLE user_aesthetic_dna ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read their own DNA" ON user_aesthetic_dna;
+CREATE POLICY "Users can read their own DNA" ON user_aesthetic_dna
+    FOR SELECT USING (auth.uid() = user_id);
+
+-- The trigger function writes via supabase_admin / SECURITY DEFINER context,
+-- so no INSERT/UPDATE policy is needed for authenticated users directly.
+
+-- 5b. Trigger to update User DNA based on Vault activity
 -- Simplified to avoid casting errors on certain pgvector versions
 CREATE OR REPLACE FUNCTION update_user_dna_from_vault()
 RETURNS TRIGGER AS $$
