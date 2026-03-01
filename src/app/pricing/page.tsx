@@ -178,7 +178,7 @@ export default function PricingPage() {
               </div>
 
               <Link
-                href="/api/checkout/subscribe"
+                href={isAnnual ? '/api/checkout/subscribe?plan=annual' : '/api/checkout/subscribe'}
                 className="w-full bg-black text-white py-8 rounded-full text-center font-black text-sm uppercase tracking-[0.5em] hover:bg-zinc-800 transition-all shadow-2xl flex items-center justify-center gap-6"
               >
                 Initialize Society Access <ArrowRight size={20} />

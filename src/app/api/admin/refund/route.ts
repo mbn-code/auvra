@@ -60,11 +60,12 @@ export async function POST(req: NextRequest) {
         console.error('[Refund] Failed to fetch inventory item:', itemError.message);
       } else if (item) {
         if (item.is_stable) {
-          // Restore one unit of stock
-          const { error: stockErr } = await supabase
-            .from('pulse_inventory')
-            .update({ stock_level: (item.stock_level ?? 0) + 1 })
-            .eq('id', order.product_id);
+          // Use atomic RPC to restore one unit of stock — matches the decrement_stock
+          // path used on purchase. A raw read-modify-write here would race under
+          // concurrent refunds for the same item.
+          const { error: stockErr } = await supabase.rpc('increment_stock', {
+            item_id: order.product_id,
+          });
           if (stockErr) {
             console.error('[Refund] Failed to restore stable stock:', stockErr.message);
           }

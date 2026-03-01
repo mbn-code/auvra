@@ -118,18 +118,14 @@ export async function POST(req: NextRequest) {
         console.error("Failed to upgrade membership:", e);
       }
     }
-    // HANDLE PRODUCT PURCHASE
-    else if (customerEmail && productId) {
-      let productName = "Archive Piece";
-      let price = `€${(session.amount_total / 100).toFixed(2)}`;
-      let vintedUrl = "";
-      let profit = 0;
-
-      // PHASE 2 CIS: Log the purchase event (idempotent via stripe_event_id)
+    // HANDLE PRODUCT PURCHASE (archive pieces + static utility products)
+    // type is now 'archive', 'static', or 'mixed' — never 'membership'
+    else if (customerEmail) {
+      const stripeEventId = event.id;
       const safeSessionId = sessionId || "unknown";
       const safeCreativeId = creativeId || null;
-      const stripeEventId = event.id;
 
+      // Idempotency: only log the purchase event once per Stripe event ID
       const { data: existingEvent } = await supabase
         .from("pulse_events")
         .select("id")
@@ -154,101 +150,112 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      if (type === "archive") {
-        const { data: item } = await supabase
-          .from("pulse_inventory")
-          .select("*")
-          .eq("id", productId)
-          .single();
-
-        if (item) {
-          productName = item.title;
-          vintedUrl = item.source_url;
-          profit = item.potential_profit;
-
-          try {
-            if (!item.is_stable) {
-              const { error } = await supabase
-                .from("pulse_inventory")
-                .update({ status: "sold" })
-                .eq("id", productId);
-              if (error) throw error;
-            } else {
-              // Both operations are atomic RPCs — no read-then-write race condition.
-              const { error: stockErr } = await supabase.rpc("decrement_stock", {
-                item_id: productId,
-              });
-              if (stockErr) throw stockErr;
-              const { error: countErr } = await supabase.rpc("increment_units_sold", {
-                item_id: productId,
-              });
-              if (countErr) throw countErr;
-            }
-          } catch (updateErr) {
-            console.error(
-              `Failed to update inventory for ${productId}:`,
-              updateErr
-            );
-          }
-        }
-      } else {
-        const staticProduct = products[productId];
-        if (staticProduct) {
-          productName = staticProduct.name;
-          vintedUrl = staticProduct.sourceUrl || "";
-          profit = (staticProduct.price / 100) - 15;
-        }
-      }
+      // Parse the full cart — productIds is comma-joined in metadata
+      const allProductIds: string[] = (session.metadata?.productIds || session.metadata?.productId || "")
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter(Boolean);
 
       const initialStatus =
         preOrder === "true"
           ? "awaiting_manufacturing_allocation"
           : "pending_secure";
 
-      const { error: orderInsertError } = await supabase.from("orders").insert({
-        stripe_session_id: session.id,
-        product_id: type === "archive" ? productId : null,
-        customer_email: customerEmail,
-        customer_name: customerName,
-        shipping_address: session.customer_details?.address,
-        source_url: vintedUrl,
-        status: initialStatus,
-      });
+      for (const pid of allProductIds) {
+        let productName = "Archive Piece";
+        let vintedUrl = "";
+        let profit = 0;
+        const price = `€${(session.amount_total / 100 / allProductIds.length).toFixed(2)}`;
 
-      if (orderInsertError) {
-        // Do NOT return non-200 — Stripe would retry and re-run inventory + emails.
-        // Log prominently and fire an alert for manual reconciliation.
-        console.error(
-          "[Webhook] CRITICAL: orders.insert failed for Stripe session",
-          session.id,
-          "| customer:", customerEmail,
-          "| product:", productId,
-          "| error:", orderInsertError.message
-        );
-        // Reuse the existing notification channel so the alert reaches the operator.
-        await sendSecureNotification({
-          productName: `ORDER RECORD FAILED — ${productName}`,
-          vintedUrl: vintedUrl || "n/a",
-          profit: 0,
-          customerName: customerName || "Unknown",
-          customerAddress: `DB insert error: ${orderInsertError.message} | Stripe session: ${session.id}`,
-        }).catch(() => {}); // Swallow notification errors — original error already logged above
-      }
+        if (type === "archive" || type === "mixed") {
+          // Try to resolve as a pulse_inventory item first
+          const { data: item } = await supabase
+            .from("pulse_inventory")
+            .select("*")
+            .eq("id", pid)
+            .single();
 
-      await sendOrderEmail(customerEmail, {
-        productName,
-        price,
-        type: type as any,
-      });
+          if (item) {
+            productName = item.title;
+            vintedUrl = item.source_url;
+            profit = item.potential_profit;
 
-      if (vintedUrl) {
-        await sendSecureNotification({
-          productName,
-          vintedUrl,
-          profit,
-          customerName: customerName || "Customer",
-          customerAddress: `${session.customer_details?.address?.line1}, ${session.customer_details?.address?.city}`,
+            try {
+              if (!item.is_stable) {
+                const { error } = await supabase
+                  .from("pulse_inventory")
+                  .update({ status: "sold" })
+                  .eq("id", pid);
+                if (error) throw error;
+              } else {
+                const { error: stockErr } = await supabase.rpc("decrement_stock", { item_id: pid });
+                if (stockErr) throw stockErr;
+                const { error: countErr } = await supabase.rpc("increment_units_sold", { item_id: pid });
+                if (countErr) throw countErr;
+              }
+            } catch (updateErr) {
+              console.error(`[Webhook] Failed to update inventory for ${pid}:`, updateErr);
+            }
+          }
+        }
+
+        // Fall back to static products config if not found in DB
+        if (!vintedUrl) {
+          const staticProduct = products[pid];
+          if (staticProduct) {
+            productName = staticProduct.name;
+            vintedUrl = staticProduct.sourceUrl || "";
+            profit = (staticProduct.price / 100) - 15;
+          }
+        }
+
+        // Write order record to Supabase (visible in admin dashboard)
+        const { error: orderInsertError } = await supabase.from("orders").insert({
+          stripe_session_id: session.id,
+          product_id: pid,
+          customer_email: customerEmail,
+          customer_name: customerName,
+          shipping_address: session.customer_details?.address,
+          source_url: vintedUrl,
+          status: initialStatus,
         });
+
+        if (orderInsertError) {
+          console.error(
+            "[Webhook] CRITICAL: orders.insert failed for Stripe session",
+            session.id,
+            "| customer:", customerEmail,
+            "| product:", pid,
+            "| error:", orderInsertError.message
+          );
+          await sendSecureNotification({
+            productName: `ORDER RECORD FAILED — ${productName}`,
+            vintedUrl: vintedUrl || "n/a",
+            profit: 0,
+            customerName: customerName || "Unknown",
+            customerAddress: `DB insert error: ${orderInsertError.message} | Stripe session: ${session.id}`,
+          }).catch(() => {});
+        }
+
+        // Send operator notification (Telegram + Pushover) for every item sold
+        if (vintedUrl) {
+          await sendSecureNotification({
+            productName,
+            vintedUrl,
+            profit,
+            customerName: customerName || "Customer",
+            customerAddress: `${session.customer_details?.address?.line1 ?? ""}, ${session.customer_details?.address?.city ?? ""}`.trim().replace(/^,\s*/, ""),
+          });
+        }
+
+        // Send customer confirmation email (once per cart, keyed on first item)
+        if (pid === allProductIds[0]) {
+          await sendOrderEmail(customerEmail, {
+            productName: allProductIds.length > 1 ? `${productName} + ${allProductIds.length - 1} more` : productName,
+            price: `€${(session.amount_total / 100).toFixed(2)}`,
+            type: (type as any) || "archive",
+          });
+        }
       }
     }
   }

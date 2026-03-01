@@ -152,13 +152,25 @@ export async function POST(req: NextRequest) {
     const sessionId = cookieStore.get('auvra_session_id')?.value || cookieStore.get('auvra_fingerprint')?.value || 'unknown_session';
     const creativeId = cookieStore.get('auvra_creative_id')?.value || '';
 
+    // Determine the cart type so the webhook can branch correctly.
+    // 'archive' = all items are from pulse_inventory (1-of-1 pieces)
+    // 'static'  = all items are from config/products (physical utility goods)
+    // 'mixed'   = combination of both (rare but possible from the stylist canvas)
+    const allArchive = productIds.every((id: string) => !staticProducts[id]);
+    const allStatic  = productIds.every((id: string) => !!staticProducts[id]);
+    const cartType   = allArchive ? 'archive' : allStatic ? 'static' : 'mixed';
+
     const stripeSession = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
       metadata: {
+        // productIds (plural, comma-joined) — full cart list for the webhook.
         productIds: productIds.join(','),
-        type: 'mixed',
+        // productId (singular) — first item; kept for webhook branch compatibility.
+        productId: productIds[0] ?? '',
+        type: cartType,
+        userId: user?.id ?? '',
         isMember: isMember ? 'true' : 'false',
         preOrder: isPreOrder ? 'true' : 'false',
         // PHASE 2 CIS: Pass attribution data to Stripe to close the loop
