@@ -383,7 +383,15 @@ export class StylistEngine {
   }
 
   private static shuffle<T>(array: T[]): T[] {
-    return array.sort((a: any, b: any) => a.id.localeCompare(b.id));
+    // Fisher-Yates in-place shuffle — O(n), unbiased.
+    // Replaces the previous sort((a,b) => a.id.localeCompare(b.id)) which was
+    // deterministic alphabetical order, not a shuffle at all.
+    const out = array.slice(); // do not mutate the original pool array
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
   }
 
   private static generateReason(items: EnrichedItem[], archetype: Archetype, substitutions: string[] = []): string {
