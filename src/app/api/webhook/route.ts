@@ -254,6 +254,7 @@ export async function POST(req: NextRequest) {
             productName: allProductIds.length > 1 ? `${productName} + ${allProductIds.length - 1} more` : productName,
             price: `€${(session.amount_total / 100).toFixed(2)}`,
             type: (type as any) || "archive",
+            stripeSessionId: session.id,
           });
         }
       }

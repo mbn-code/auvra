@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     const lineItems = [];
     const unavailableItems = [];
-    let shippingZone = "EU_ONLY"; // Default to stricter zone if mixing
+    let shippingZone = "GLOBAL"; // Start permissive, narrow down as items are inspected
     let isPreOrder = false;
 
     // Pre-fetch all non-static items in one go
@@ -96,9 +96,16 @@ export async function POST(req: NextRequest) {
           description: item.description || `Archive piece: ${item.brand}`,
         };
         isArchive = true;
-        // If any item is EU_ONLY, the whole session becomes EU_ONLY for safety
+        // Most-restrictive zone wins across all items in the cart
         if (item.shipping_zone === "EU_ONLY") shippingZone = "EU_ONLY";
         else if (item.shipping_zone === "SCANDINAVIA_ONLY" && shippingZone !== "EU_ONLY") shippingZone = "SCANDINAVIA_ONLY";
+        // GLOBAL: no change needed — GLOBAL is the permissive default
+      } else {
+        // Static product from config — apply its shippingZone with the same narrowing logic
+        const staticZone = (product as any)?.shippingZone ?? "GLOBAL";
+        if (staticZone === "EU_ONLY") shippingZone = "EU_ONLY";
+        else if (staticZone === "SCANDINAVIA_ONLY" && shippingZone !== "EU_ONLY") shippingZone = "SCANDINAVIA_ONLY";
+        // GLOBAL: no change needed
       }
 
       if (product) {

@@ -73,7 +73,7 @@ export default function BundleSelector({ basePrice, onSelect }: BundleSelectorPr
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-black text-zinc-900">
-                    ${discountedPrice.toFixed(2)}
+                    €{discountedPrice.toFixed(2)}
                   </p>
                   {option.discount > 0 && (
                     <p className="text-[10px] font-bold text-green-600 uppercase">

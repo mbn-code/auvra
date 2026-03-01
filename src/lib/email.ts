@@ -109,7 +109,8 @@ export async function sendSocietyActiveEmail(to: string) {
 export async function sendOrderEmail(to: string, orderDetails: {
   productName: string,
   price: string,
-  type: 'archive' | 'static'
+  type: 'archive' | 'static',
+  stripeSessionId?: string,
 }) {
   const resend = getResend();
 
@@ -130,7 +131,7 @@ export async function sendOrderEmail(to: string, orderDetails: {
       </p>
       <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
         <p style="font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3em; color: #aaa;">Digital Certificate of Curation</p>
-        <p style="font-size: 11px; font-weight: 700; color: #333; margin-top: 10px;">AUVRA-PULSE-ID: ${Math.random().toString(36).toUpperCase().substring(2, 12)}</p>
+        <p style="font-size: 11px; font-weight: 700; color: #333; margin-top: 10px;">AUVRA-PULSE-ID: ${orderDetails.stripeSessionId ? orderDetails.stripeSessionId.replace(/^cs_/, '').toUpperCase().substring(0, 16) : 'N/A'}</p>
         <p style="font-size: 9px; color: #ccc; margin-top: 5px;">This document verifies that the item has been scanned, filtered, and secured via the Auvra Neural Network.</p>
       </div>
       <p style="margin-top: 40px; font-size: 12px; color: #888; text-align: center;">&copy; ${new Date().getFullYear()} AUVRA. High-Fidelity Archive Sourcing.</p>
