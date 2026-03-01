@@ -52,41 +52,64 @@ $$ LANGUAGE plpgsql;
 
 
 -- D3: Add missing constraints on price/financial columns and membership_tier.
---     All constraints use ALTER TABLE … ADD CONSTRAINT IF NOT EXISTS (PG 9.6+).
+--     Uses DO $$ BEGIN ... EXCEPTION WHEN duplicate_object THEN null; END $$
+--     pattern because ADD CONSTRAINT IF NOT EXISTS is not valid PostgreSQL syntax.
 --     Prices are stored as numeric — must be non-negative.
 --     membership_tier must be one of the known application values.
 
-ALTER TABLE pulse_inventory
-    ADD CONSTRAINT IF NOT EXISTS chk_listing_price_nonneg
-        CHECK (listing_price >= 0),
-    ADD CONSTRAINT IF NOT EXISTS chk_member_price_nonneg
-        CHECK (member_price IS NULL OR member_price >= 0),
-    ADD CONSTRAINT IF NOT EXISTS chk_early_bird_price_nonneg
-        CHECK (early_bird_price IS NULL OR early_bird_price >= 0),
-    ADD CONSTRAINT IF NOT EXISTS chk_preorder_price_nonneg
-        CHECK (preorder_price IS NULL OR preorder_price >= 0);
+DO $$ BEGIN
+  ALTER TABLE pulse_inventory ADD CONSTRAINT chk_listing_price_nonneg CHECK (listing_price >= 0);
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-ALTER TABLE profiles
-    ADD CONSTRAINT IF NOT EXISTS chk_membership_tier
-        CHECK (membership_tier IN ('free', 'society'));
+DO $$ BEGIN
+  ALTER TABLE pulse_inventory ADD CONSTRAINT chk_member_price_nonneg CHECK (member_price IS NULL OR member_price >= 0);
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE pulse_inventory ADD CONSTRAINT chk_early_bird_price_nonneg CHECK (early_bird_price IS NULL OR early_bird_price >= 0);
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE pulse_inventory ADD CONSTRAINT chk_preorder_price_nonneg CHECK (preorder_price IS NULL OR preorder_price >= 0);
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE profiles ADD CONSTRAINT chk_membership_tier CHECK (membership_tier IN ('free', 'society'));
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 
--- D4: Prevent public read of sold/archived inventory.
---     The existing RLS SELECT policy exposes all rows regardless of status.
---     We replace it so that anonymous users can only see 'available' items
---     (and stable pre-order items with is_stable = TRUE), while authenticated
---     users (admin service role bypasses RLS entirely) are not affected.
+-- D4: Prevent anonymous users from reading sold/archived inventory.
+--     Anonymous users only see 'available' items and active stable pre-orders.
+--     Authenticated users (logged-in shoppers) may also see 'sold' items —
+--     these appear as "Acquired" archive history on brand pages.
+--     Only 'archived' (soft-deleted) items are hidden from everyone.
+--     The admin service_role bypasses RLS entirely regardless.
 
 -- Drop the open SELECT policy if it exists (name may vary — try both common names).
 DROP POLICY IF EXISTS "Allow public read access" ON pulse_inventory;
 DROP POLICY IF EXISTS "Public read access" ON pulse_inventory;
 DROP POLICY IF EXISTS "Enable read access for all users" ON pulse_inventory;
+DROP POLICY IF EXISTS "Public read: available and stable items only" ON pulse_inventory;
 
--- Recreate with status filter: public can only see available items or active stable nodes.
-CREATE POLICY "Public read: available and stable items only"
+-- Two policies — Postgres ORs them together automatically.
+
+-- Policy A: Anonymous users see available items and active stable pre-orders only.
+CREATE POLICY "Anon read: available and stable pre-orders"
     ON pulse_inventory
     FOR SELECT
+    TO anon
     USING (
         status = 'available'
+        OR (is_stable = TRUE AND pre_order_status = TRUE)
+    );
+
+-- Policy B: Authenticated users see available AND sold items (sold = archive history).
+--           Archived (soft-deleted) items remain hidden.
+CREATE POLICY "Auth read: available and sold items"
+    ON pulse_inventory
+    FOR SELECT
+    TO authenticated
+    USING (
+        status IN ('available', 'sold')
         OR (is_stable = TRUE AND pre_order_status = TRUE)
     );
