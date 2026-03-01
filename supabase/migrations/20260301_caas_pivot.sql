@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS dna_briefs (
 -- Enable RLS for dna_briefs
 ALTER TABLE dna_briefs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own dna_briefs" ON dna_briefs;
 CREATE POLICY "Users can view own dna_briefs" ON dna_briefs
     FOR SELECT USING (auth.uid() = user_id);
 
