@@ -95,32 +95,39 @@ export async function middleware(request: NextRequest) {
   }
 
   // 3. Society Member Protection
-  const { data: { user } } = await supabase.auth.getUser();
+  const needsAuth = pathname.startsWith('/account') || 
+                    pathname.startsWith('/vault') || 
+                    pathname.startsWith('/api/stylist/sync') || 
+                    pathname.startsWith('/api/pdf/generate');
 
-  if (pathname.startsWith('/account') && !user) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
+  if (needsAuth) {
+    const { data: { user } } = await supabase.auth.getUser();
 
-  // 4. Society Member Gating (CaaS Pivot)
-  if (pathname.startsWith('/vault') || pathname.startsWith('/api/stylist/sync') || pathname.startsWith('/api/pdf/generate')) {
-    if (!user) {
-      return NextResponse.redirect(new URL('/pricing', request.url));
+    if (pathname.startsWith('/account') && !user) {
+      return NextResponse.redirect(new URL('/login', request.url));
     }
-    
-    let isSociety = request.cookies.get('auvra_tier')?.value === 'society';
-    
-    if (!isSociety) {
-      const { data } = await supabase.from('profiles').select('membership_tier').eq('id', user.id).single();
-      if (data?.membership_tier === 'society') {
-         response.cookies.set('auvra_tier', 'society', { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 60 * 60 * 24 * 7 });
-         isSociety = true;
-      } else {
-         response.cookies.set('auvra_tier', 'free', { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 60 * 60 * 24 * 7 });
+
+    // 4. Society Member Gating (CaaS Pivot)
+    if (pathname.startsWith('/vault') || pathname.startsWith('/api/stylist/sync') || pathname.startsWith('/api/pdf/generate')) {
+      if (!user) {
+        return NextResponse.redirect(new URL('/pricing', request.url));
       }
-    }
-    
-    if (!isSociety) {
-      return NextResponse.redirect(new URL('/pricing', request.url));
+      
+      let isSociety = request.cookies.get('auvra_tier')?.value === 'society';
+      
+      if (!isSociety) {
+        const { data } = await supabase.from('profiles').select('membership_tier').eq('id', user.id).single();
+        if (data?.membership_tier === 'society') {
+           response.cookies.set('auvra_tier', 'society', { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 60 * 60 * 24 * 7 });
+           isSociety = true;
+        } else {
+           response.cookies.set('auvra_tier', 'free', { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 60 * 60 * 24 * 7 });
+        }
+      }
+      
+      if (!isSociety) {
+        return NextResponse.redirect(new URL('/pricing', request.url));
+      }
     }
   }
 
