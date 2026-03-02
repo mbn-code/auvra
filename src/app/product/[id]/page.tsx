@@ -11,6 +11,14 @@ import TrustPulse from "@/components/TrustPulse";
 import { Star, ShieldCheck, Truck, RotateCcw, Share2, Heart, Eye, PackageCheck, Sparkles } from "lucide-react";
 import { Metadata } from "next";
 
+export async function generateStaticParams() {
+  return Object.keys(products).map((id) => ({
+    id: id,
+  }));
+}
+
+export const dynamicParams = false;
+
 interface ProductPageProps {
   params: Promise<{ id: string }>;
 }

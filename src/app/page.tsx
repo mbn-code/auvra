@@ -12,21 +12,10 @@ import { NeuralInjections } from "@/components/NeuralInjections";
 import StableShowcase from "@/components/StableShowcase";
 
 export const revalidate = 60;
+export const runtime = 'edge';
 
 export default async function Home() {
   const supabaseServer = await createClient();
-  
-  // Check membership status with fresh server context
-  const { data: { user } } = await supabaseServer.auth.getUser();
-  let isMember = false;
-  if (user) {
-    const { data: profile } = await supabaseServer
-      .from('profiles')
-      .select('membership_tier')
-      .eq('id', user.id)
-      .single();
-    if (profile?.membership_tier === 'society') isMember = true;
-  }
   
   const allowedBrands = [
     "Lacoste", "Adidas", "Supreme", "New Balance", "Dickies", "Louis Vuitton", 
@@ -34,7 +23,8 @@ export default async function Home() {
     "CP Company", "Moncler", "A Bathing Ape", "Prada"
   ];
 
-  const [archiveRes, latestItemRes, stableNodesRes] = await Promise.all([
+  const [userRes, archiveRes, latestItemRes, stableNodesRes] = await Promise.all([
+    supabaseServer.auth.getUser(),
     supabaseServer
       .from('pulse_inventory')
       .select('*')
@@ -56,6 +46,17 @@ export default async function Home() {
       .order('created_at', { ascending: false })
       .limit(4)
   ]);
+
+  const user = userRes.data?.user;
+  let isMember = false;
+  if (user) {
+    const { data: profile } = await supabaseServer
+      .from('profiles')
+      .select('membership_tier')
+      .eq('id', user.id)
+      .single();
+    if (profile?.membership_tier === 'society') isMember = true;
+  }
 
   const archiveItems = archiveRes.data;
   const latestItem = latestItemRes.data;

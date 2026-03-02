@@ -1,22 +1,32 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShoppingBag, Menu, User, Zap } from "lucide-react";
 import AnnouncementMarquee from "./AnnouncementMarquee";
 import Logo from "./Logo";
-import { createClient } from "@/lib/supabase-server";
+import { createClient } from "@/lib/supabase-client";
 
-export default async function Header() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  let isSociety = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('membership_tier')
-      .eq('id', user.id)
-      .single();
-    if (profile?.membership_tier === 'society') isSociety = true;
-  }
+export default function Header() {
+  const [isSociety, setIsSociety] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    async function checkUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('membership_tier')
+          .eq('id', user.id)
+          .single();
+        if (profile?.membership_tier === 'society') setIsSociety(true);
+      }
+    }
+    checkUser();
+  }, []);
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[100]">

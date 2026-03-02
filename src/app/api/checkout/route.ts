@@ -5,6 +5,8 @@ import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { createClient } from "@/lib/supabase-server";
 import { cookies } from "next/headers";
 
+export const runtime = 'edge';
+
 const ZONE_COUNTRIES: Record<string, string[]> = {
   "EU_ONLY": ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"],
   "SCANDINAVIA_ONLY": ["DK", "SE", "NO", "FI"],

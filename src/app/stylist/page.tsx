@@ -14,8 +14,6 @@ import { DraggableItem } from "@/components/stylist/DraggableItem";
 import { SocietyModal } from "@/components/stylist/SocietyModal";
 import { useArchiveState } from "@/hooks/useArchiveState";
 
-export const dynamic = 'force-dynamic';
-
 /**
  * AUVRA ARCHIVE BUILDER v5.3 (Neural Workspace)
  * High-fidelity workstation with outfit hydration and membership protection.

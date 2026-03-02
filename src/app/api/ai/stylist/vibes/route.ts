@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 
 // Dynamic Route - Handled on demand due to search params
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 export async function GET(req: NextRequest) {
   try {
@@ -34,7 +35,11 @@ export async function GET(req: NextRequest) {
         id: v.id,
         url: v.image_url,
         archetype: v.archetype
-      })));
+      })), {
+        headers: {
+          'Cache-Control': 's-maxage=60, stale-while-revalidate=300'
+        }
+      });
     }
 
     // Default: Return random pool of currently available items for discovery
@@ -55,7 +60,11 @@ export async function GET(req: NextRequest) {
       id: v.id,
       url: v.image_url,
       archetype: v.archetype
-    })));
+    })), {
+      headers: {
+        'Cache-Control': 's-maxage=60, stale-while-revalidate=300'
+      }
+    });
 
   } catch (error) {
     console.error('[VibeDiscovery] Error:', error);

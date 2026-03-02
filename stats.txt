@@ -1,0 +1,10 @@
+=== TIMING ===
+DNS Lookup: 0.002752s
+TCP Connect: 0.027486s
+TLS Handshake: 0.064274s
+Server Processing (TTFB): 0.687517s
+Total Time: 0.830246s
+
+=== VERCEL INFO ===
+Vercel CLI 50.22.1
+Error: Invalid number of arguments. Usage: `vercel project ls`
