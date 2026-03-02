@@ -155,8 +155,8 @@ def sentinel_cycle():
     """One full execution loop of the Auvra automated pipeline."""
     logging.info("--- STARTING NEW SENTINEL CYCLE ---")
     
-    # 1. Scrape Marketplace (Pulse Hunt)
-    run_command("npx tsx scripts/pulse-run.ts", "Marketplace Pulse Hunt")
+    # 1. Process Unverified Assets (Aesthetic Filter)
+    run_command("python3 scripts/aesthetic_filter.py", "Aesthetic Filter & Approval")
     
     # 2. Neural DNA Sync
     run_command("python3 scripts/neural_sync.py", "Neural Latent Space Sync")

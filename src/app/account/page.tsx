@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, Zap, Mail, Crown, Package, LogOut, ArrowRight, Layers, Cpu, Fingerprint, Lock, Sparkles } from "lucide-react";
+import SubmitVintedLink from "@/components/account/SubmitVintedLink";
 
 /**
  * AUVRA ACCOUNT TERMINAL v1.0
@@ -114,6 +115,9 @@ export default async function AccountPage() {
                 )}
               </div>
             </div>
+
+            {/* Submit Vinted Link Component */}
+            <SubmitVintedLink />
 
             {/* Quick Actions */}
             <div className="bg-white border border-zinc-100 rounded-[2.5rem] p-8 space-y-6 shadow-sm">

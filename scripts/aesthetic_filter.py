@@ -71,7 +71,7 @@ def process_unverified_assets():
                 print("✅ Approved!")
                 
                 # Insert into pulse_inventory
-                supabase.table('pulse_inventory').insert({
+                insert_data = {
                     'vinted_id': asset['vinted_id'],
                     'brand': asset['brand'],
                     'title': asset['title'],
@@ -84,7 +84,12 @@ def process_unverified_assets():
                     'shipping_zone': asset['shipping_zone'],
                     'status': 'available',
                     'style_embedding': img_embedding.tolist() # Pre-calculate vector!
-                }).execute()
+                }
+                
+                if 'submitted_by_user_id' in asset and asset['submitted_by_user_id']:
+                    insert_data['submitted_by_user_id'] = asset['submitted_by_user_id']
+
+                supabase.table('pulse_inventory').insert(insert_data).execute()
                 
                 # Mark as approved
                 supabase.table('unverified_assets').update({'status': 'approved'}).eq('id', asset['id']).execute()
