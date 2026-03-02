@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: "res.cloudinary.com" },
       // Specific Vinted image CDN hostname — replacing the wildcard *.vinted.net
       // to reduce the attack surface for image hotlinking from unverified subdomains.
-      { protocol: 'https', hostname: "images.vinted.net" },
+      { protocol: 'https', hostname: "images1.vinted.net" },
       { protocol: 'https', hostname: "www.grailed.com" },
       { protocol: 'https', hostname: "media-assets.grailed.com" },
       // AliCDN: restrict to the two known image hostnames instead of *.alicdn.com

@@ -81,7 +81,7 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <header className="flex flex-col items-start mb-24">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-200 bg-white mb-8 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-1000">
-              <Fingerprint size={12} className="text-zinc-400" />
+              <Fingerprint size={12} className="text-zinc-500" />
               <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Neural Sync Active</span>
             </div>
             
@@ -102,7 +102,7 @@ export default async function Home() {
 
           <div className="flex gap-8 overflow-x-auto pb-12 scrollbar-hide -mx-6 px-6 mask-fade-right animate-in fade-in duration-1000 delay-500 fill-mode-both">
             {archiveItems && archiveItems.length > 0 ? (
-              archiveItems.map((item) => {
+              archiveItems.map((item, index) => {
                 const isSold = item.status === 'sold';
                 const isVault = item.potential_profit > 200;
                 // SOCIETY MEMBER BYPASS BLUR
@@ -122,6 +122,7 @@ export default async function Home() {
                         src={item.images[0]} 
                         fill
                         unoptimized
+                        priority={index < 3}
                         sizes="(max-width: 768px) 100vw, 450px"
                         className={`object-cover transition-transform duration-1000 group-hover:scale-105 ${isLocked ? 'blur-md opacity-90 scale-105' : ''} ${isSold ? 'opacity-40' : ''}`} 
                         alt={`${item.brand} ${item.title}`} 
@@ -164,12 +165,12 @@ export default async function Home() {
                     </div>
                     <div className="px-4">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-2xl font-black text-zinc-900 tracking-tighter leading-none uppercase italic">{item.title}</h3>
+                        <h2 className="text-2xl font-black text-zinc-900 tracking-tighter leading-none uppercase italic">{item.title}</h2>
                         <div className="bg-zinc-100 text-zinc-900 px-4 py-2 rounded-full text-lg font-black italic">
                           €{getCurationFee(item.listing_price)}
                         </div>
                       </div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Link Unlock Fee</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Link Unlock Fee</p>
                     </div>
                   </Link>
                 );
@@ -224,7 +225,7 @@ export default async function Home() {
          <p className="text-zinc-500 text-2xl font-medium leading-relaxed max-w-3xl mx-auto tracking-tight mb-16">
            We manage the discovery and discovery and link unlocking of global archives. Our neural network monitors unlisted grails, ensuring you possess what others simply browse.
          </p>
-         <div className="flex flex-wrap justify-center gap-12 text-zinc-300">
+         <div className="flex flex-wrap justify-center gap-12 text-zinc-500">
             <span className="text-[11px] font-black uppercase tracking-[0.6em]">Global Sourcing Mesh</span>
             <span className="text-[11px] font-black uppercase tracking-[0.6em]">Verified Integrity</span>
             <span className="text-[11px] font-black uppercase tracking-[0.6em]">Neural Latent Space</span>
@@ -255,7 +256,7 @@ export default async function Home() {
         <div className="text-center mb-24">
           <div className="inline-flex items-center gap-2 mb-6">
              <div className="w-8 h-[1px] bg-zinc-200"></div>
-             <p className="text-[10px] font-black uppercase tracking-[0.6em] text-zinc-400">Node Connections</p>
+             <p className="text-[10px] font-black uppercase tracking-[0.6em] text-zinc-500">Node Connections</p>
              <div className="w-8 h-[1px] bg-zinc-200"></div>
           </div>
           <h2 className="text-5xl md:text-[7xl] font-black tracking-tighter text-zinc-900 leading-none uppercase">

@@ -66,6 +66,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   verification: {
+    google: "pob5xwuMCNnCgBP9IaZ7zyKUx14r7ybManz6S5RXP0M",
     other: {
       "p:domain_verify": ["5b79c949fd9e86edb5ce810d299fb80f"],
     },

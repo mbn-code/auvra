@@ -28,7 +28,7 @@ export default function StableShowcase({ items, isMember }: { items: StableNode[
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-16">
         <div className="animate-in fade-in slide-in-from-left-8 duration-700">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-200 bg-white mb-6 shadow-sm">
-            <Cpu size={12} className="text-zinc-400" />
+            <Cpu size={12} className="text-zinc-500" />
             <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Core Allocation Mesh</span>
           </div>
           <h2 className="text-5xl md:text-7xl font-black tracking-[-0.06em] text-zinc-900 leading-[0.8] uppercase italic">
@@ -102,12 +102,12 @@ export default function StableShowcase({ items, isMember }: { items: StableNode[
               <div className="px-2 space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1">{item.brand}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">{item.brand}</p>
                     <h3 className="text-xl font-black tracking-tight leading-none uppercase italic">{item.title}</h3>
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-black italic">€{Math.round(displayPrice)}</div>
-                    <p className="text-[7px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{priceLabel}</p>
+                    <p className="text-[7px] font-bold text-zinc-500 uppercase tracking-widest mt-1">{priceLabel}</p>
                   </div>
                 </div>
                 
@@ -116,7 +116,7 @@ export default function StableShowcase({ items, isMember }: { items: StableNode[
                     <Zap size={8} fill="currentColor" /> Society Discount Applied
                   </div>
                 ) : (
-                  <div className="text-[8px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2">
+                  <div className="text-[8px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                     Member Price: <span className="text-yellow-600">€{Math.round(memberPrice)}</span>
                   </div>
                 )}

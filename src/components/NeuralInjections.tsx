@@ -46,7 +46,7 @@ export function NeuralInjections() {
               <div className="w-20 h-20 rounded-full p-1 border border-zinc-200 group-hover:border-red-500 transition-colors duration-500 overflow-hidden">
                 <div className="w-full h-full rounded-full overflow-hidden bg-zinc-100">
                   <img 
-                    src={item.images[0]} 
+                    src={item.images[0]} loading="lazy" decoding="async" 
                     alt={item.title}
                     className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                   />

@@ -35,7 +35,7 @@ export default function SubmitVintedLink() {
       }
 
       setStatus("success");
-      setMessage("Listing submitted! Our curation engine is analyzing it.");
+      setMessage(data.message || "Item added to your favorites and DNA updated!");
       setUrl("");
     } catch (err: any) {
       setStatus("error");
@@ -50,9 +50,9 @@ export default function SubmitVintedLink() {
           <Link2 size={20} className="text-zinc-900" />
         </div>
         <div>
-          <h4 className="text-lg font-black tracking-tight uppercase">Submit Listing</h4>
+          <h4 className="text-lg font-black tracking-tight uppercase">Import Style DNA</h4>
           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-            Earn curation fee shares
+            Paste a Vinted link to update your algorithm
           </p>
         </div>
       </div>

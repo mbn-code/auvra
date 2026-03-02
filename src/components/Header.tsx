@@ -41,7 +41,7 @@ export default function Header() {
               <Link href="/stylist" className="relative after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[1px] after:bg-black after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-300 hover:text-black transition-colors">AI Stylist</Link>
               <Link href="/core" className="relative after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[1px] after:bg-blue-600 after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-300 hover:text-blue-600 transition-colors text-blue-600">Core Hardware</Link>
               {isSociety ? (
-                <Link href="/account" className="text-yellow-600 flex items-center gap-2 hover:opacity-80 active:scale-95 transition-all">
+                <Link href="/account" className="text-yellow-700 flex items-center gap-2 hover:opacity-80 active:scale-95 transition-all">
                   <Zap size={10} className="fill-yellow-600" /> Society Node
                 </Link>
               ) : (
@@ -58,10 +58,10 @@ export default function Header() {
           
           {/* RIGHT: User & Cart */}
           <div className="flex-1 flex items-center justify-end gap-6">
-            <Link href={user ? "/account" : "/login"} className="p-2 text-zinc-900 hover:opacity-50 active:scale-95 transition-all">
+            <Link href={user ? "/account" : "/login"} aria-label="User Account" className="p-2 text-zinc-900 hover:opacity-50 active:scale-95 transition-all">
               <User size={20} strokeWidth={1.5} />
             </Link>
-            <button className="relative p-2 text-zinc-900 active:scale-90 transition-transform">
+            <button aria-label="Shopping Cart" className="relative p-2 text-zinc-900 active:scale-90 transition-transform">
               <ShoppingBag size={20} strokeWidth={1.5} />
               <span className="absolute top-1 right-1 bg-black text-white text-[8px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-bold">0</span>
             </button>

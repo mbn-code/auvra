@@ -59,7 +59,7 @@ export function NeuralEchoes({ productId }: { productId: string }) {
             className="group flex flex-col gap-4"
           >
             <div className="aspect-[4/5] rounded-[2.5rem] overflow-hidden border border-zinc-100 relative group-hover:shadow-xl transition-all duration-700 bg-white">
-              <img 
+              <img loading="lazy" decoding="async" 
                 src={item.images[0]} 
                 alt={item.title}
                 className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700"

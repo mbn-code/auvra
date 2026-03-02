@@ -17,14 +17,14 @@ export default function Footer() {
             "We manage the discovery and curation of global archives. Our neural network monitors unlisted grails, giving you the direct source to what others simply browse."
           </p>
           <div className="flex gap-6">
-             <Link href="https://www.instagram.com/auvra.eu/" target="_blank" rel="noopener noreferrer" className="p-4 bg-white border border-zinc-100 rounded-full hover:bg-black hover:text-white hover:scale-110 transition-all shadow-sm"><Instagram size={20} strokeWidth={1.5} /></Link>
-             <Link href="https://www.tiktok.com/@.auvra" target="_blank" rel="noopener noreferrer" className="p-4 bg-white border border-zinc-100 rounded-full hover:bg-black hover:text-white hover:scale-110 transition-all shadow-sm"><Music2 size={20} strokeWidth={1.5} /></Link>
+             <Link href="https://www.instagram.com/auvra.eu/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="p-4 bg-white border border-zinc-100 rounded-full hover:bg-black hover:text-white hover:scale-110 transition-all shadow-sm"><Instagram size={20} strokeWidth={1.5} /></Link>
+             <Link href="https://www.tiktok.com/@.auvra" target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="p-4 bg-white border border-zinc-100 rounded-full hover:bg-black hover:text-white hover:scale-110 transition-all shadow-sm"><Music2 size={20} strokeWidth={1.5} /></Link>
           </div>
         </div>
 
         <div className="md:col-span-2 md:col-start-7">
           <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-900 mb-10">Index</h4>
-          <ul className="space-y-5 text-sm font-bold text-zinc-400">
+          <ul className="space-y-5 text-sm font-bold text-zinc-500">
             <li><Link href="/archive" className="hover:text-black transition-colors hover:italic">The Archive</Link></li>
             <li><Link href="/stylist" className="hover:text-black transition-colors hover:italic">Workstation</Link></li>
             <li><Link href="/pricing" className="hover:text-black transition-colors hover:italic">The Society</Link></li>
@@ -33,7 +33,7 @@ export default function Footer() {
 
         <div className="md:col-span-2">
           <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-900 mb-10">Protocol</h4>
-          <ul className="space-y-5 text-sm font-bold text-zinc-400">
+          <ul className="space-y-5 text-sm font-bold text-zinc-500">
             <li><Link href="/shipping" className="hover:text-black transition-colors hover:italic">Delivery</Link></li>
             <li><Link href="/refunds" className="hover:text-black transition-colors hover:italic">Integrity</Link></li>
             <li><Link href="/privacy" className="hover:text-black transition-colors hover:italic">Neural Privacy</Link></li>
@@ -43,14 +43,14 @@ export default function Footer() {
 
         <div className="md:col-span-2">
           <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-900 mb-10">Intel</h4>
-          <p className="text-xs text-zinc-400 font-medium mb-8 leading-relaxed">Subscribe to the neural mesh updates.</p>
+          <p className="text-xs text-zinc-500 font-medium mb-8 leading-relaxed">Subscribe to the neural mesh updates.</p>
           <div className="relative group">
             <input
               type="email"
               placeholder="Authentication Email"
               className="w-full bg-transparent border-b-2 border-zinc-200 py-4 text-sm outline-none focus:border-black transition-all font-bold text-zinc-900 placeholder:text-zinc-300 italic"
             />
-            <button aria-label="Subscribe" className="absolute right-0 bottom-4 text-[10px] font-black uppercase tracking-[0.2em] hover:tracking-[0.4em] transition-all">
+            <button aria-label="Subscribe" className="absolute right-0 bottom-2 min-h-[44px] px-2 text-[10px] font-black uppercase tracking-[0.2em] hover:tracking-[0.4em] transition-all">
               Join
             </button>
           </div>
@@ -62,7 +62,7 @@ export default function Footer() {
           <p className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.6em] text-center md:text-left">
             © {new Date().getFullYear()} AUVRA • NEURAL ARCHIVE NETWORK • AUTHENTICATED
           </p>
-          <p className="text-[8px] text-zinc-400 font-medium max-w-xl leading-loose text-center md:text-left uppercase tracking-widest">
+          <p className="text-[8px] text-zinc-500 font-medium max-w-xl leading-loose text-center md:text-left uppercase tracking-widest">
             Independent curator mesh. All assets verified by Auvra Neural Engine. Not authorized by represented labels.
           </p>
         </div>
@@ -71,9 +71,9 @@ export default function Footer() {
                    <ShieldCheck size={14} className="text-zinc-900" />
                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-900">Secure Node</span>
                 </div>
-                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Visa</span>
-                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Mastercard</span>
-                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Stripe</span>
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Visa</span>
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Mastercard</span>
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Stripe</span>
             </div>
       </div>
     </footer>
