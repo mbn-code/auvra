@@ -11,6 +11,7 @@ import WelcomeModal from "@/components/WelcomeModal";
 // and auvraAnalytics, both gated behind cookie consent. See AnalyticsProvider.tsx.
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { Toaster } from "sonner";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: {
@@ -132,6 +133,7 @@ export default function RootLayout({
         {/* Analytics and auvraAnalytics are loaded inside AnalyticsProvider,
             gated behind cookie consent (GDPR Art. 6(1)(a)). */}
         <AnalyticsProvider />
+        <SpeedInsights />
       </body>
     </html>
   );
