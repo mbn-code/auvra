@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
         product = {
           name: isDbArchive ? `${item.title} (Source Link)` : item.title,
           price: Math.round(finalPrice * 100), // Convert to cents
-          currency: item.currency.toLowerCase(),
+          currency: 'eur',
           images: item.images,
           description: isDbArchive ? `Digital Source Link Curation Fee for: ${item.brand}` : item.description || '',
         };
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
 
         lineItems.push({
           price_data: {
-            currency: product.currency,
+            currency: 'eur',
             product_data: {
               name: `${product.name} ${isMember ? '(Member Price)' : ''}`,
               images: product.images,
