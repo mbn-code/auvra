@@ -16,7 +16,7 @@ interface StickyBuyProps {
   sourceUrl?: string;
 }
 
-export default function StickyBuy({ productId, price, quantity, isStable, stockLevel, preOrderStatus, isMember, sourceUrl }: StickyBuyProps) {
+export default function StickyBuy({ productId, price, quantity, isStable, stockLevel, preOrderStatus, isMember, sourceUrl, items }: StickyBuyProps & { items?: {id: string, quantity: number}[] }) {
   const [status, setStatus] = useState<"idle" | "securing" | "redirecting">("idle");
 
   const isPreOrder = isStable && stockLevel === 0 && preOrderStatus;
@@ -32,14 +32,12 @@ export default function StickyBuy({ productId, price, quantity, isStable, stockL
 
     setStatus("securing");
     try {
+      const payload = items ? { items, cancelUrl: window.location.href } : { productId, quantity, cancelUrl: window.location.href };
+
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          productId, 
-          quantity,
-          cancelUrl: window.location.href
-        }),
+        body: JSON.stringify(payload),
       });
       
       if (!response.ok) {

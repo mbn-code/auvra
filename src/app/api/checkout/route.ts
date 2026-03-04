@@ -15,12 +15,27 @@ const ZONE_COUNTRIES: Record<string, string[]> = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { productId, productIds: passedProductIds, quantity, cancelUrl: passedCancelUrl } = await req.json();
+    const { productId, productIds: passedProductIds, quantity, cancelUrl: passedCancelUrl, items: passedItems } = await req.json();
     
-    const productIds = passedProductIds || (productId ? [productId] : []);
-    if (productIds.length === 0) {
+    let itemsToProcess: { id: string, quantity: number }[] = [];
+
+    if (passedItems && Array.isArray(passedItems) && passedItems.length > 0) {
+      itemsToProcess = passedItems;
+    } else {
+      const productIds = passedProductIds || (productId ? [productId] : []);
+      if (productIds.length > 0) {
+        itemsToProcess = productIds.map((id: string) => ({
+          id,
+          quantity: productIds.length === 1 ? (Number(quantity) || 1) : 1
+        }));
+      }
+    }
+
+    if (itemsToProcess.length === 0) {
       return NextResponse.json({ error: "No products provided" }, { status: 400 });
     }
+
+    const allProductIds = itemsToProcess.map(item => item.id);
 
     // Determine cancel URL: body > Referer header > default
     const referrer = req.headers.get("referer");
@@ -46,7 +61,7 @@ export async function POST(req: NextRequest) {
     let isPreOrder = false;
 
     // Pre-fetch all non-static items in one go
-    const dbItemIds = productIds.filter((id: string) => !staticProducts[id]);
+    const dbItemIds = allProductIds.filter((id: string) => !staticProducts[id]);
     let fetchedItems: Record<string, any> = {};
     if (dbItemIds.length > 0) {
       const { data: items, error } = await supabase
@@ -61,7 +76,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    for (const id of productIds) {
+    for (const { id, quantity: itemQty } of itemsToProcess) {
       let product: any = staticProducts[id];
       let isArchive = false;
 
@@ -118,7 +133,7 @@ export async function POST(req: NextRequest) {
 
       if (product) {
         // ... unitAmount logic ...
-        const qty = productIds.length === 1 ? (Number(quantity) || 1) : 1;
+        const qty = itemQty > 0 ? Number(itemQty) : 1;
         let unitAmount = product.price;
 
         if (!isArchive) {
@@ -171,17 +186,22 @@ export async function POST(req: NextRequest) {
     // 'archive' = all items are from pulse_inventory (digital source links)
     // 'static'  = all items are from config/products (physical utility goods)
     // 'mixed'   = combination of both (rare but possible from the stylist canvas)
-    const allArchive = productIds.every((id: string) => !staticProducts[id]);
-    const allStatic  = productIds.every((id: string) => !!staticProducts[id]);
+    const allArchive = allProductIds.every((id: string) => !staticProducts[id]);
+    const allStatic  = allProductIds.every((id: string) => !!staticProducts[id]);
     const cartType   = allArchive ? 'archive' : allStatic ? 'static' : 'mixed';
 
+    // Instead of passing a comma separated string for quantities which might be too complex for the webhook if it doesn't parse it,
+    // actually let's pass an item map or simple arrays. But webhook might just use productIds to know what to update.
+    // Let's pass JSON stringified payload if there are items with quantity > 1.
+    // For safety, let's keep productIds string so webhook doesn't break.
     const checkoutConfig: any = {
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
       metadata: {
-        productIds: productIds.join(','),
-        productId: productIds[0] ?? '',
+        productIds: allProductIds.join(','),
+        productId: allProductIds[0] ?? '',
+        itemsPayload: JSON.stringify(itemsToProcess),
         type: cartType,
         userId: user?.id ?? '',
         isMember: isMember ? 'true' : 'false',
