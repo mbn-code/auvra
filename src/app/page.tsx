@@ -184,7 +184,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <StylistFeature />
+      <StylistFeature items={archiveItems || undefined} />
 
       <section className="px-6 mb-24">
         <div className="max-w-7xl mx-auto bg-black rounded-[4rem] p-12 md:p-24 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12">

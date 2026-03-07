@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { SkeletonCanvas } from "@/components/stylist/SkeletonCanvas";
 import { DraggableItem } from "@/components/stylist/DraggableItem";
 import { SocietyModal } from "@/components/stylist/SocietyModal";
+import { HuntModal } from "@/components/stylist/HuntModal";
 import { useArchiveState } from "@/hooks/useArchiveState";
 
 /**
@@ -80,6 +81,8 @@ function StylistContent() {
     description: "",
     feature: 'save'
   });
+
+  const [isHuntModalOpen, setIsHuntModalOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
@@ -502,7 +505,10 @@ function StylistContent() {
                         </div>
                       )}
                    </div>
-                   <button onClick={() => { setOutfits(null); setSelectedVibeIds([]); setOffset(0); setHasMore(true); setActiveCategory(null); setCanvasOutfit({ head: [], neck: [], inner_upper: [], mid_upper: [], outer_upper: [], hands: [], waist: [], lower: [], legwear: [], footwear: [], accessory: [] }); setActiveIndices({ head: 0, neck: 0, inner_upper: 0, mid_upper: 0, outer_upper: 0, hands: 0, waist: 0, lower: 0, legwear: 0, footwear: 0, accessory: 0 }); }} className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest transition-transform hover:scale-105">Tune DNA</button>
+                   <div className="flex items-center gap-3">
+                     <button onClick={() => setIsHuntModalOpen(true)} className="bg-yellow-400 text-black px-6 py-4 rounded-full font-black text-[10px] uppercase tracking-widest transition-transform hover:scale-105 flex items-center gap-2"><Search size={12} /> Deep Hunt</button>
+                     <button onClick={() => { setOutfits(null); setSelectedVibeIds([]); setOffset(0); setHasMore(true); setActiveCategory(null); setCanvasOutfit({ head: [], neck: [], inner_upper: [], mid_upper: [], outer_upper: [], hands: [], waist: [], lower: [], legwear: [], footwear: [], accessory: [] }); setActiveIndices({ head: 0, neck: 0, inner_upper: 0, mid_upper: 0, outer_upper: 0, hands: 0, waist: 0, lower: 0, legwear: 0, footwear: 0, accessory: 0 }); }} className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest transition-transform hover:scale-105">Tune DNA</button>
+                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -579,6 +585,10 @@ function StylistContent() {
         description={modalConfig.description}
         feature={modalConfig.feature}
         onFreeAction={handleFreeAction}
+      />
+      <HuntModal 
+        isOpen={isHuntModalOpen}
+        onClose={() => setIsHuntModalOpen(false)}
       />
     </DndContext>
   );

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 export function VaultButton({ productId, className = "" }: { productId: string, className?: string }) {
   const [inVault, setInVault] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -33,8 +34,6 @@ export function VaultButton({ productId, className = "" }: { productId: string, 
     e.preventDefault();
     e.stopPropagation();
     
-    if (isLoading) return;
-
     // Check session first
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -44,10 +43,17 @@ export function VaultButton({ productId, className = "" }: { productId: string, 
     }
 
     triggerHaptic('light');
-    setIsLoading(true);
+    
     // Optimistic UI update
     const previousState = inVault;
     setInVault(!previousState);
+    if (!previousState) {
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 500);
+      toast.success("Added to The Vault ✦", { description: "Artifact secured in your personal collection." });
+    } else {
+      toast.info("Removed from Vault", { description: "Artifact removed from your collection." });
+    }
 
     try {
       const res = await fetch("/api/vault", {
@@ -56,7 +62,6 @@ export function VaultButton({ productId, className = "" }: { productId: string, 
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ productId }),
-        // Ensure credentials (cookies) are sent
         credentials: 'same-origin'
       });
       
@@ -68,31 +73,23 @@ export function VaultButton({ productId, className = "" }: { productId: string, 
       } else {
         const data = await res.json();
         setInVault(data.action === "added");
-        if (data.action === "added") {
-          toast.success("Added to Vault", { description: "Artifact secured in your personal collection." });
-        } else {
-          toast.info("Removed from Vault", { description: "Artifact removed from your collection." });
-        }
       }
     } catch (err) {
       console.error("Fetch Exception:", err);
       setInVault(previousState);
-    } finally {
-      setIsLoading(false);
     }
   }
 
   return (
     <button 
       onClick={toggleVault}
-      disabled={isLoading}
       className={`p-3 rounded-full backdrop-blur-md transition-all active:scale-90 ${
         inVault 
           ? "bg-red-500 text-white shadow-lg shadow-red-500/20" 
           : "bg-white/90 text-zinc-900 border border-zinc-100 hover:bg-zinc-50"
-      } ${className}`}
+      } ${justAdded ? "animate-ping scale-125" : ""} ${className}`}
     >
-      <Heart size={16} fill={inVault ? "white" : "none"} className={isLoading ? "animate-pulse" : ""} />
+      <Heart size={16} fill={inVault ? "white" : "none"} className={justAdded ? "scale-110" : ""} />
     </button>
   );
 }

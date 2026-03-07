@@ -10,6 +10,7 @@ import PulseHeartbeat from "@/components/PulseHeartbeat";
 import { createClient } from "@/lib/supabase-client";
 import { getEstimatedMarketValue, getCurationFee } from "@/lib/pricing";
 import { VaultButton } from "@/components/VaultButton";
+import { TiltCard } from "@/components/TiltCard";
 
 export default function BrandArchivePage({ params }: { params: Promise<{ brand: string }> }) {
   const { brand: brandName } = use(params);
@@ -154,7 +155,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
 
               return (
                 <Link key={item.id} href={isSold ? "#" : `/archive/${item.id}`} className={`group block ${isSold ? 'cursor-not-allowed' : ''}`}>
-                  <div className={`aspect-[4/5] bg-white rounded-[2.5rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 relative ${isSold ? 'grayscale' : 'group-hover:shadow-2xl group-hover:shadow-zinc-100'} ${isLocked ? 'bg-zinc-950' : ''}`}>
+                  <TiltCard className={`aspect-[4/5] bg-white rounded-[2.5rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 relative ${isSold ? 'grayscale' : 'group-hover:shadow-2xl group-hover:shadow-zinc-100'} ${isLocked ? 'bg-zinc-950' : ''}`}>
                     <Image 
                       src={item.images[0]} 
                       fill
@@ -195,7 +196,7 @@ export default function BrandArchivePage({ params }: { params: Promise<{ brand: 
                       </div>
                       {!isSold && <VaultButton productId={item.id} />}
                     </div>
-                  </div>
+                  </TiltCard>
                   <div className="px-2 flex justify-between items-end">
                     <div className={`pb-1 ${isSold ? 'opacity-40' : ''}`}>
                       <h3 className="text-lg font-black text-zinc-900 tracking-tighter leading-tight mb-1 group-hover:underline decoration-1 underline-offset-4 uppercase italic">{item.title}</h3>

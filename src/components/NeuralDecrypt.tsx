@@ -19,7 +19,10 @@ export default function NeuralDecrypt({
   useEffect(() => {
     if (isLocked) {
       const interval = setInterval(() => {
-        setProgress((prev) => (prev < 92 ? prev + Math.random() * 2 : prev));
+        setProgress((prev) => {
+          const next = prev + Math.random() * 4;
+          return next >= 97 ? 97 : next;
+        });
       }, 3000);
       return () => clearInterval(interval);
     }
@@ -44,7 +47,7 @@ export default function NeuralDecrypt({
       
       <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
         <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 animate-pulse">
-          <Lock size={24} className="text-yellow-400" />
+          <Lock size={24} className={progress >= 97 ? "text-red-500" : "text-yellow-400"} />
         </div>
         
         <h4 className="text-white text-xs font-black uppercase tracking-[0.4em] mb-4">
@@ -53,25 +56,31 @@ export default function NeuralDecrypt({
         
         <div className="w-full max-w-[200px] h-1 bg-white/10 rounded-full overflow-hidden mb-3">
           <div 
-            className="h-full bg-yellow-400 transition-all duration-1000 ease-out"
+            className={`h-full transition-all duration-1000 ease-out ${progress >= 97 ? "bg-red-500" : "bg-yellow-400"}`}
             style={{ width: `${progress}%` }}
           />
         </div>
         
-        <p className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-8">
-          Status: {progress.toFixed(1)}% Decrypted...
+        <p className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-4">
+          Status: {progress >= 97 ? "BLOCKED AT 97.0%" : `${progress.toFixed(1)}% Decrypted...`}
         </p>
+
+        {progress >= 97 && (
+          <div className="bg-red-500/20 border border-red-500/50 text-red-500 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest mb-4 animate-pulse">
+            FIREWALL DETECTED
+          </div>
+        )}
 
         <Link 
           href="/pricing"
-          className="bg-white text-black px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-yellow-400 transition-all"
+          className="bg-white text-black px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-yellow-400 transition-all mt-4"
         >
           Bypass Security Node
         </Link>
       </div>
 
       {/* Grid scanning effect */}
-      <div className="absolute top-0 left-0 w-full h-[2px] bg-yellow-400/20 animate-scan" />
+      <div className={`absolute top-0 left-0 w-full h-[2px] animate-scan ${progress >= 97 ? "bg-red-500/30" : "bg-yellow-400/20"}`} />
     </div>
   );
 }

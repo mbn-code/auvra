@@ -4,7 +4,39 @@ import Link from "next/link";
 import Image from "next/image";
 import { Sparkles, ArrowRight, Cpu, Zap } from "lucide-react";
 
-export default function StylistFeature() {
+export default function StylistFeature({ items = [] }: { items?: any[] }) {
+  const itemTransforms = [
+    "-rotate-3",
+    "rotate-6 translate-y-8",
+    "-rotate-6 -translate-y-4",
+    "rotate-3"
+  ];
+
+  const defaultItems = [
+    {
+      title: "Alpha SV",
+      brand: "Arc'teryx",
+      images: ["https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/a0nllqrvwh2iafjz9vhx"]
+    },
+    {
+      title: "Bib Pants",
+      brand: "Arc'teryx",
+      images: ["https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/ezmxxsrfdx0zpzomrawl"]
+    },
+    {
+      title: "Gel NYC",
+      brand: "ASICS",
+      images: ["https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/u0ocezd7zzdtbfelpbux"]
+    },
+    {
+      title: "S/Lab Vesta",
+      brand: "Salomon",
+      images: ["https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/rar3s1sn1pfsoc3899qb"]
+    }
+  ];
+
+  const displayItems = items.length >= 4 ? items.slice(0, 4) : defaultItems;
+
   return (
     <section className="max-w-7xl mx-auto px-6 py-24">
       <div className="bg-zinc-50 rounded-[4rem] border border-zinc-100 overflow-hidden relative">
@@ -49,38 +81,16 @@ export default function StylistFeature() {
           {/* Visual Side (Simulated Outfit) */}
           <div className="flex-1 w-full bg-zinc-100/50 p-8 lg:p-12 relative min-h-[500px] flex items-center justify-center">
              <div className="grid grid-cols-2 gap-4 w-full max-w-md animate-in fade-in zoom-in duration-1000">
-                 <div className="aspect-[4/5] bg-white rounded-3xl border border-zinc-200 p-2 shadow-xl -rotate-3 hover:rotate-0 transition-transform duration-500 relative group">
-                   <div className="w-full h-full bg-zinc-50 rounded-2xl flex items-center justify-center overflow-hidden">
-                      <Image src="https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/a0nllqrvwh2iafjz9vhx" unoptimized fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="Arc'teryx Alpha SV" />
-                   </div>
-                   <div className="absolute bottom-4 left-4 right-4 bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10">
-                      <p className="text-[7px] font-black text-white uppercase tracking-widest text-center">Arc'teryx Alpha SV</p>
-                   </div>
-                </div>
-                <div className="aspect-[4/5] bg-white rounded-3xl border border-zinc-200 p-2 shadow-xl rotate-6 translate-y-8 hover:rotate-0 transition-transform duration-500 relative group">
-                   <div className="w-full h-full bg-zinc-50 rounded-2xl flex items-center justify-center overflow-hidden">
-                      <Image src="https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/ezmxxsrfdx0zpzomrawl" unoptimized fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="Arc'teryx Bib Pants" />
-                   </div>
-                   <div className="absolute bottom-4 left-4 right-4 bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10">
-                      <p className="text-[7px] font-black text-white uppercase tracking-widest text-center">Arc'teryx Bib Pants</p>
-                   </div>
-                </div>
-                <div className="aspect-[4/5] bg-white rounded-3xl border border-zinc-200 p-2 shadow-xl -rotate-6 -translate-y-4 hover:rotate-0 transition-transform duration-500 relative group">
-                   <div className="w-full h-full bg-zinc-50 rounded-2xl flex items-center justify-center overflow-hidden">
-                      <Image src="https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/u0ocezd7zzdtbfelpbux" unoptimized fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="ASICS Gel NYC" />
-                   </div>
-                   <div className="absolute bottom-4 left-4 right-4 bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10">
-                      <p className="text-[7px] font-black text-white uppercase tracking-widest text-center">ASICS Gel NYC</p>
-                   </div>
-                </div>
-                <div className="aspect-[4/5] bg-white rounded-3xl border border-zinc-200 p-2 shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500 relative group">
-                   <div className="w-full h-full bg-zinc-50 rounded-2xl flex items-center justify-center overflow-hidden">
-                      <Image src="https://res.cloudinary.com/dvdjz4igb/image/upload/c_fill,g_center,h_1250,w_1000/q_auto/f_auto/v1/auvra/archive/rar3s1sn1pfsoc3899qb" unoptimized fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="Salomon S/Lab Vesta" />
-                   </div>
-                   <div className="absolute bottom-4 left-4 right-4 bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10">
-                      <p className="text-[7px] font-black text-white uppercase tracking-widest text-center">Salomon S/Lab</p>
-                   </div>
-                </div>
+                {displayItems.map((item, i) => (
+                  <div key={item.id || i} className={`aspect-[4/5] bg-white rounded-3xl border border-zinc-200 p-2 shadow-xl hover:rotate-0 transition-transform duration-500 relative group ${itemTransforms[i % 4]}`}>
+                    <div className="w-full h-full bg-zinc-50 rounded-2xl flex items-center justify-center overflow-hidden">
+                       <Image src={item.images[0]} unoptimized fill className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt={`${item.brand} ${item.title}`} />
+                    </div>
+                    <div className="absolute bottom-4 left-4 right-4 bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10">
+                       <p className="text-[7px] font-black text-white uppercase tracking-widest text-center truncate px-1">{item.brand} {item.title}</p>
+                    </div>
+                  </div>
+                ))}
              </div>
              
              {/* Decorative UI elements */}

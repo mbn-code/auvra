@@ -7,6 +7,7 @@ import MobileNav from "@/components/MobileNav";
 // LiveToast removed — was displaying fabricated purchase notifications (fake social proof).
 // Prohibited under EU Omnibus Directive 2019/2161. See components/LiveToast.tsx.
 import WelcomeModal from "@/components/WelcomeModal";
+import NewUserWelcomeScreen from "@/components/NewUserWelcomeScreen";
 // Analytics import removed here — AnalyticsProvider below handles Vercel Analytics
 // and auvraAnalytics, both gated behind cookie consent. See AnalyticsProvider.tsx.
 import { AnalyticsProvider } from "@/components/AnalyticsProvider";
@@ -129,6 +130,7 @@ export default function RootLayout({
         <MobileNav />
         {/* LiveToast removed — fake social proof, EU Omnibus Directive 2019/2161 */}
         <WelcomeModal />
+        <NewUserWelcomeScreen />
         {/* Analytics and auvraAnalytics are loaded inside AnalyticsProvider,
             gated behind cookie consent (GDPR Art. 6(1)(a)). */}
         <AnalyticsProvider />

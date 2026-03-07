@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { ExternalLink, Search, Zap, Filter, SortAsc, Clock, Target, TrendingUp, Star, ShoppingBag, CheckCircle } from "lucide-react";
 import { getCurationFee } from "@/lib/pricing";
+import { TiltCard } from "@/components/TiltCard";
 
 export default function HuntTerminal({ initialItems }: { initialItems: any[] }) {
   const [items, setItems] = useState<any[]>(initialItems);
@@ -199,70 +200,72 @@ export default function HuntTerminal({ initialItems }: { initialItems: any[] }) 
           {filteredItems.map((item) => {
             const isActioned = actionedIds.has(item.id) || item.is_owned;
             return (
-              <div key={item.id} className={`bg-zinc-900/50 rounded-[2.5rem] overflow-hidden border transition-all flex flex-col group ${isActioned ? 'border-green-500 opacity-50' : 'border-zinc-800 hover:border-red-500'}`}>
-                <div className="aspect-square relative overflow-hidden">
-                  <img src={item.images[0]} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={item.title} />
-                  <div className="absolute top-6 left-6 flex flex-col gap-2">
-                    <div className="bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white border border-white/10">
-                      {item.brand}
+              <div key={item.id}>
+                <TiltCard className={`bg-zinc-900/50 rounded-[2.5rem] overflow-hidden border transition-all flex flex-col group h-full ${isActioned ? 'border-green-500 opacity-50' : 'border-zinc-800 hover:border-red-500'}`}>
+                  <div className="aspect-square relative overflow-hidden">
+                    <img src={item.images[0]} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={item.title} />
+                    <div className="absolute top-6 left-6 flex flex-col gap-2">
+                      <div className="bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white border border-white/10">
+                        {item.brand}
+                      </div>
+                      <div className="bg-red-500 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
+                        {item.category}
+                      </div>
                     </div>
-                    <div className="bg-red-500 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
-                      {item.category}
-                    </div>
+                    {isActioned && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                         <CheckCircle size={48} className="text-green-500" />
+                      </div>
+                    )}
                   </div>
-                  {isActioned && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                       <CheckCircle size={48} className="text-green-500" />
-                    </div>
-                  )}
-                </div>
-                
-                <div className="p-8 flex-1 flex flex-col">
-                  <h3 className="text-xl font-black tracking-tight leading-tight mb-6 line-clamp-2 uppercase h-12">{item.title}</h3>
                   
-                  <div className="grid grid-cols-2 gap-3 mb-8">
-                    <div className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 text-center">
-                      <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-1">Source Cost</p>
-                      <p className="text-2xl font-black text-white">€{Math.round(item.source_price)}</p>
+                  <div className="p-8 flex-1 flex flex-col">
+                    <h3 className="text-xl font-black tracking-tight leading-tight mb-6 line-clamp-2 uppercase h-12">{item.title}</h3>
+                    
+                    <div className="grid grid-cols-2 gap-3 mb-8">
+                      <div className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 text-center">
+                        <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-1">Source Cost</p>
+                        <p className="text-2xl font-black text-white">€{Math.round(item.source_price)}</p>
+                      </div>
+                      <div className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 text-center">
+                        <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-1">Curation Fee</p>
+                        <p className="text-2xl font-black text-zinc-500">€{getCurationFee(item.listing_price)}</p>
+                      </div>
                     </div>
-                    <div className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 text-center">
-                      <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-1">Curation Fee</p>
-                      <p className="text-2xl font-black text-zinc-500">€{getCurationFee(item.listing_price)}</p>
+
+                    <div className="flex justify-between items-center mb-6 px-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                       <div className="flex items-center gap-2">
+                          <TrendingUp size={12} className="text-green-500" />
+                          Profit: <span className="text-white">€{Math.round(item.potential_profit)}</span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                          <Star size={12} className="text-yellow-400 fill-yellow-400" />
+                          Seller: <span className="text-white">{item.seller_rating} ({item.seller_reviews_count})</span>
+                       </div>
+                    </div>
+
+                    <div className="mt-auto space-y-3 relative z-10">
+                      <a 
+                        href={item.source_url} 
+                        target="_blank"
+                        className="flex items-center justify-center gap-3 w-full bg-zinc-800 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-zinc-700 transition-all border border-zinc-700"
+                      >
+                        <ExternalLink size={16} /> Open Source
+                      </a>
+                      <button 
+                        onClick={() => secureForItem(item.id)}
+                        disabled={isActioned}
+                        className={`flex items-center justify-center gap-3 w-full py-5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl ${
+                          isActioned 
+                          ? 'bg-green-600 text-white cursor-default' 
+                          : 'bg-white text-black hover:bg-red-500 hover:text-white shadow-zinc-950'
+                        }`}
+                      >
+                        <ShoppingBag size={16} /> {isActioned ? 'Secured for Store' : 'Secure for Auvra'}
+                      </button>
                     </div>
                   </div>
-
-                  <div className="flex justify-between items-center mb-6 px-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                     <div className="flex items-center gap-2">
-                        <TrendingUp size={12} className="text-green-500" />
-                        Profit: <span className="text-white">€{Math.round(item.potential_profit)}</span>
-                     </div>
-                     <div className="flex items-center gap-2">
-                        <Star size={12} className="text-yellow-400 fill-yellow-400" />
-                        Seller: <span className="text-white">{item.seller_rating} ({item.seller_reviews_count})</span>
-                     </div>
-                  </div>
-
-                  <div className="mt-auto space-y-3">
-                    <a 
-                      href={item.source_url} 
-                      target="_blank"
-                      className="flex items-center justify-center gap-3 w-full bg-zinc-800 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-zinc-700 transition-all border border-zinc-700"
-                    >
-                      <ExternalLink size={16} /> Open Source
-                    </a>
-                    <button 
-                      onClick={() => secureForItem(item.id)}
-                      disabled={isActioned}
-                      className={`flex items-center justify-center gap-3 w-full py-5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl ${
-                        isActioned 
-                        ? 'bg-green-600 text-white cursor-default' 
-                        : 'bg-white text-black hover:bg-red-500 hover:text-white shadow-zinc-950'
-                      }`}
-                    >
-                      <ShoppingBag size={16} /> {isActioned ? 'Secured for Store' : 'Secure for Auvra'}
-                    </button>
-                  </div>
-                </div>
+                </TiltCard>
               </div>
             );
           })}

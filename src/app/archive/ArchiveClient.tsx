@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { Zap, ChevronRight, Search, Fingerprint, Hexagon, ArrowRight } from "lucide-react";
+import { Zap, ChevronRight, Search, Fingerprint, Hexagon, ArrowRight, Flame } from "lucide-react";
 import PulseHeartbeat from "@/components/PulseHeartbeat";
 import { useSearchParams } from "next/navigation";
+import { TiltCard } from "@/components/TiltCard";
 
 export default function ArchivePage() {
   const [brands, setBrands] = useState<{ name: string; preview: string; count: number }[]>([]);
+  const [trending, setTrending] = useState<any[]>([]);
+  const [streak, setStreak] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
@@ -16,7 +19,40 @@ export default function ArchivePage() {
 
   useEffect(() => {
     fetchBrands();
+    fetchTrending();
+    checkStreak();
   }, [initialCategory]);
+
+  async function checkStreak() {
+    try {
+      const res = await fetch('/api/user/streak', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.streak > 0) setStreak(data.streak);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  async function fetchTrending() {
+    const { data: trendingIds, error: rpcError } = await supabase.rpc('get_trending_items', { limit_count: 6 });
+    if (!rpcError && trendingIds && trendingIds.length > 0) {
+      const ids = trendingIds.map((t: any) => t.product_id);
+      const { data: items } = await supabase
+        .from('pulse_inventory')
+        .select('id, brand, title, images, listing_price, status')
+        .in('id', ids);
+      
+      if (items) {
+        // Sort items to match the order of trendingIds
+        const sortedItems = items.sort((a, b) => {
+          return ids.indexOf(a.id) - ids.indexOf(b.id);
+        });
+        setTrending(sortedItems);
+      }
+    }
+  }
 
   async function fetchBrands() {
     setLoading(true);
@@ -63,6 +99,15 @@ export default function ArchivePage() {
     <div className="min-h-screen bg-[#fafafa]">
       <PulseHeartbeat />
       
+      {streak !== null && (
+        <div className="bg-black text-white px-6 py-3 flex items-center justify-center gap-3 animate-in slide-in-from-top duration-500">
+          <Flame size={16} className="text-red-500 fill-red-500 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest">
+            {streak}-Day Streak — You haven't missed a drop.
+          </span>
+        </div>
+      )}
+
       <section className="relative pt-40 pb-24 px-6 overflow-hidden">
         {/* Architectural Background */}
         <div className="absolute top-0 right-0 w-1/2 h-full z-0 opacity-[0.03] pointer-events-none text-black">
@@ -118,7 +163,40 @@ export default function ArchivePage() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 py-24">
+      {trending.length > 0 && !searchQuery && !initialCategory && (
+        <section className="max-w-7xl mx-auto px-6 mb-24">
+          <div className="flex items-center gap-3 mb-8">
+            <Flame size={20} className="text-red-500 fill-red-500" />
+            <h3 className="text-2xl font-black uppercase tracking-tighter">Trending in The Archive</h3>
+          </div>
+          <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory scrollbar-hide">
+            {trending.map((item) => (
+              <Link key={item.id} href={`/archive/${item.id}`} className="snap-start shrink-0 w-72 group block">
+                <TiltCard className="aspect-[4/5] bg-white rounded-[2rem] overflow-hidden mb-4 border border-zinc-100 relative group-hover:shadow-xl group-hover:border-zinc-300">
+                  <img src={item.images[0]} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt={item.title} />
+                  <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1">
+                    <Flame size={10} className="fill-white" /> Trending
+                  </div>
+                  {item.status === 'sold' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+                      <div className="bg-black/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 -rotate-12">
+                        <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Acquired</span>
+                      </div>
+                    </div>
+                  )}
+                </TiltCard>
+                <div className="px-2">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">{item.brand}</p>
+                  <h4 className="text-sm font-black tracking-tight mb-2 truncate uppercase italic">{item.title}</h4>
+                  <span className="text-sm font-black">€{item.listing_price}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="max-w-7xl mx-auto px-6 py-12">
         {loading ? (
           <div className="py-48 text-center">
             <div className="inline-block w-8 h-8 border-4 border-zinc-100 border-t-black rounded-full animate-spin mb-4"></div>
@@ -132,7 +210,7 @@ export default function ArchivePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredBrands.map((brand) => (
               <Link key={brand.name} href={`/archive/brand/${encodeURIComponent(brand.name)}`} prefetch={true} className="group block relative">
-                <div className="aspect-[4/3] bg-white rounded-[3.5rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 shadow-[0_8px_30px_rgb(0,0,0,0.02)] group-hover:shadow-[0_30px_60px_rgb(0,0,0,0.06)] group-hover:-translate-y-2 relative">
+                <TiltCard className="aspect-[4/3] bg-white rounded-[3.5rem] overflow-hidden mb-8 border border-zinc-100 transition-all duration-700 shadow-[0_8px_30px_rgb(0,0,0,0.02)] group-hover:shadow-[0_30px_60px_rgb(0,0,0,0.06)] group-hover:-translate-y-2 relative">
                   <img src={brand.preview} className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100" alt={brand.name} />
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                   
@@ -144,7 +222,7 @@ export default function ArchivePage() {
                   <div className="absolute bottom-10 right-10 bg-white text-black p-5 rounded-full opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-500 shadow-2xl">
                     <ArrowRight size={24} />
                   </div>
-                </div>
+                </TiltCard>
               </Link>
             ))}
           </div>
