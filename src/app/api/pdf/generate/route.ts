@@ -16,6 +16,21 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const { data: outfit, error: outfitError } = await supabase
+      .from("user_outfits")
+      .select("id")
+      .eq("id", outfit_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (outfitError) {
+      throw outfitError;
+    }
+
+    if (!outfit) {
+      return NextResponse.json({ error: "Outfit not found" }, { status: 404 });
+    }
+
     const workerUrl = process.env.PDF_WORKER_URL || 'http://localhost:4000/generate-pdf';
     const workerSecret = process.env.WORKER_SECRET || '';
     
@@ -34,8 +49,8 @@ export async function POST(req: NextRequest) {
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("PDF Generate Route Error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : "PDF generation failed" }, { status: 500 });
   }
 }

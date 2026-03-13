@@ -9,6 +9,8 @@ Ensure you have Node.js (v18+) installed on your Pi.
 Run these commands in the project folder on your Pi:
 ```bash
 npm install
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
 npx playwright install-deps
 npx playwright install chromium
 ```
@@ -27,20 +29,18 @@ PUSHOVER_TOKEN=a3hmnaorgc4b83qf5wchi8hm62fdi3
 ```
 
 ## 4. Running the Algorithm
-To run a full cycle of all 29 brands:
+To run the full sentinel daemon:
+```bash
+python3 scripts/sentinel.py
+```
+
+To manually run a marketplace scrape only:
 ```bash
 npx tsx scripts/pulse-run.ts
 ```
 
-## 5. Automation (Crontab)
-To make it run every hour automatically, open your crontab:
-```bash
-crontab -e
-```
-Add this line at the bottom:
-```cron
-0 * * * * cd /path/to/auvra && /usr/local/bin/npx tsx scripts/pulse-run.ts >> /home/pi/pulse.log 2>&1
-```
+## 5. Automation
+Run `scripts/sentinel.py` under `systemd`, `pm2`, or `screen` so it can poll commands every minute and trigger its full cycle on schedule.
 
 ## 6. Admin Review
 Log into your website at `/admin/review` to see items flagged by the algorithm.

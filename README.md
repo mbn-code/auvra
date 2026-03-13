@@ -158,12 +158,10 @@ Vercel serverless functions have a 10-second execution limit on the Hobby plan, 
 
 **Automated Hourly Cycle:**
 ```
-1. git pull                              → Auto-update codebase
-2. npm install                           → Sync node dependencies
-3. npx tsx scripts/pulse-run.ts          → Marketplace Pulse Hunt
-4. python3 scripts/neural_sync.py        → Neural Latent Space Sync
-5. python3 scripts/prune_archive.py      → Mesh Integrity Pruning
-6. npx tsx scripts/generate-daily-content.ts → Social Asset Generation
+1. python3 scripts/aesthetic_filter.py       → Aesthetic Filter & Approval
+2. python3 scripts/neural_sync.py            → Neural Latent Space Sync
+3. python3 scripts/prune_archive.py          → Mesh Integrity Pruning
+4. npx tsx scripts/generate-daily-content.ts → Social Asset Generation
 ```
 
 **Manual Trigger Commands** (dispatched from `/admin` dashboard → `/api/admin/system/trigger`):
@@ -188,7 +186,7 @@ npx playwright install chromium && npx playwright install-deps
 python3 scripts/sentinel.py
 ```
 
-See `README_PULSE.md` for the full Raspberry Pi setup guide including crontab configuration.
+See `README_PULSE.md` for the full Raspberry Pi setup guide.
 
 ---
 
@@ -268,7 +266,7 @@ python3 scripts/promote_user.py user@example.com
 | Constraint | Workaround |
 |---|---|
 | 10s serverless timeout | All scraping/heavy work runs on the Raspberry Pi Sentinel; Vercel API routes only queue commands |
-| Image optimization quota | `unoptimized: true` sitewide in `next.config.ts` — all images served directly from Cloudinary/source |
+| Image optimization quota | `next.config.ts` now uses explicit remote image allowlists instead of global `unoptimized: true` |
 | Cron execution limits | `vercel.json` sets a single `0 1 * * *` cron for lightweight mesh inspection only; bulk work is on the Pi |
 
 ### Critical Implementation Rules
@@ -431,7 +429,7 @@ npx tsx scripts/generate-daily-content.ts
 
 ## Environment Variables
 
-All secrets live in `.env.local`. See `.env.example` for the full template.
+All secrets live in `.env.local`. Ensure the variables below are present before running locally or in production.
 
 | Variable | Required | Description |
 |---|---|---|

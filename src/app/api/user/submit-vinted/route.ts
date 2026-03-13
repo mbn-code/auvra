@@ -2,11 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import * as cheerio from 'cheerio';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+const ALLOWED_VINTED_HOSTS = new Set([
+  'www.vinted.fr',
+  'www.vinted.de',
+  'www.vinted.it',
+  'www.vinted.es',
+  'www.vinted.nl',
+  'www.vinted.be',
+  'www.vinted.pl',
+  'www.vinted.cz',
+  'www.vinted.lt',
+  'www.vinted.pt',
+  'www.vinted.ro',
+  'www.vinted.co.uk',
+  'www.vinted.com',
+]);
+
+function isAllowedVintedHost(hostname: string): boolean {
+  return ALLOWED_VINTED_HOSTS.has(hostname.toLowerCase());
+}
 
 // Helper to calculate initial dummy curation fee if price parsing fails
 import { calculateListingPriceEngine } from '@/lib/pricing';
@@ -28,7 +48,22 @@ export async function POST(req: NextRequest) {
 
     const { url } = await req.json();
 
-    if (!url || typeof url !== 'string' || !url.includes('vinted.')) {
+    if (!url || typeof url !== 'string') {
+      return NextResponse.json({ error: 'Invalid Vinted URL provided.' }, { status: 400 });
+    }
+
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      return NextResponse.json({ error: 'Invalid Vinted URL provided.' }, { status: 400 });
+    }
+
+    const isTrustedVintedHost =
+      parsedUrl.protocol === 'https:' &&
+      isAllowedVintedHost(parsedUrl.hostname);
+
+    if (!isTrustedVintedHost || !parsedUrl.pathname.includes('/items/')) {
       return NextResponse.json({ error: 'Invalid Vinted URL provided.' }, { status: 400 });
     }
 
@@ -60,11 +95,11 @@ export async function POST(req: NextRequest) {
       let brand = "Unknown";
       let source_price = 0;
       let images: string[] = [];
-      let condition = "Good";
-      let category = "Archive";
+      const condition = "Good";
+      const category = "Archive";
 
       try {
-        const response = await fetch(url, {
+        const response = await fetch(parsedUrl.toString(), {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept-Language': 'en-US,en;q=0.9',
@@ -74,6 +109,11 @@ export async function POST(req: NextRequest) {
         });
 
         if (response.ok) {
+          const finalUrl = new URL(response.url);
+          if (!isAllowedVintedHost(finalUrl.hostname)) {
+            throw new Error('Unexpected redirect while fetching listing.');
+          }
+
           const html = await response.text();
           const $ = cheerio.load(html);
 
@@ -105,9 +145,16 @@ export async function POST(req: NextRequest) {
       let style_embedding = null;
       try {
         const scriptPath = `${process.cwd()}/scripts/generate_single_embedding.py`;
-        const pythonExecutable = `${process.cwd()}/venv/bin/python`;
+        const pythonExecutable = process.platform === 'win32'
+          ? path.join(process.cwd(), 'venv', 'Scripts', 'python.exe')
+          : path.join(process.cwd(), 'venv', 'bin', 'python');
+        const imageUrl = new URL(images[0]);
+
+        if (!['http:', 'https:'].includes(imageUrl.protocol)) {
+          return NextResponse.json({ error: 'Invalid listing image URL.' }, { status: 400 });
+        }
         
-        const { stdout } = await execAsync(`"${pythonExecutable}" "${scriptPath}" "${images[0]}"`);
+        const { stdout } = await execFileAsync(pythonExecutable, [scriptPath, imageUrl.toString()]);
         const result = JSON.parse(stdout.trim());
         
         if (result.embedding) {
@@ -164,7 +211,7 @@ export async function POST(req: NextRequest) {
       message: 'Item added to your favorites and applied to your Profile DNA!'
     });
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Unhandled error in user submit route:", err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

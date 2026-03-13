@@ -1,21 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { verifyAdmin } from "@/lib/admin";
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
-    const adminSecret = req.headers.get("x-admin-secret") || req.headers.get("authorization")?.replace("Bearer ", "");
-    
-    let isAuthorized = false;
-    
-    if (adminSecret === process.env.CRON_SECRET && process.env.CRON_SECRET) {
-      isAuthorized = true;
-    } else {
-      const isAdmin = await verifyAdmin();
-      if (isAdmin) isAuthorized = true;
-    }
-
-    if (!isAuthorized) {
+    const isAdmin = await verifyAdmin();
+    if (!isAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -27,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, message: "Rankings recalculated successfully" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Rankings Route] Error:", error);
     return NextResponse.json({ error: "Server Error" }, { status: 500 });
   }

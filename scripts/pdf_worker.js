@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const express = require('express');
 const { chromium } = require('playwright');
 const { createClient } = require('@supabase/supabase-js');
@@ -35,10 +36,11 @@ app.post('/generate-pdf', async (req, res) => {
     console.log(`Generating PDF for outfit ${outfit_id}`);
     
     // Using localhost Next.js server for rendering the hidden print route
-    const targetUrl = `http://localhost:3000/pdf-render?outfit_id=${outfit_id}&secret=${workerSecret}`;
+    const targetUrl = `http://localhost:3000/pdf-render?outfit_id=${encodeURIComponent(outfit_id)}&user_id=${encodeURIComponent(user_id)}`;
     
     browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
+    await page.setExtraHTTPHeaders({ authorization: `Bearer ${workerSecret}` });
     
     // Add auth cookie if needed by the route, or use a service key route
     await page.goto(targetUrl, { waitUntil: 'networkidle', timeout: 30000 });
@@ -51,7 +53,7 @@ app.post('/generate-pdf', async (req, res) => {
 
     const fileName = `brief_${user_id}_${outfit_id}_${Date.now()}.pdf`;
     
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('briefs_vault')
       .upload(fileName, pdfBuffer, {
         contentType: 'application/pdf',

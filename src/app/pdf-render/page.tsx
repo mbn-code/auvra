@@ -1,15 +1,23 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-export default async function PDFRenderPage({ searchParams }: { searchParams: Promise<{ outfit_id?: string, secret?: string }> }) {
+export default async function PDFRenderPage({ searchParams }: { searchParams: Promise<{ outfit_id?: string, user_id?: string }> }) {
   const params = await searchParams;
-  const { outfit_id, secret } = params;
+  const requestHeaders = await headers();
+  const authHeader = requestHeaders.get('authorization');
+  const { outfit_id, user_id } = params;
 
-  if (!outfit_id || secret !== process.env.WORKER_SECRET) {
+  if (!outfit_id || !user_id || authHeader !== `Bearer ${process.env.WORKER_SECRET}`) {
     return notFound();
   }
 
-  const { data: outfit } = await supabaseAdmin.from('user_outfits').select('*').eq('id', outfit_id).single();
+  const { data: outfit } = await supabaseAdmin
+    .from('user_outfits')
+    .select('*')
+    .eq('id', outfit_id)
+    .eq('user_id', user_id)
+    .single();
 
   if (!outfit) return notFound();
 

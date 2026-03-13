@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { products as staticProducts } from "@/config/products";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
+import { normalizeOrderItems, sanitizeSameOriginUrl } from "@/lib/order-items";
 import { createClient } from "@/lib/supabase-server";
 import { cookies } from "next/headers";
 
@@ -13,6 +15,33 @@ const ZONE_COUNTRIES: Record<string, string[]> = {
   "GLOBAL": ["US", "CA", "GB", "AU", "DE", "FR", "DK", "SE", "PL", "FI", "JP", "KR"]
 };
 
+interface PulseInventoryItem {
+  id: string;
+  title: string;
+  brand: string;
+  listing_price: number;
+  images: string[];
+  description?: string | null;
+  status: string;
+  is_stable: boolean;
+  pre_order_status?: boolean | null;
+  stock_level?: number | null;
+  units_sold_count?: number | null;
+  early_bird_limit?: number | null;
+  early_bird_price?: number | null;
+  preorder_price?: number | null;
+  shipping_zone?: "EU_ONLY" | "GLOBAL" | "SCANDINAVIA_ONLY" | null;
+}
+
+interface CheckoutProduct {
+  name: string;
+  price: number;
+  currency: string;
+  images: string[];
+  description: string;
+  shippingZone?: "EU_ONLY" | "GLOBAL" | "SCANDINAVIA_ONLY";
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { productId, productIds: passedProductIds, quantity, cancelUrl: passedCancelUrl, items: passedItems } = await req.json();
@@ -20,14 +49,14 @@ export async function POST(req: NextRequest) {
     let itemsToProcess: { id: string, quantity: number }[] = [];
 
     if (passedItems && Array.isArray(passedItems) && passedItems.length > 0) {
-      itemsToProcess = passedItems;
+      itemsToProcess = normalizeOrderItems(passedItems);
     } else {
       const productIds = passedProductIds || (productId ? [productId] : []);
       if (productIds.length > 0) {
-        itemsToProcess = productIds.map((id: string) => ({
+        itemsToProcess = normalizeOrderItems(productIds.map((id: string) => ({
           id,
           quantity: productIds.length === 1 ? (Number(quantity) || 1) : 1
-        }));
+        })));
       }
     }
 
@@ -35,11 +64,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No products provided" }, { status: 400 });
     }
 
-    const allProductIds = itemsToProcess.map(item => item.id);
+    const allProductIds = itemsToProcess.flatMap((item) =>
+      Array.from({ length: item.quantity }, () => item.id)
+    );
 
     // Determine cancel URL: body > Referer header > default
     const referrer = req.headers.get("referer");
-    const cancelUrl = passedCancelUrl || referrer || `${req.nextUrl.origin}/stylist`;
+    const cancelUrl = sanitizeSameOriginUrl(passedCancelUrl || referrer, req.nextUrl.origin);
 
     // Check Membership Status
     const authSupabase = await createClient();
@@ -55,14 +86,14 @@ export async function POST(req: NextRequest) {
       if (profile?.membership_tier === 'society') isMember = true;
     }
 
-    const lineItems = [];
-    const unavailableItems = [];
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+    const unavailableItems: string[] = [];
     let shippingZone = "GLOBAL"; // Start permissive, narrow down as items are inspected
     let isPreOrder = false;
 
     // Pre-fetch all non-static items in one go
     const dbItemIds = allProductIds.filter((id: string) => !staticProducts[id]);
-    let fetchedItems: Record<string, any> = {};
+    const fetchedItems: Record<string, PulseInventoryItem> = {};
     if (dbItemIds.length > 0) {
       const { data: items, error } = await supabase
         .from('pulse_inventory')
@@ -77,13 +108,22 @@ export async function POST(req: NextRequest) {
     }
 
     for (const { id, quantity: itemQty } of itemsToProcess) {
-      let product: any = staticProducts[id];
+      let product: CheckoutProduct | undefined = staticProducts[id];
       let isArchive = false;
 
       if (!product) {
         const item = fetchedItems[id];
+
+        if (item && !item.is_stable && itemQty > 1) {
+          return NextResponse.json({ error: "Archive items are limited to one per checkout." }, { status: 400 });
+        }
         
         if (!item || (item.status !== 'available' && !item.is_stable)) {
+          unavailableItems.push(id);
+          continue;
+        }
+
+        if (item.is_stable && !item.pre_order_status && typeof item.stock_level === 'number' && item.stock_level < itemQty) {
           unavailableItems.push(id);
           continue;
         }
@@ -96,7 +136,7 @@ export async function POST(req: NextRequest) {
         // Determine correct base price for stable/pre-order items
         let basePrice = item.listing_price;
         if (item.is_stable) {
-          if (item.units_sold_count < item.early_bird_limit && item.early_bird_price) {
+          if ((item.units_sold_count ?? 0) < (item.early_bird_limit ?? 0) && item.early_bird_price) {
             basePrice = item.early_bird_price;
           } else if (item.pre_order_status && item.preorder_price) {
             basePrice = item.preorder_price;
@@ -125,7 +165,7 @@ export async function POST(req: NextRequest) {
         // GLOBAL: no change needed — GLOBAL is the permissive default
       } else {
         // Static product from config — apply its shippingZone with the same narrowing logic
-        const staticZone = (product as any)?.shippingZone ?? "GLOBAL";
+        const staticZone = product?.shippingZone ?? "GLOBAL";
         if (staticZone === "EU_ONLY") shippingZone = "EU_ONLY";
         else if (staticZone === "SCANDINAVIA_ONLY" && shippingZone !== "EU_ONLY") shippingZone = "SCANDINAVIA_ONLY";
         // GLOBAL: no change needed
@@ -190,11 +230,7 @@ export async function POST(req: NextRequest) {
     const allStatic  = allProductIds.every((id: string) => !!staticProducts[id]);
     const cartType   = allArchive ? 'archive' : allStatic ? 'static' : 'mixed';
 
-    // Instead of passing a comma separated string for quantities which might be too complex for the webhook if it doesn't parse it,
-    // actually let's pass an item map or simple arrays. But webhook might just use productIds to know what to update.
-    // Let's pass JSON stringified payload if there are items with quantity > 1.
-    // For safety, let's keep productIds string so webhook doesn't break.
-    const checkoutConfig: any = {
+    const checkoutConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
@@ -216,7 +252,7 @@ export async function POST(req: NextRequest) {
     // Only collect shipping for physical products
     if (cartType !== 'archive') {
       checkoutConfig.shipping_address_collection = {
-        allowed_countries: allowedCountries as any,
+          allowed_countries: allowedCountries as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[],
       };
       checkoutConfig.phone_number_collection = {
         enabled: true,
@@ -230,8 +266,8 @@ export async function POST(req: NextRequest) {
     const stripeSession = await stripe.checkout.sessions.create(checkoutConfig);
 
     return NextResponse.json({ url: stripeSession.url });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Stripe Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Stripe Error" }, { status: 500 });
   }
 }

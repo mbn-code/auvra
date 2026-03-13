@@ -9,7 +9,7 @@ const ALLOWED_ORIGINS = [
 
 function isValidOrigin(req: NextRequest) {
   const origin = req.headers.get("origin");
-  if (!origin) return true; // Server-to-server calls often lack Origin header
+  if (!origin) return false;
   
   if (ALLOWED_ORIGINS.includes(origin)) return true;
   if (origin.startsWith("http://localhost:")) return true;
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Ingest] Received: ${events.length} | Rejected: ${rejectedCount} | Inserted: ${validEvents.length}`);
     return NextResponse.json({ success: true, count: validEvents.length });
-  } catch (error: any) {
+  } catch {
     return NextResponse.json({ error: "Server Error" }, { status: 500 });
   }
 }

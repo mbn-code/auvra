@@ -1,24 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { products } from "@/config/products";
 import { sendOrderEmail, sendSocietyActiveEmail } from "@/lib/email";
 import { sendSecureNotification } from "@/lib/notifications";
+import { isUuid, parseOrderItemsFromMetadata } from "@/lib/order-items";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Stripe subscription statuses that mean "no longer paying"
-// ─────────────────────────────────────────────────────────────────────────────
 const INACTIVE_SUBSCRIPTION_STATUSES = new Set([
   "canceled",
   "unpaid",
   "incomplete_expired",
 ]);
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper: downgrade a profile to free tier by Stripe customer ID.
-// Called by both subscription.updated (when status goes inactive) and
-// subscription.deleted (always).
-// ─────────────────────────────────────────────────────────────────────────────
 async function revokeSociety(stripeCustomerId: string, newStatus: string) {
   const { data: profile, error: lookupError } = await supabase
     .from("profiles")
@@ -31,17 +25,7 @@ async function revokeSociety(stripeCustomerId: string, newStatus: string) {
     return;
   }
 
-  if (!profile) {
-    // Customer ID not yet stored — possible for old subscriptions created
-    // before this fix was deployed. Log and continue; no action needed.
-    console.warn(
-      `[Webhook] No profile found for Stripe customer ${stripeCustomerId}. Skipping downgrade.`
-    );
-    return;
-  }
-
-  if (profile.membership_tier !== "society") {
-    // Already downgraded or was never upgraded — idempotent, no-op.
+  if (!profile || profile.membership_tier !== "society") {
     return;
   }
 
@@ -55,10 +39,268 @@ async function revokeSociety(stripeCustomerId: string, newStatus: string) {
 
   if (updateError) {
     console.error("[Webhook] Failed to revoke Society tier:", updateError.message);
-  } else {
-    console.log(
-      `[Webhook] Society tier revoked for profile ${profile.id} (Stripe customer: ${stripeCustomerId}, status: ${newStatus})`
-    );
+  }
+}
+
+async function upsertWebhookEvent(
+  eventId: string,
+  eventType: string,
+  stripeObjectId: string | null,
+  status: "processing" | "processed" | "failed",
+  errorMessage?: string | null
+) {
+  const timestamp = new Date().toISOString();
+
+  await supabase.from("stripe_webhook_events").upsert(
+    {
+      event_id: eventId,
+      event_type: eventType,
+      stripe_object_id: stripeObjectId,
+      status,
+      error_message: errorMessage ?? null,
+      processed_at: status === "processed" ? timestamp : null,
+      updated_at: timestamp,
+    },
+    { onConflict: "event_id" }
+  );
+}
+
+async function reserveWebhookEvent(eventId: string, eventType: string, stripeObjectId: string | null) {
+  const { data, error } = await supabase.rpc("reserve_webhook_event", {
+    event_id_input: eventId,
+    event_type_input: eventType,
+    stripe_object_id_input: stripeObjectId,
+  });
+
+  return { status: data as string | null, error };
+}
+
+async function processMembershipCheckout(session: Stripe.Checkout.Session) {
+  const userId = session.metadata?.userId;
+  const customerEmail = session.customer_details?.email;
+
+  if (!userId) {
+    return;
+  }
+
+  const stripeCustomerId = session.customer as string | null;
+  const stripeSubscriptionId = session.subscription as string | null;
+
+  await supabase
+    .from("profiles")
+    .update({
+      membership_tier: "society",
+      subscription_status: "active",
+      ...(stripeCustomerId && { stripe_customer_id: stripeCustomerId }),
+      ...(stripeSubscriptionId && {
+        stripe_subscription_id: stripeSubscriptionId,
+      }),
+    })
+    .eq("id", userId);
+
+  if (customerEmail) {
+    await sendSocietyActiveEmail(customerEmail);
+  }
+}
+
+async function processProductCheckout(eventId: string, session: Stripe.Checkout.Session) {
+  const customerEmail = session.customer_details?.email;
+  if (!customerEmail) {
+    return;
+  }
+
+  const customerName = session.customer_details?.name;
+  const safeSessionId = session.metadata?.sessionId || "unknown";
+  const safeCreativeId = session.metadata?.creativeId || null;
+  const preOrder = session.metadata?.preOrder === "true";
+  const rawCartType = session.metadata?.type;
+  const shouldCheckInventory = rawCartType === "archive" || rawCartType === "mixed";
+  const cartType: "archive" | "static" = rawCartType === "static" ? "static" : "archive";
+  const orderItems = parseOrderItemsFromMetadata(session.metadata);
+  const initialStatus = preOrder
+    ? "awaiting_manufacturing_allocation"
+    : "pending_secure";
+  const sourceUrls: string[] = [];
+  const amountTotal = session.amount_total ?? 0;
+  const stripePaymentIntentId = typeof session.payment_intent === "string"
+    ? session.payment_intent
+    : null;
+
+  if (orderItems.length === 0) {
+    throw new Error(`Stripe session ${session.id} did not contain any order items`);
+  }
+
+  const { error: analyticsError } = await supabase.rpc("batch_insert_pulse_events", {
+    events: [
+      {
+        session_id: safeSessionId,
+        creative_id: safeCreativeId,
+        event_type: "purchase",
+        metadata: {
+          revenue: amountTotal / 100,
+          stripe_event_id: eventId,
+        },
+        timestamp: new Date().toISOString(),
+      },
+    ],
+  });
+
+  if (analyticsError) {
+    throw analyticsError;
+  }
+
+  let firstProductName = "Archive Piece";
+  let totalItemCount = 0;
+
+  for (const { id, quantity } of orderItems) {
+    let productName = "Archive Piece";
+    let vintedUrl = "";
+    let profit = 0;
+
+    if (shouldCheckInventory && isUuid(id)) {
+      const { data: item, error: itemError } = await supabase
+        .from("pulse_inventory")
+        .select("id, title, source_url, potential_profit")
+        .eq("id", id)
+        .single();
+
+      if (itemError) {
+        throw itemError;
+      }
+
+      productName = item.title;
+      vintedUrl = item.source_url;
+      profit = item.potential_profit || 0;
+    }
+
+    if (!vintedUrl) {
+      const staticProduct = products[id];
+      if (staticProduct) {
+        productName = staticProduct.name;
+        vintedUrl = staticProduct.sourceUrl || "";
+        profit = (staticProduct.price / 100) - 15;
+      }
+    }
+
+    if (totalItemCount === 0) {
+      firstProductName = productName;
+    }
+
+    totalItemCount += quantity;
+
+    if (vintedUrl) {
+      sourceUrls.push(vintedUrl);
+    }
+
+    const { data: insertedOrder, error: orderInsertError } = await supabase
+      .from("orders")
+      .upsert(
+        {
+          stripe_session_id: session.id,
+          stripe_payment_intent_id: stripePaymentIntentId,
+          product_id: isUuid(id) ? id : null,
+          product_sku: id,
+          product_name: productName,
+          quantity,
+          customer_email: customerEmail,
+          customer_name: customerName,
+          shipping_address: session.customer_details?.address,
+          source_url: vintedUrl,
+          status: initialStatus,
+        },
+        { onConflict: "stripe_session_id,product_sku" }
+      )
+      .select("id")
+      .single();
+
+    if (orderInsertError) {
+      console.error(
+        "[Webhook] orders.insert failed",
+        session.id,
+        customerEmail,
+        id,
+        orderInsertError.message
+      );
+      throw orderInsertError;
+    }
+
+    if (shouldCheckInventory && isUuid(id)) {
+      const { error: fulfillError } = await supabase.rpc("fulfill_order_item", {
+        order_id_input: insertedOrder.id,
+        item_id_input: id,
+        item_quantity_input: quantity,
+      });
+
+      if (fulfillError) {
+        throw fulfillError;
+      }
+    }
+
+    if (vintedUrl) {
+      const notificationResult = await sendSecureNotification({
+        productName: quantity > 1 ? `${productName} x${quantity}` : productName,
+        vintedUrl,
+        profit: profit * quantity,
+      });
+
+      if (notificationResult !== undefined) {
+        await supabase
+          .from("orders")
+          .update({ admin_notified_at: new Date().toISOString() })
+          .eq("id", insertedOrder.id);
+      }
+    }
+  }
+
+  if (totalItemCount > 0) {
+    await sendOrderEmail(customerEmail, {
+      productName: totalItemCount > 1 ? `${firstProductName} + ${totalItemCount - 1} more` : firstProductName,
+      price: `€${(amountTotal / 100).toFixed(2)}`,
+      type: cartType,
+      stripeSessionId: session.id,
+      sourceUrls,
+    });
+
+    await supabase
+      .from("stripe_webhook_events")
+      .update({ customer_notified_at: new Date().toISOString() })
+      .eq("event_id", eventId);
+  }
+}
+
+async function processRefund(refund: Stripe.Refund) {
+  const paymentIntentId = typeof refund.payment_intent === "string"
+    ? refund.payment_intent
+    : refund.payment_intent?.id;
+
+  if (!paymentIntentId) {
+    throw new Error(`Refund ${refund.id} is missing payment_intent`);
+  }
+
+  const { data: order, error: orderLookupError } = await supabase
+    .from("orders")
+    .select("stripe_session_id, status")
+    .eq("stripe_payment_intent_id", paymentIntentId)
+    .neq("status", "refunded")
+    .limit(1)
+    .maybeSingle();
+
+  if (orderLookupError) {
+    throw orderLookupError;
+  }
+
+  if (!order?.stripe_session_id) {
+    return;
+  }
+
+  const { error: refundError } = await supabase.rpc("refund_order_session", {
+    stripe_session_id_input: order.stripe_session_id,
+    refund_id_input: refund.id,
+    refunded_at_input: new Date((refund.created || Math.floor(Date.now() / 1000)) * 1000).toISOString(),
+  });
+
+  if (refundError) {
+    throw refundError;
   }
 }
 
@@ -66,7 +308,7 @@ export async function POST(req: NextRequest) {
   const body = await req.text();
   const signature = req.headers.get("stripe-signature") as string;
 
-  let event;
+  let event: Stripe.Event;
 
   try {
     event = stripe.webhooks.constructEvent(
@@ -74,244 +316,79 @@ export async function POST(req: NextRequest) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-  } catch (err: any) {
-    console.error(`Webhook signature verification failed: ${err.message}`);
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown webhook signature error";
+    console.error(`Webhook signature verification failed: ${message}`);
+    return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 });
   }
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // EVENT: checkout.session.completed
-  // Handles: membership upgrades + archive/product purchases
-  // ───────────────────────────────────────────────────────────────────────────
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object as any;
+  const stripeObjectId = (event.data.object as { id?: string }).id ?? null;
+  const { data: existingWebhookEvent } = await supabase
+    .from("stripe_webhook_events")
+    .select("status")
+    .eq("event_id", event.id)
+    .maybeSingle();
 
-    const { productId, type, userId, sessionId, creativeId, preOrder } =
-      session.metadata || {};
-    const customerEmail = session.customer_details?.email;
-    const customerName = session.customer_details?.name;
+  if (existingWebhookEvent?.status === "processed") {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
 
-    // HANDLE MEMBERSHIP PURCHASE
-    if (type === "membership" && userId) {
-      try {
-        // Persist the Stripe customer ID and subscription ID so future
-        // subscription lifecycle events (updated/deleted) can find this profile.
-        const stripeCustomerId = session.customer as string | null;
-        const stripeSubscriptionId = session.subscription as string | null;
+  const reservation = await reserveWebhookEvent(event.id, event.type, stripeObjectId);
+  if (reservation.error) {
+    console.error("[Webhook] Failed to reserve event:", reservation.error.message);
+    return NextResponse.json({ error: "Webhook reservation failed" }, { status: 500 });
+  }
 
-        await supabase
+  if (reservation.status === "processed" || reservation.status === "in_progress") {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+
+  try {
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+
+      if (session.metadata?.type === "membership") {
+        await processMembershipCheckout(session);
+      } else {
+        await processProductCheckout(event.id, session);
+      }
+    } else if (event.type === "customer.subscription.updated") {
+      const subscription = event.data.object as Stripe.Subscription;
+      const stripeCustomerId = subscription.customer as string;
+      const status: string = subscription.status;
+
+      if (INACTIVE_SUBSCRIPTION_STATUSES.has(status)) {
+        await revokeSociety(stripeCustomerId, status);
+      } else {
+        const { error } = await supabase
           .from("profiles")
-          .update({
-            membership_tier: "society",
-            subscription_status: "active",
-            ...(stripeCustomerId && { stripe_customer_id: stripeCustomerId }),
-            ...(stripeSubscriptionId && {
-              stripe_subscription_id: stripeSubscriptionId,
-            }),
-          })
-          .eq("id", userId);
+          .update({ subscription_status: status })
+          .eq("stripe_customer_id", stripeCustomerId);
 
-        if (customerEmail) {
-          await sendSocietyActiveEmail(customerEmail);
+        if (error) {
+          console.error("[Webhook] Failed to sync subscription status:", error.message);
         }
-      } catch (e) {
-        console.error("Failed to upgrade membership:", e);
       }
+    } else if (event.type === "customer.subscription.deleted") {
+      const subscription = event.data.object as Stripe.Subscription;
+      const stripeCustomerId = subscription.customer as string;
+      await revokeSociety(stripeCustomerId, "canceled");
+    } else if (event.type === "refund.created") {
+      const refund = event.data.object as Stripe.Refund;
+      await processRefund(refund);
     }
-    // HANDLE PRODUCT PURCHASE (archive pieces + static utility products)
-    // type is now 'archive', 'static', or 'mixed' — never 'membership'
-    else if (customerEmail) {
-      const stripeEventId = event.id;
-      const safeSessionId = sessionId || "unknown";
-      const safeCreativeId = creativeId || null;
 
-      // Idempotency: only log the purchase event once per Stripe event ID
-      const { data: existingEvent } = await supabase
-        .from("pulse_events")
-        .select("id")
-        .eq("event_type", "purchase")
-        .contains("metadata", { stripe_event_id: stripeEventId })
-        .maybeSingle();
-
-      if (!existingEvent) {
-        await supabase.rpc("batch_insert_pulse_events", {
-          events: [
-            {
-              session_id: safeSessionId,
-              creative_id: safeCreativeId,
-              event_type: "purchase",
-              metadata: {
-                revenue: session.amount_total / 100,
-                stripe_event_id: stripeEventId,
-              },
-              timestamp: new Date().toISOString(),
-            },
-          ],
-        });
-      }
-
-      const allProductIds: string[] = (session.metadata?.productIds || session.metadata?.productId || "")
-        .split(",")
-        .map((s: string) => s.trim())
-        .filter(Boolean);
-
-      const initialStatus =
-        preOrder === "true"
-          ? "awaiting_manufacturing_allocation"
-          : "pending_secure";
-
-      const sourceUrls: string[] = [];
-      let firstProductName = "Archive Piece";
-
-      for (const pid of allProductIds) {
-        let productName = "Archive Piece";
-        let vintedUrl = "";
-        let profit = 0;
-        const price = `€${(session.amount_total / 100 / allProductIds.length).toFixed(2)}`;
-
-        if (type === "archive" || type === "mixed") {
-          // Try to resolve as a pulse_inventory item first
-          const { data: item } = await supabase
-            .from("pulse_inventory")
-            .select("*")
-            .eq("id", pid)
-            .single();
-
-          if (item) {
-            productName = item.title;
-            vintedUrl = item.source_url;
-            profit = item.potential_profit;
-
-            try {
-              if (!item.is_stable) {
-                const { error } = await supabase
-                  .from("pulse_inventory")
-                  .update({ status: "sold" })
-                  .eq("id", pid);
-                if (error) throw error;
-              } else {
-                const { error: stockErr } = await supabase.rpc("decrement_stock", { item_id: pid });
-                if (stockErr) throw stockErr;
-                const { error: countErr } = await supabase.rpc("increment_units_sold", { item_id: pid });
-                if (countErr) throw countErr;
-              }
-            } catch (updateErr) {
-              console.error(`[Webhook] Failed to update inventory for ${pid}:`, updateErr);
-            }
-          }
-        }
-
-        // Fall back to static products config if not found in DB
-        if (!vintedUrl) {
-          const staticProduct = products[pid];
-          if (staticProduct) {
-            productName = staticProduct.name;
-            vintedUrl = staticProduct.sourceUrl || "";
-            profit = (staticProduct.price / 100) - 15;
-          }
-        }
-
-        if (vintedUrl) sourceUrls.push(vintedUrl);
-        if (pid === allProductIds[0]) firstProductName = productName;
-
-        // Write order record to Supabase (visible in admin dashboard)
-        const { error: orderInsertError } = await supabase.from("orders").insert({
-          stripe_session_id: session.id,
-          product_id: pid,
-          customer_email: customerEmail,
-          customer_name: customerName,
-          shipping_address: session.customer_details?.address,
-          source_url: vintedUrl,
-          status: initialStatus,
-        });
-
-        if (orderInsertError) {
-          console.error(
-            "[Webhook] CRITICAL: orders.insert failed for Stripe session",
-            session.id,
-            "| customer:", customerEmail,
-            "| product:", pid,
-            "| error:", orderInsertError.message
-          );
-          // Notify operator — PII (name, address) intentionally excluded.
-          // Full order details are in the admin dashboard (Supabase orders table).
-          // GDPR Art. 5(1)(c) — data minimisation.
-          await sendSecureNotification({
-            productName: `ORDER RECORD FAILED — ${productName}`,
-            vintedUrl: vintedUrl || "n/a",
-            profit: 0,
-          }).catch(() => {});
-        }
-
-        // Send operator notification (Telegram + Pushover) for every item sold.
-        // PII (customer name, address) intentionally excluded — GDPR Art. 5(1)(c).
-        if (vintedUrl) {
-          await sendSecureNotification({
-            productName,
-            vintedUrl,
-            profit,
-          });
-        }
-      }
-
-      // Send customer confirmation email once all items are processed
-      if (customerEmail && allProductIds.length > 0) {
-        await sendOrderEmail(customerEmail, {
-          productName: allProductIds.length > 1 ? `${firstProductName} + ${allProductIds.length - 1} more` : firstProductName,
-          price: `€${(session.amount_total / 100).toFixed(2)}`,
-          type: (type as any) || "archive",
-          stripeSessionId: session.id,
-          sourceUrls: sourceUrls
-        });
-      }
-    }
-  }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // EVENT: customer.subscription.updated
-  //
-  // Fired whenever a subscription changes state. If it transitions to a
-  // terminal non-paying status, revoke the Society tier immediately.
-  // ───────────────────────────────────────────────────────────────────────────
-  else if (event.type === "customer.subscription.updated") {
-    const subscription = event.data.object as any;
-    const stripeCustomerId = subscription.customer as string;
-    const status: string = subscription.status;
-
-    if (INACTIVE_SUBSCRIPTION_STATUSES.has(status)) {
-      console.log(
-        `[Webhook] Subscription ${subscription.id} updated to '${status}' — revoking Society tier.`
-      );
-      await revokeSociety(stripeCustomerId, status);
-    } else {
-      // Subscription is active/trialing — ensure profile is marked active.
-      // This handles cases like a payment recovering from past_due.
-      const { error } = await supabase
-        .from("profiles")
-        .update({ subscription_status: status })
-        .eq("stripe_customer_id", stripeCustomerId);
-
-      if (error) {
-        console.error("[Webhook] Failed to sync subscription status:", error.message);
-      }
-    }
-  }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // EVENT: customer.subscription.deleted
-  //
-  // Fired when a subscription is fully cancelled (end of billing period or
-  // immediately). Always revoke Society tier — this is the hard termination.
-  // ───────────────────────────────────────────────────────────────────────────
-  else if (event.type === "customer.subscription.deleted") {
-    const subscription = event.data.object as any;
-    const stripeCustomerId = subscription.customer as string;
-
-    console.log(
-      `[Webhook] Subscription ${subscription.id} deleted — revoking Society tier.`
+    await upsertWebhookEvent(event.id, event.type, stripeObjectId, "processed");
+    return NextResponse.json({ received: true });
+  } catch (error: unknown) {
+    console.error("[Webhook] Processing failure:", error);
+    await upsertWebhookEvent(
+      event.id,
+      event.type,
+      stripeObjectId,
+      "failed",
+      error instanceof Error ? error.message : "Unknown webhook error"
     );
-    await revokeSociety(stripeCustomerId, "canceled");
+    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
-
-  return NextResponse.json({ received: true });
 }

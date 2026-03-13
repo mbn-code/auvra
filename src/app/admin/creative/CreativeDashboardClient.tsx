@@ -3,12 +3,25 @@
 import { useState } from "react";
 import { Zap, TrendingUp, Users, Target, Activity, RefreshCw, Smartphone, PlaySquare, Plus } from "lucide-react";
 
+interface CreativeRankingRow {
+  creative_id: string;
+  score: number;
+  views?: number | null;
+  drags?: number | null;
+  purchases?: number | null;
+  creative_nodes?: {
+    thumbnail_url?: string | null;
+    platform?: string | null;
+    format?: string | null;
+  } | null;
+}
+
 export default function CreativeDashboardClient({ 
   rankings,
   totalViews,
   totalRevenue
 }: { 
-  rankings: any[],
+  rankings: CreativeRankingRow[],
   totalViews: number,
   totalRevenue: number
 }) {
@@ -18,8 +31,7 @@ export default function CreativeDashboardClient({
     setIsRefreshing(true);
     try {
       await fetch('/api/admin/recalculate-creatives', {
-        method: 'POST',
-        headers: { 'x-admin-secret': process.env.NEXT_PUBLIC_CRON_SECRET || '' } // We'll need a better way to pass this, but for now it's internal
+        method: 'POST'
       });
       window.location.reload();
     } catch (e) {

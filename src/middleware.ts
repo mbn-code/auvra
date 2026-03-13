@@ -86,7 +86,7 @@ export async function middleware(request: NextRequest) {
 
   // 2. Admin Terminal Protection
   // Verify the signed JWT instead of comparing a static cookie value.
-  if (pathname.startsWith('/admin/review') || pathname.startsWith('/admin/orders')) {
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
     const sessionToken = request.cookies.get('admin_session')?.value;
     const isValid = sessionToken ? await verifyAdminJwt(sessionToken) : false;
     if (!isValid) {

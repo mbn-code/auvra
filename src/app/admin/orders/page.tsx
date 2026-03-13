@@ -3,23 +3,49 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, Package, Truck, CheckCircle, Copy, AlertCircle } from "lucide-react";
 
-export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+interface AdminOrder {
+  id: string;
+  stripe_session_id: string;
+  product_name?: string | null;
+  quantity?: number | null;
+  customer_name?: string | null;
+  customer_email: string;
+  shipping_address?: {
+    line1?: string | null;
+    line2?: string | null;
+    postal_code?: string | null;
+    city?: string | null;
+    country?: string | null;
+  } | null;
+  status: string;
+  tracking_number?: string | null;
+  source_url?: string | null;
+  pulse_inventory?: {
+    title?: string | null;
+    brand?: string | null;
+    source_url?: string | null;
+    source_price?: number | null;
+    listing_price?: number | null;
+  } | null;
+}
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+export default function AdminOrdersPage() {
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [loading, setLoading] = useState(true);
 
   async function fetchOrders() {
     setLoading(true);
     const res = await fetch("/api/admin/orders");
     if (res.ok) {
-      const data = await res.json();
+      const data: AdminOrder[] = await res.json();
       setOrders(data || []);
     }
     setLoading(false);
   }
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   async function updateOrderStatus(id: string, status: string) {
     const res = await fetch("/api/admin/orders/status", {
@@ -59,7 +85,7 @@ export default function AdminOrdersPage() {
     });
 
     if (res.ok) {
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'refunded' } : o));
+      await fetchOrders();
     } else {
       const data = await res.json();
       alert("Refund failed: " + data.error);
@@ -93,15 +119,19 @@ export default function AdminOrdersPage() {
               {/* 1. Item Info */}
               <div className="lg:col-span-3">
                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-4">Secured Item</p>
-                <h3 className="text-xl font-black tracking-tighter mb-2">{order.pulse_inventory?.title || 'Static Product'}</h3>
+                <h3 className="text-xl font-black tracking-tighter mb-2">{order.pulse_inventory?.title || order.product_name || 'Static Product'}</h3>
                 <p className="text-sm font-bold text-zinc-900 mb-6">{order.pulse_inventory?.brand}</p>
                 <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
+                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2 text-zinc-500">
+                      <span>Quantity</span>
+                      <span>{order.quantity || 1}</span>
+                   </div>
                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
                       <span className="text-zinc-500">Profit</span>
-                      <span className="text-green-600">+€{order.pulse_inventory?.listing_price - (order.pulse_inventory?.source_price || 0) - 20}</span>
+                      <span className="text-green-600">+€{(((order.pulse_inventory?.listing_price || 0) - (order.pulse_inventory?.source_price || 0) - 20) * (order.quantity || 1)).toFixed(2)}</span>
                    </div>
-                   <a 
-                    href={order.source_url || order.pulse_inventory?.source_url} 
+                    <a 
+                     href={order.source_url || order.pulse_inventory?.source_url || '#'} 
                     target="_blank"
                     className="w-full bg-black text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-80 transition-all"
                    >
@@ -116,7 +146,7 @@ export default function AdminOrdersPage() {
                 <div className="space-y-4">
                    <div className="flex justify-between items-center group">
                       <p className="text-sm font-bold">{order.customer_name}</p>
-                      <button onClick={() => copyToClipboard(order.customer_name)} className="opacity-0 group-hover:opacity-100 text-zinc-300 hover:text-black transition-all"><Copy size={14}/></button>
+                       <button onClick={() => copyToClipboard(order.customer_name || '')} className="opacity-0 group-hover:opacity-100 text-zinc-300 hover:text-black transition-all"><Copy size={14}/></button>
                    </div>
                    <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100 relative group">
                       <p className="text-xs font-medium leading-relaxed text-zinc-600">
@@ -132,7 +162,7 @@ export default function AdminOrdersPage() {
                         <Copy size={14}/>
                       </button>
                    </div>
-                   <p className="text-xs font-bold text-zinc-500 italic">"{order.customer_email}"</p>
+                    <p className="text-xs font-bold text-zinc-500 italic">&quot;{order.customer_email}&quot;</p>
                 </div>
               </div>
 

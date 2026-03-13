@@ -54,15 +54,35 @@ CREATE POLICY "Users can update own profile" ON profiles
 -- Orders Table for Fulfillment
 CREATE TABLE IF NOT EXISTS orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    stripe_session_id TEXT UNIQUE NOT NULL,
+    stripe_session_id TEXT NOT NULL,
     product_id UUID REFERENCES pulse_inventory(id),
+    product_sku TEXT,
+    product_name TEXT,
+    quantity INTEGER NOT NULL DEFAULT 1,
     customer_email TEXT NOT NULL,
     customer_name TEXT,
     shipping_address JSONB,
     status TEXT DEFAULT 'pending_secure', -- pending_secure, secured, dispatched, delivered
     source_url TEXT,
     tracking_number TEXT,
+    stripe_payment_intent_id TEXT,
+    inventory_applied BOOLEAN NOT NULL DEFAULT FALSE,
+    admin_notified_at TIMESTAMP WITH TIME ZONE,
+    refund_id TEXT,
+    refunded_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+    event_id TEXT PRIMARY KEY,
+    event_type TEXT NOT NULL,
+    stripe_object_id TEXT,
+    status TEXT NOT NULL DEFAULT 'processing',
+    error_message TEXT,
+    customer_notified_at TIMESTAMP WITH TIME ZONE,
+    processed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Indices
@@ -70,10 +90,13 @@ CREATE INDEX IF NOT EXISTS idx_status ON pulse_inventory(status);
 CREATE INDEX IF NOT EXISTS idx_brand ON pulse_inventory(brand);
 CREATE INDEX IF NOT EXISTS idx_profit ON pulse_inventory(potential_profit DESC);
 CREATE INDEX IF NOT EXISTS idx_order_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_stripe_session_id ON orders(stripe_session_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_session_product_unique ON orders(stripe_session_id, product_sku);
 
 -- Security
 ALTER TABLE pulse_inventory ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE stripe_webhook_events ENABLE ROW LEVEL SECURITY;
 
 -- Pulse Policies
 DROP POLICY IF EXISTS "Public Read Available" ON pulse_inventory;

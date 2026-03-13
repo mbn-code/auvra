@@ -5,3 +5,6 @@ numpy
 python-dotenv
 tqdm
 requests
+sentence-transformers
+supabase
+playwright
